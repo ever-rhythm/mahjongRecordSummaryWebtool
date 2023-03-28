@@ -1,0 +1,7 @@
+package majsoul
+
+
+
+func main()  {
+
+}
