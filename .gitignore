@@ -19,3 +19,4 @@
 record/
 main/
 .uuid
+/vendor/

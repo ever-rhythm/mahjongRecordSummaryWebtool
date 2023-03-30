@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8" />
+    <title>祝仪积分表生成工具</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/sdk.css" />
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/helper.css" />
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/iconfont.css" />
+    <!-- 这是默认主题所需的，如果是其他主题则不需要 -->
+    <!-- 从 1.1.0 开始 sdk.css 将不支持 IE 11，如果要支持 IE11 请引用这个 css，并把前面那个删了 -->
+    <!-- <link rel="stylesheet" href="sdk-ie11.css" /> -->
+    <!-- 不过 amis 开发团队几乎没测试过 IE 11 下的效果，所以可能有细节功能用不了，如果发现请报 issue -->
+    <style>
+        html,
+        body,
+        .app-wrapper {
+            position: relative;
+            width: 80%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+<div id="root" class="app-wrapper"></div>
+<script src="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/sdk.js"></script>
+<script type="text/javascript">
+    (function () {
+        let amis = amisRequire('amis/embed');
+        // 通过替换下面这个配置来生成不同页面
+
+        let amisJSON =
+
+            {
+                "title": "祝仪积分表生成工具",
+                "type":"page",
+                "cssVars": {
+                    "--text-color": "#CD3632",
+                    "--primary": "#CD3632",
+                    "--primary-onActive": "#BB312D",
+                    "--fontFamilyBase":"font-serif",
+                    "--fontSizeBase":"18px"
+                },
+                "hash": "unique",
+                "body": [
+                    {
+                        "type": "form",
+                        "api": "/api/test",
+                        "title": "",
+                        "mode": "horizontal",
+                        "horizontal": {
+                            "leftFixed": "sm"
+                        },
+                        "actions":[],
+                        "body": [
+                            {
+                                "type": "combo",
+                                "name": "comboRecords",
+                                "label": "牌谱链接",
+                                "multiple": true,
+                                "value": [
+                                    {}
+                                ],
+                                "items": [
+                                    {
+                                        "name": "url",
+                                        "type": "input-text",
+                                        "placeholder": "雀魂牌谱:https://game.maj-soul.com/1/?paipu=",
+                                        "value": "",
+                                        "unique": true,
+                                        "required": true
+                                    },
+                                ]
+                            },
+                            {
+                                "type": "input-text",
+                                "name": "mode",
+                                "size": "xs",
+                                "label": "祝仪模式",
+                                "value": "103",
+                                "placeholder": "103",
+                                "required": true,
+
+                            },
+                            {
+                                "type":"submit",
+                                "label":"生成表格",
+                                "level":"primary",
+                                "size":"md",
+                            },
+                            {
+                                "type": "divider"
+                            },
+                            {
+                                "name":"report",
+                                "title": "",
+                                "type":"table",
+                                "source": "$rows",
+                                "rowClassNameExpr": "<%= data.desc == '最终积分' ? 'bg-primary' : '' %>",
+                                "visibleOn": "typeof data.rows !== 'undefined'",
+                                "columns": [
+                                    {
+                                        "name": "desc",
+                                        "label": "",
+                                        "width":"20%",
+                                        "classNameExpr": "<%= \" text-lg font-bold text-center \" %>"
+                                    },
+                                    {
+                                        "name": "p0",
+                                        "label": "$names.0",
+                                        "labelClassName": "font-bold text-center",
+                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                    },
+                                    {
+                                        "name": "p1",
+                                        "label": "$names.1",
+                                        "labelClassName": "font-bold text-center",
+                                        "classNameExpr": "<%= \"text-lg text-center\" %>"
+                                    },
+                                    {
+                                        "name": "p2",
+                                        "label": "$names.2",
+                                        "labelClassName": "font-bold text-center",
+                                        "classNameExpr": "<%= \"text-lg text-center\" %>"
+                                    },
+                                    {
+                                        "name": "p3",
+                                        "label": "$names.3",
+                                        "labelClassName": "font-bold text-center",
+                                        "classNameExpr": "<%= \"text-lg text-center\" %>"
+                                    },
+                                ]
+                            },
+                            {
+                                "name":"report",
+                                "title": "",
+                                "type":"table",
+                                "source": "$ptRows",
+                                "visibleOn": "typeof data.ptRows !== 'undefined'",
+                                "columns": [
+                                    {
+                                        "name": "desc",
+                                        "label": "",
+                                        "width":"20%",
+                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                    },
+                                    {
+                                        "name": "p0",
+                                        "label": "$names.0",
+                                        "labelClassName": "font-bold text-center",
+                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                    },
+                                    {
+                                        "name": "p1",
+                                        "label": "$names.1",
+                                        "labelClassName": "font-bold text-center",
+                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                    },
+                                    {
+                                        "name": "p2",
+                                        "label": "$names.2",
+                                        "labelClassName": "font-bold text-center",
+                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                    },
+                                    {
+                                        "name": "p3",
+                                        "label": "$names.3",
+                                        "labelClassName": "font-bold text-center",
+                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                    },
+                                ]
+                            },
+                            {
+                                "name":"report",
+                                "title": "",
+                                "type":"table",
+                                "source": "$zhuyiRows",
+                                "visibleOn": "typeof data.zhuyiRows !== 'undefined'",
+                                "columns": [
+                                    {
+                                        "name": "desc",
+                                        "label": "",
+                                        "width":"20%",
+                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                    },
+                                    {
+                                        "name": "p0",
+                                        "label": "$names.0",
+                                        "labelClassName": "font-bold text-center",
+                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                    },
+                                    {
+                                        "name": "p1",
+                                        "label": "$names.1",
+                                        "labelClassName": "font-bold text-center",
+                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                    },
+                                    {
+                                        "name": "p2",
+                                        "label": "$names.2",
+                                        "labelClassName": "font-bold text-center",
+                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                    },
+                                    {
+                                        "name": "p3",
+                                        "label": "$names.3",
+                                        "labelClassName": "font-bold text-center",
+                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                    },
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            };
+
+        let amisScoped = amis.embed('#root', amisJSON);
+    })();
+</script>
+</body>
+</html>

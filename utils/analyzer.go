@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"math/rand"
 	"strconv"
 	"strings"
 )
@@ -79,4 +80,20 @@ func GetRateZhuyiByMode(mode string) (int, int, error) {
 	} else {
 		return v.rate, v.zhuyi, nil
 	}
+}
+
+func GetMajsoulBot() (string, string) {
+	type stBot struct {
+		n string
+		p string
+	}
+
+	mapBot := map[int]stBot{}
+	mapBot[0] = stBot{"3264373548@qq.com","77shuafen"}
+	mapBot[1] = stBot{"evershikieiki@gmail.com","77shuafen"}
+	mapBot[2] = stBot{"343669220@qq.com","77shuafen"}
+
+	idx := rand.Intn(len(mapBot))
+
+	return mapBot[idx].n, mapBot[idx].p
 }
