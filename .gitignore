@@ -20,3 +20,4 @@ record/
 main/
 .uuid
 /vendor/
+/bin/

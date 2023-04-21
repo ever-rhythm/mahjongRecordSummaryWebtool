@@ -20,37 +20,37 @@ type Player struct {
 	Sum        string
 }
 
-func GetSummaryByRecords(records []string, mode string)  (map[string]*Player, []map[string]string, []map[string]string ,error){
+func GetSummaryByRecords(records []string, mode string) (map[string]*Player, []map[string]string, []map[string]string, error) {
 
 	// validate
 	uuids, err := utils.GetUuidByRecordUrl(records)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("url fail", err)
 		return nil, nil, nil, err
 	}
 
 	ratePt, rateZhuyi, err := utils.GetRateZhuyiByMode(mode)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("mode fail", err)
 		return nil, nil, nil, err
 	}
 
 	// login
 	mSoul, err := client.New()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("new client fail", err)
 		return nil, nil, nil, errors.New("client fail")
 	}
 
 	n, p := utils.GetMajsoulBot()
-	rspLogin, err := mSoul.Login(n,p)
+	rspLogin, err := mSoul.Login(n, p)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("login fail", err)
 		return nil, nil, nil, errors.New("client 1 fail")
 	}
 
 	if rspLogin.Error != nil {
-		fmt.Println(rspLogin.Error)
+		fmt.Println("login err", rspLogin.Error)
 		return nil, nil, nil, errors.New("client 2 fail")
 	}
 
@@ -60,27 +60,27 @@ func GetSummaryByRecords(records []string, mode string)  (map[string]*Player, []
 	}
 	rspRecords, err := mSoul.FetchGameRecordsDetail(mSoul.Ctx, &reqInfo)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("detail fail", err)
 		return nil, nil, nil, errors.New("detail fail")
 	}
 
 	// get record
 	mapUuidByte := map[string][]byte{}
 
-	for _,oneUuid := range uuids {
+	for _, oneUuid := range uuids {
 		reqPaipu := message.ReqGameRecord{
-			GameUuid: oneUuid,
+			GameUuid:            oneUuid,
 			ClientVersionString: mSoul.Version.Web(),
 		}
 		resPaipu, err := mSoul.FetchGameRecord(mSoul.Ctx, &reqPaipu)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("paipu fail", err)
 			return nil, nil, nil, errors.New("record fail")
 		}
 
 		data := resPaipu.Data
 		if len(data) == 0 {
-			fmt.Println(err)
+			fmt.Println("paipu data fail", err)
 			return nil, nil, nil, errors.New("record data fail")
 		}
 
@@ -112,7 +112,7 @@ func GetSummaryByRecords(records []string, mode string)  (map[string]*Player, []
 	idxZhuyiRow := 0
 
 	// init idx name
-	for _,oneAccount := range rspRecords.RecordList[0].Accounts {
+	for _, oneAccount := range rspRecords.RecordList[0].Accounts {
 		mapPlayerIdx[oneAccount.Nickname] = "p" + strconv.Itoa(int(oneAccount.Seat))
 		mapIdxPlayer[strconv.Itoa(int(oneAccount.Seat))] = oneAccount.Nickname
 		mapPlayerInfo[oneAccount.Nickname] = &Player{
@@ -122,7 +122,7 @@ func GetSummaryByRecords(records []string, mode string)  (map[string]*Player, []
 	}
 
 	// init uuid seat name
-	for _,oneRecord := range rspRecords.RecordList {
+	for _, oneRecord := range rspRecords.RecordList {
 		for _, oneAccount := range oneRecord.Accounts {
 			mapUuidInfo[oneRecord.Uuid] = append(mapUuidInfo[oneRecord.Uuid], &Player{
 				Nickname: oneAccount.Nickname,
@@ -132,26 +132,26 @@ func GetSummaryByRecords(records []string, mode string)  (map[string]*Player, []
 	}
 
 	// record pt
-	for _,oneRecord := range rspRecords.RecordList {
+	for _, oneRecord := range rspRecords.RecordList {
 		var onePtRow = make(map[string]string)
 		idxPtRow += 1
 
-		for _,oneResultPlayer := range oneRecord.Result.Players {
-			for _,oneInfo := range mapUuidInfo[oneRecord.Uuid] {
+		for _, oneResultPlayer := range oneRecord.Result.Players {
+			for _, oneInfo := range mapUuidInfo[oneRecord.Uuid] {
 				if oneInfo.Seat == oneResultPlayer.Seat {
-					onePtRow[mapPlayerIdx[oneInfo.Nickname]] = fmt.Sprintf("%.1f", float32(oneResultPlayer.TotalPoint) / 1000)
+					onePtRow[mapPlayerIdx[oneInfo.Nickname]] = fmt.Sprintf("%.1f", float32(oneResultPlayer.TotalPoint)/1000)
 
 					mapPlayerInfo[oneInfo.Nickname].TotalPoint += oneResultPlayer.TotalPoint
 					break
 				}
 			}
 		}
-		onePtRow["desc"] = fmt.Sprintf("第%d局",idxPtRow)
+		onePtRow["desc"] = fmt.Sprintf("第%d局", idxPtRow)
 		ptRows = append(ptRows, onePtRow)
 	}
 
 	// record zhuyi
-	for oneUuid,oneByteContent := range mapUuidByte {
+	for oneUuid, oneByteContent := range mapUuidByte {
 		idxZhuyiRow += 1
 		var oneZhuyiRow = make(map[string]string)
 		oneZhuyiRow["desc"] = fmt.Sprintf("第%d局", idxZhuyiRow)
@@ -165,7 +165,7 @@ func GetSummaryByRecords(records []string, mode string)  (map[string]*Player, []
 		}
 
 		// skip head bytes between 25 and 27
-		for i:=25;i<=27;i++{
+		for i := 25; i <= 27; i++ {
 			tmpData := oneByteContent[i:]
 			err = proto.Unmarshal(tmpData, tmpRecord)
 			if err != nil {
@@ -200,7 +200,7 @@ func GetSummaryByRecords(records []string, mode string)  (map[string]*Player, []
 				if err != nil || tmpHule.Hules == nil {
 					continue
 				} else {
-					for _,v := range tmpHule.Hules {
+					for _, v := range tmpHule.Hules {
 						var tmpZ uint32 = 0
 						var tmpZimo = false
 						var tmpMing = false
@@ -213,8 +213,8 @@ func GetSummaryByRecords(records []string, mode string)  (map[string]*Player, []
 						}
 
 						// ming
-						for _,s := range v.Ming {
-							if strings.Index(s, "shunzi") != -1 || strings.Index(s, "kezi") != -1 || strings.Index(s,"minggang") != -1 {
+						for _, s := range v.Ming {
+							if strings.Index(s, "shunzi") != -1 || strings.Index(s, "kezi") != -1 || strings.Index(s, "minggang") != -1 {
 								tmpMing = true
 								break
 							}
@@ -235,7 +235,7 @@ func GetSummaryByRecords(records []string, mode string)  (map[string]*Player, []
 							arrZHand = append(arrZHand, "0s")
 							arrZHand = append(arrZHand, "0m")
 							arrZHand = append(arrZHand, "0p")
-							for _,d := range v.LiDoras {
+							for _, d := range v.LiDoras {
 								oneZhuyiHand, err := utils.GetZhuyiHandByLi(d)
 								if err != nil {
 									fmt.Println(err)
@@ -244,8 +244,8 @@ func GetSummaryByRecords(records []string, mode string)  (map[string]*Player, []
 								arrZHand = append(arrZHand, oneZhuyiHand)
 							}
 
-							for _,d := range v.Hand {
-								for _,h := range arrZHand {
+							for _, d := range v.Hand {
+								for _, h := range arrZHand {
 									if d == h {
 										tmpZ += 1
 									}
@@ -256,9 +256,9 @@ func GetSummaryByRecords(records []string, mode string)  (map[string]*Player, []
 								}
 							}
 
-							for _,d := range v.Ming {
+							for _, d := range v.Ming {
 								if strings.Index(d, "angang") != -1 {
-									for _,h := range arrZHand {
+									for _, h := range arrZHand {
 										if strings.Index(d, h) != -1 {
 											tmpZ += 4
 										}
@@ -267,13 +267,14 @@ func GetSummaryByRecords(records []string, mode string)  (map[string]*Player, []
 							}
 
 						} else {
-							for _,v2 := range v.Fans {
-								// li and yifa
+							for _, v2 := range v.Fans {
+								// yifa
 								if v2.Id == 30 {
 									tmpZ += v2.Val
 									oneDesc += "一发 "
 								}
 
+								// li
 								if v2.Id == 33 && v2.Val > 0 {
 									tmpZ += v2.Val
 									oneDesc += fmt.Sprintf("里%d ", v2.Val)
@@ -293,10 +294,10 @@ func GetSummaryByRecords(records []string, mode string)  (map[string]*Player, []
 						}
 
 						// dec zhuyi
-						for i:=0;i<len(tmpHule.DeltaScores);i++ {
+						for i := 0; i < len(tmpHule.DeltaScores); i++ {
 							if tmpHule.DeltaScores[i] < 0 {
-								for _,oneInfo := range mapUuidInfo[oneUuid] {
-									if i == int(oneInfo.Seat) && 0 != tmpZ{
+								for _, oneInfo := range mapUuidInfo[oneUuid] {
+									if i == int(oneInfo.Seat) && 0 != tmpZ {
 										mapPlayerInfo[oneInfo.Nickname].Zhuyi -= int(tmpZ)
 										oneZhuyiRow[mapPlayerIdx[oneInfo.Nickname]] = "-" + strconv.Itoa(int(tmpZ))
 										break
@@ -307,16 +308,16 @@ func GetSummaryByRecords(records []string, mode string)  (map[string]*Player, []
 
 						// inc zhuyi
 						if tmpZimo {
-							for _,oneInfo := range mapUuidInfo[oneUuid] {
-								if v.Seat == oneInfo.Seat && 0 != tmpZ{
+							for _, oneInfo := range mapUuidInfo[oneUuid] {
+								if v.Seat == oneInfo.Seat && 0 != tmpZ {
 									mapPlayerInfo[oneInfo.Nickname].Zhuyi += int(tmpZ) * 3
-									oneZhuyiRow[mapPlayerIdx[oneInfo.Nickname]] = strconv.Itoa(int(tmpZ)*3)
+									oneZhuyiRow[mapPlayerIdx[oneInfo.Nickname]] = strconv.Itoa(int(tmpZ) * 3)
 									break
 								}
 							}
 						} else {
-							for _,oneInfo := range mapUuidInfo[oneUuid] {
-								if v.Seat == oneInfo.Seat && 0 != tmpZ{
+							for _, oneInfo := range mapUuidInfo[oneUuid] {
+								if v.Seat == oneInfo.Seat && 0 != tmpZ {
 									mapPlayerInfo[oneInfo.Nickname].Zhuyi += int(tmpZ)
 									oneZhuyiRow[mapPlayerIdx[oneInfo.Nickname]] = strconv.Itoa(int(tmpZ))
 									break
@@ -335,8 +336,8 @@ func GetSummaryByRecords(records []string, mode string)  (map[string]*Player, []
 	}
 
 	// calc sum
-	for _,v := range mapPlayerInfo {
-		money := (float32(v.TotalPoint) / 1000 + float32(v.Zhuyi) * float32(rateZhuyi)) * float32(ratePt)
+	for _, v := range mapPlayerInfo {
+		money := (float32(v.TotalPoint)/1000 + float32(v.Zhuyi)*float32(rateZhuyi)) * float32(ratePt)
 		v.Sum = fmt.Sprintf("%.2f", money)
 		//fmt.Println(v.seat, v.nickname, v.totalPoint, v.zhuyi, v.sum)	// test done
 	}
@@ -344,15 +345,15 @@ func GetSummaryByRecords(records []string, mode string)  (map[string]*Player, []
 	//fmt.Println(mapIdxPlayer)	// test done
 
 	/*
-	for _,v := range ptRows {
-		fmt.Println(v)	// test done
-	}
+		for _,v := range ptRows {
+			fmt.Println(v)	// test done
+		}
 
-	for _,v := range zhuyiRows {
-		fmt.Println(v)	// test
-	}
+		for _,v := range zhuyiRows {
+			fmt.Println(v)	// test
+		}
 
-	 */
+	*/
 
-	return mapPlayerInfo, ptRows, zhuyiRows ,nil
+	return mapPlayerInfo, ptRows, zhuyiRows, nil
 }

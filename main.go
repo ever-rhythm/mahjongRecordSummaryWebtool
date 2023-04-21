@@ -5,32 +5,51 @@ import (
 	"github.com/bitly/go-simplejson"
 	"github.com/gin-gonic/gin"
 	"github.com/mahjongRecordSummaryWebtool/api"
+	"github.com/mahjongRecordSummaryWebtool/utils"
+	"io"
+	"log"
+	"os"
 	"strconv"
 )
 
-func main()  {
+func main() {
+	logFile, err := os.Create("./gin.log")
+	if err != nil {
+		panic(err)
+	}
+	log.SetOutput(logFile)
+	gin.DisableConsoleColor()
+	gin.DefaultWriter = io.MultiWriter(logFile)
 	r := gin.Default()
+
+	// html
 	r.LoadHTMLFiles("web/index.html")
 	r.GET("/index.html", func(c *gin.Context) {
 		c.HTML(200, "index.html", "index")
+		return
 	})
 
-	r.POST("/api/test", func(c *gin.Context) {
-		b,_ := c.GetRawData()
-		fmt.Println(string(b))
+	// todo test
+	r.POST("/api/v2", func(c *gin.Context) {
+		// get input json
+		b, _ := c.GetRawData()
+		log.Println(string(b))
+
 		req, err := simplejson.NewJson(b)
 		if err != nil {
-			fmt.Println(err)
-			c.JSON(500,"")
+			log.Println(err)
+			c.JSON(500, "req invalid")
+			return
 		}
 
 		var records []string
 		mapRecords, err := req.Get("comboRecords").Array()
 		if err != nil {
-			fmt.Println(err)
-			c.JSON(500,"")
+			log.Println(err)
+			c.JSON(500, "record invalid")
+			return
 		}
-		for _,v := range mapRecords {
+		for _, v := range mapRecords {
 			tmpMap, _ := v.(map[string]interface{})
 			tmpRecord, _ := tmpMap["url"].(string)
 			records = append(records, tmpRecord)
@@ -38,20 +57,42 @@ func main()  {
 
 		mode, err := req.Get("mode").String()
 		if err != nil {
-			fmt.Println(err)
-			c.JSON(500,"")
+			log.Println(err)
+			c.JSON(500, "mode invalid")
+			return
 		}
 
-		//fmt.Println(records, mode)
-		mapPlayerInfo, ptRows, zhuyiRows, err := api.GetSummaryByRecords(records, mode)
+		// validate
+		uuids, err := utils.GetUuidByRecordUrl(records)
 		if err != nil {
-			c.JSON(500, err)
+			log.Println(err)
+			c.JSON(500, "url invalid")
+			return
 		}
+
+		ratePt, rateZhuyi, err := utils.GetRateZhuyiByMode(mode)
+		if err != nil {
+			log.Println(err)
+			c.JSON(500, "rate invalid")
+			return
+		}
+
+		log.Println(uuids, ratePt, rateZhuyi)
+
+		// calc
+		mapPlayerInfo, ptRows, zhuyiRows, err := api.GetSummaryByUuids(uuids, ratePt, rateZhuyi)
+		if err != nil {
+			log.Println("GetSummaryByUuids fail ", err)
+			c.JSON(500, "calc invalid")
+			return
+		}
+
+		// output
 
 		// names
 		var arrName []string
-		for i:=0;i<4;i++ {
-			for _,oneInfo := range mapPlayerInfo {
+		for i := 0; i < 4; i++ {
+			for _, oneInfo := range mapPlayerInfo {
 				if i == int(oneInfo.Seat) {
 					arrName = append(arrName, oneInfo.Nickname)
 					break
@@ -68,9 +109,9 @@ func main()  {
 		rowZhuyiSum["desc"] = "总计祝仪"
 		rowMoneySum["desc"] = "最终积分"
 
-		for _,oneInfo := range mapPlayerInfo {
+		for _, oneInfo := range mapPlayerInfo {
 			oneIdx := "p" + strconv.Itoa(int(oneInfo.Seat))
-			rowPtSum[oneIdx] = fmt.Sprintf("%.1f", float32(oneInfo.TotalPoint) / 1000)
+			rowPtSum[oneIdx] = fmt.Sprintf("%.1f", float32(oneInfo.TotalPoint)/1000)
 			rowZhuyiSum[oneIdx] = strconv.Itoa(int(oneInfo.Zhuyi))
 			rowMoneySum[oneIdx] = oneInfo.Sum
 		}
@@ -78,17 +119,98 @@ func main()  {
 		rows = append(rows, rowPtSum, rowZhuyiSum, rowMoneySum)
 
 		objJs := simplejson.New()
-		objJs.Set("status",0)
-		objJs.Set("msg","ok")
-		objJs.SetPath([]string{"data","names"}, arrName)
-		objJs.SetPath([]string{"data","rows"}, rows)
-		objJs.SetPath([]string{"data","ptRows"}, ptRows)
-		objJs.SetPath([]string{"data","zhuyiRows"}, zhuyiRows)
+		objJs.Set("status", 0)
+		objJs.Set("msg", "ok")
+		objJs.SetPath([]string{"data", "names"}, arrName)
+		objJs.SetPath([]string{"data", "rows"}, rows)
+		objJs.SetPath([]string{"data", "ptRows"}, ptRows)
+		objJs.SetPath([]string{"data", "zhuyiRows"}, zhuyiRows)
 
 		tmpMap, err := objJs.Map()
-		if err != nil{
+		if err != nil {
+			log.Println(err)
+			c.JSON(500, "js map err")
+			return
+		}
+
+		c.JSON(200, tmpMap)
+		return
+	})
+
+	r.POST("/api/test", func(c *gin.Context) {
+		b, _ := c.GetRawData()
+		fmt.Println(string(b))
+		req, err := simplejson.NewJson(b)
+		if err != nil {
 			fmt.Println(err)
-			c.JSON(500,"")
+			c.JSON(500, "")
+		}
+
+		var records []string
+		mapRecords, err := req.Get("comboRecords").Array()
+		if err != nil {
+			fmt.Println(err)
+			c.JSON(500, "")
+		}
+		for _, v := range mapRecords {
+			tmpMap, _ := v.(map[string]interface{})
+			tmpRecord, _ := tmpMap["url"].(string)
+			records = append(records, tmpRecord)
+		}
+
+		mode, err := req.Get("mode").String()
+		if err != nil {
+			fmt.Println(err)
+			c.JSON(500, "")
+		}
+
+		//fmt.Println(records, mode)
+		mapPlayerInfo, ptRows, zhuyiRows, err := api.GetSummaryByRecords(records, mode)
+		if err != nil {
+			c.JSON(500, err)
+		}
+
+		// names
+		var arrName []string
+		for i := 0; i < 4; i++ {
+			for _, oneInfo := range mapPlayerInfo {
+				if i == int(oneInfo.Seat) {
+					arrName = append(arrName, oneInfo.Nickname)
+					break
+				}
+			}
+		}
+
+		var rows []map[string]string
+		var rowPtSum = make(map[string]string)
+		var rowZhuyiSum = make(map[string]string)
+		var rowMoneySum = make(map[string]string)
+
+		rowPtSum["desc"] = "总计点数"
+		rowZhuyiSum["desc"] = "总计祝仪"
+		rowMoneySum["desc"] = "最终积分"
+
+		for _, oneInfo := range mapPlayerInfo {
+			oneIdx := "p" + strconv.Itoa(int(oneInfo.Seat))
+			rowPtSum[oneIdx] = fmt.Sprintf("%.1f", float32(oneInfo.TotalPoint)/1000)
+			rowZhuyiSum[oneIdx] = strconv.Itoa(int(oneInfo.Zhuyi))
+			rowMoneySum[oneIdx] = oneInfo.Sum
+		}
+
+		rows = append(rows, rowPtSum, rowZhuyiSum, rowMoneySum)
+
+		objJs := simplejson.New()
+		objJs.Set("status", 0)
+		objJs.Set("msg", "ok")
+		objJs.SetPath([]string{"data", "names"}, arrName)
+		objJs.SetPath([]string{"data", "rows"}, rows)
+		objJs.SetPath([]string{"data", "ptRows"}, ptRows)
+		objJs.SetPath([]string{"data", "zhuyiRows"}, zhuyiRows)
+
+		tmpMap, err := objJs.Map()
+		if err != nil {
+			fmt.Println(err)
+			c.JSON(500, "")
 		}
 
 		//fmt.Println(tmpMap)
@@ -98,7 +220,6 @@ func main()  {
 
 	r.Run(":8085") // 监听并在 0.0.0.0:8080 上启动服务
 }
-
 
 /*
 	var rows []map[string]string
