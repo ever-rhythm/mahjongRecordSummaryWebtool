@@ -9,9 +9,9 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/mahjongRecordSummaryWebtool/message"
 	"github.com/mahjongRecordSummaryWebtool/utils"
-	"github.com/golang/protobuf/proto"
 )
 
 const (
@@ -79,7 +79,7 @@ func New() (*Majsoul, error) {
 		LobbyConn:     cConn,
 	}
 	majsoul.init()
-	go majsoul.heatbeat()
+	//go majsoul.heatbeat()	//test
 	//go majsoul.receiveConn()	//test
 	return majsoul, nil
 }
@@ -386,8 +386,8 @@ func (majsoul *Majsoul) Login(account, password string) (*message.ResLogin, erro
 			SalePlatform:   "web",
 			HardwareVendor: "",
 			ModelNumber:    "",
-			ScreenWidth:    914,
-			ScreenHeight:   1316,
+			ScreenWidth:    800,
+			ScreenHeight:   600,
 		},
 		RandomKey: majsoul.UUID,
 		ClientVersion: &message.ClientVersionInfo{

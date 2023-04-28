@@ -29,7 +29,7 @@ func main() {
 		return
 	})
 
-	// todo test
+	// test done
 	r.POST("/api/v2", func(c *gin.Context) {
 		// get input json
 		b, _ := c.GetRawData()
@@ -83,7 +83,7 @@ func main() {
 		mapPlayerInfo, ptRows, zhuyiRows, err := api.GetSummaryByUuids(uuids, ratePt, rateZhuyi)
 		if err != nil {
 			log.Println("GetSummaryByUuids fail ", err)
-			c.JSON(500, "calc invalid")
+			c.JSON(500, err)
 			return
 		}
 
@@ -218,7 +218,8 @@ func main() {
 
 	})
 
-	r.Run(":8085") // 监听并在 0.0.0.0:8080 上启动服务
+	r.Run(":8085")
+	//r.Run(":8086")
 }
 
 /*

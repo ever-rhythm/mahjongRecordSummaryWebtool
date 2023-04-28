@@ -11,9 +11,10 @@ import (
 	"time"
 )
 
-// todo test more
+// test done
 func GetRecordFromBytes(bs []byte, st protoreflect.ProtoMessage, oneRecordName string) error {
 
+	// find split ascii
 	var idx int
 	for i := 0; i < len(bs); i++ {
 		if bs[i] == 16 || bs[i] == 8 || bs[i] == 1 {
@@ -22,19 +23,41 @@ func GetRecordFromBytes(bs []byte, st protoreflect.ProtoMessage, oneRecordName s
 		}
 	}
 
-	if oneRecordName == "RecordHule" || oneRecordName == "RecordAnGangAddGang" {
-		idx += 1
+	// fast filter
+	if strings.Index(string(bs[:idx+1]), oneRecordName) == -1 {
+		return errors.New("record name not match")
 	}
 
-	err := proto.Unmarshal(bs[idx:], st)
-	if err != nil {
-		return err
+	// fix magic ascii
+	if oneRecordName == "GameDetailRecords" {
+		var err error
+		for i := 27; i >= 25; i-- {
+			err = proto.Unmarshal(bs[i:], st)
+			if err != nil {
+				continue
+			} else {
+				break
+			}
+		}
+
+		if err != nil {
+			return err
+		}
+	} else {
+		if oneRecordName == "RecordHule" || oneRecordName == "RecordAnGangAddGang" {
+			idx += 1
+		}
+
+		err := proto.Unmarshal(bs[idx:], st)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-// todo test 2 ge angang
+// undo test 2 ge angang
 func GetHandFromAnGang(s string) []string {
 	tmpLeft := strings.Index(s, "(")
 	tmpRight := strings.Index(s, ")")
@@ -46,62 +69,68 @@ func GetHandFromAnGang(s string) []string {
 	return nil
 }
 
-// todo test
-func GetZhuyiByHandAndLi(hands []string, li []string, bolYifa bool) (int, string, error) {
+// test done
+func GetZhuyiByHandAndLi(hands []string, li []string, bolYifa bool, bolMing bool) (int, string, error) {
 	cntYifa := 0
 	cntLi := 0
 	cntAka := 0
 	desc := ""
-	mapAka := make(map[string]int)
-	mapAka["0s"] = 1
-	mapAka["0m"] = 1
-	mapAka["0p"] = 1
 
-	// init
-	mapLi := make(map[string]int)
-	for _, oneLi := range li {
-		oneLiHand, err := GetZhuyiHandByLi(oneLi)
-		if err != nil {
-			return 0, "", err
-		}
-		mapLi[oneLiHand] += 1
-
-		if oneLiHand == "5s" {
-			mapLi["0s"] += 1
-		} else if oneLiHand == "5m" {
-			mapLi["0m"] += 1
-		} else if oneLiHand == "5p" {
-			mapLi["0p"] += 1
-		}
-	}
-
-	fmt.Println(mapLi)
-
-	// yifa
-	if bolYifa {
-		cntYifa += 1
-		desc += "一发 "
-	}
-
-	// li
-	for _, vHand := range hands {
-		if mapAka[vHand] == 1 {
-			cntAka += 1
+	if !bolMing {
+		// yifa
+		if bolYifa {
+			cntYifa += 1
+			desc += "一发 "
 		}
 
-		if mapLi[vHand] == 1 {
-			cntLi += mapLi[vHand]
+		// li init
+		mapLi := make(map[string]int)
+		for _, oneLi := range li {
+			oneLiHand, err := GetZhuyiHandByLi(oneLi)
+			if err != nil {
+				return 0, "", err
+			}
+			mapLi[oneLiHand] += 1
+
+			if oneLiHand == "5s" {
+				mapLi["0s"] += 1
+			} else if oneLiHand == "5m" {
+				mapLi["0m"] += 1
+			} else if oneLiHand == "5p" {
+				mapLi["0p"] += 1
+			}
 		}
-	}
 
-	desc += fmt.Sprintf("里%d ", cntLi)
+		// aka init
+		mapAka := make(map[string]int)
+		mapAka["0s"] = 1
+		mapAka["0m"] = 1
+		mapAka["0p"] = 1
 
-	// aka
-	if cntAka == 3 {
-		cntAka = 5
-		desc += "AS "
-	} else {
-		desc += fmt.Sprintf("赤%d ", cntAka)
+		for _, vHand := range hands {
+			if mapAka[vHand] == 1 {
+				cntAka += 1
+			}
+
+			if mapLi[vHand] == 1 {
+				cntLi += mapLi[vHand]
+			}
+		}
+
+		// li
+		if cntLi > 0 {
+			desc += fmt.Sprintf("里%d ", cntLi)
+		}
+
+		// aka
+		if cntAka > 0 {
+			if cntAka == 3 {
+				cntAka = 5
+				desc += "AS "
+			} else {
+				desc += fmt.Sprintf("赤%d ", cntAka)
+			}
+		}
 	}
 
 	return cntYifa + cntLi + cntAka, desc, nil
@@ -199,4 +228,25 @@ func GetMajsoulBot() (string, string) {
 	idx := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(len(mapBot))
 
 	return mapBot[idx].n, mapBot[idx].p
+}
+
+func GetMajSoulBotByIdx(idx int) (string, string) {
+	account := []string{
+		"3264373548@qq.com",
+		"evershikieiki@gmail.com",
+		"343669220@qq.com",
+		"1684579478@qq.com",
+	}
+	p := []string{
+		"77shuafen",
+		"77shuafen",
+		"77shuafen",
+		"887178",
+	}
+
+	if idx < len(p) {
+		return account[idx], p[idx]
+	} else {
+		return "", ""
+	}
 }

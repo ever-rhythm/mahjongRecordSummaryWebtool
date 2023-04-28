@@ -230,7 +230,7 @@ func GetSummaryByRecords(records []string, mode string) (map[string]*Player, []m
 								tmpZ += 10 * uint32(len(v.Fans))
 							}
 
-							// todo yiman yifa baopai,  yiman with as
+							// undo yiman yifa baopai,  yiman with as
 							var arrZHand []string
 							arrZHand = append(arrZHand, "0s")
 							arrZHand = append(arrZHand, "0m")

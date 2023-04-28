@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8" />
-    <title>祝仪积分表生成工具</title>
+    <title>祝仪积分生成工具By夜光天楼</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta
             name="viewport"
@@ -21,7 +21,7 @@
         body,
         .app-wrapper {
             position: relative;
-            width: 1000px;
+            width: 800px;
             height: 100%;
             margin: 0;
             padding: 20px;
@@ -39,12 +39,9 @@
         let amisJSON =
 
             {
-                "title": "祝仪积分表生成工具",
+                "title": "提示：役满包牌请确认祝仪",
                 "type":"page",
                 "cssVars": {
-                    "--text-color": "#CD3632",
-                    "--primary": "#CD3632",
-                    "--primary-onActive": "#BB312D",
                     "--fontFamilyBase":"font-serif",
                     "--fontSizeBase":"18px"
                 },
@@ -52,7 +49,7 @@
                 "body": [
                     {
                         "type": "form",
-                        "api": "/api/test",
+                        "api": "/api/v2",
                         "title": "",
                         "mode": "horizontal",
                         "horizontal": {
@@ -65,6 +62,12 @@
                                 "name": "comboRecords",
                                 "label": "牌谱链接",
                                 "multiple": true,
+                                "addBtn": {
+                                    "type": "button",
+                                    "label": "新增一行",
+                                    "level":"primary",
+                                    "size":"md",
+                                },
                                 "value": [
                                     {}
                                 ],
@@ -75,71 +78,83 @@
                                         "placeholder": "雀魂牌谱:https://game.maj-soul.com/1/?paipu=",
                                         "value": "",
                                         "unique": true,
-                                        "required": true
+                                        "required": true,
                                     },
                                 ]
                             },
                             {
                                 "type": "input-text",
                                 "name": "mode",
-                                "size": "xs",
+                                "size": "sm",
                                 "label": "祝仪模式",
                                 "value": "103",
                                 "placeholder": "103",
                                 "required": true,
-
+                                "addOn": {
+                                    "type":"submit",
+                                    "id":"b_smit",
+                                    "label":"生成表格",
+                                    "level":"primary",
+                                    "size":"md",
+                                    "disabledTip":"请刷新页面",
+                                    "onEvent": {
+                                        "click": { // 监听点击事件
+                                            "actions": [
+                                                {
+                                                    "actionType": "disabled",
+                                                    "componentId": "b_smit",
+                                                }
+                                            ]
+                                        },
+                                    }
+                                }
                             },
                             {
-                                "type":"submit",
-                                "label":"生成表格",
-                                "level":"primary",
-                                "size":"md",
-                            },
-                            {
-                                "type": "divider"
-                            },
-                            {
-                                "name":"report",
+                                "name":"report1",
                                 "title": "",
                                 "type":"table",
                                 "source": "$rows",
-                                "rowClassNameExpr": "<%= data.desc == '最终积分' ? 'bg-primary' : '' %>",
+                                "rowClassNameExpr": "<%= data.desc == '最终积分' ? 'text-primary font-bold' : '' %>",
                                 "visibleOn": "typeof data.rows !== 'undefined'",
                                 "columns": [
                                     {
                                         "name": "desc",
                                         "label": "",
-                                        "width":"20%",
-                                        "classNameExpr": "<%= \" text-lg font-bold text-center \" %>"
+                                        "width":100,
+                                        "classNameExpr": "<%= \" text-lg text-center text-black font-bold\" %>"
                                     },
                                     {
                                         "name": "p0",
                                         "label": "$names.0",
+                                        "width":120,
                                         "labelClassName": "font-bold text-center",
                                         "classNameExpr": "<%= \"text-lg text-center \" %>"
                                     },
                                     {
                                         "name": "p1",
                                         "label": "$names.1",
+                                        "width":120,
                                         "labelClassName": "font-bold text-center",
                                         "classNameExpr": "<%= \"text-lg text-center\" %>"
                                     },
                                     {
                                         "name": "p2",
                                         "label": "$names.2",
+                                        "width":120,
                                         "labelClassName": "font-bold text-center",
                                         "classNameExpr": "<%= \"text-lg text-center\" %>"
                                     },
                                     {
                                         "name": "p3",
                                         "label": "$names.3",
+                                        "width":120,
                                         "labelClassName": "font-bold text-center",
                                         "classNameExpr": "<%= \"text-lg text-center\" %>"
                                     },
                                 ]
                             },
                             {
-                                "name":"report",
+                                "name":"report2",
                                 "title": "",
                                 "type":"table",
                                 "source": "$ptRows",
@@ -148,37 +163,41 @@
                                     {
                                         "name": "desc",
                                         "label": "",
-                                        "width":"20%",
+                                        "width":100,
                                         "classNameExpr": "<%= \"text-lg text-center \" %>"
                                     },
                                     {
                                         "name": "p0",
                                         "label": "$names.0",
+                                        "width":120,
                                         "labelClassName": "font-bold text-center",
                                         "classNameExpr": "<%= \"text-lg text-center \" %>"
                                     },
                                     {
                                         "name": "p1",
                                         "label": "$names.1",
+                                        "width":120,
                                         "labelClassName": "font-bold text-center",
                                         "classNameExpr": "<%= \"text-lg text-center \" %>"
                                     },
                                     {
                                         "name": "p2",
                                         "label": "$names.2",
+                                        "width":120,
                                         "labelClassName": "font-bold text-center",
                                         "classNameExpr": "<%= \"text-lg text-center \" %>"
                                     },
                                     {
                                         "name": "p3",
                                         "label": "$names.3",
+                                        "width":120,
                                         "labelClassName": "font-bold text-center",
                                         "classNameExpr": "<%= \"text-lg text-center \" %>"
                                     },
                                 ]
                             },
                             {
-                                "name":"report",
+                                "name":"report3",
                                 "title": "",
                                 "type":"table",
                                 "source": "$zhuyiRows",
@@ -187,29 +206,33 @@
                                     {
                                         "name": "desc",
                                         "label": "",
-                                        "width":"20%",
+                                        "width":100,
                                         "classNameExpr": "<%= \"text-lg text-center \" %>"
                                     },
                                     {
                                         "name": "p0",
+                                        "width":120,
                                         "label": "$names.0",
                                         "labelClassName": "font-bold text-center",
                                         "classNameExpr": "<%= \"text-lg text-center \" %>"
                                     },
                                     {
                                         "name": "p1",
+                                        "width":120,
                                         "label": "$names.1",
                                         "labelClassName": "font-bold text-center",
                                         "classNameExpr": "<%= \"text-lg text-center \" %>"
                                     },
                                     {
                                         "name": "p2",
+                                        "width":120,
                                         "label": "$names.2",
                                         "labelClassName": "font-bold text-center",
                                         "classNameExpr": "<%= \"text-lg text-center \" %>"
                                     },
                                     {
                                         "name": "p3",
+                                        "width":120,
                                         "label": "$names.3",
                                         "labelClassName": "font-bold text-center",
                                         "classNameExpr": "<%= \"text-lg text-center \" %>"

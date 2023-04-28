@@ -8,9 +8,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/mahjongRecordSummaryWebtool/message"
 	"github.com/mahjongRecordSummaryWebtool/utils"
-	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
 )
 
@@ -44,13 +44,20 @@ func NewClientConn(ctx context.Context, addr string) (*ClientConn, error) {
 func (c *ClientConn) loop() {
 receive:
 	for {
-		msg := c.WSClient.Read()
+		msg, err := c.WSClient.Read()
+		if err != nil {
+			log.Println("websocket read fail", err)
+			break receive
+		}
+
 		if len(msg) > 0 {
 			switch msg[0] {
 			case MsgTypeNotify:
-				c.handleNotify(msg)
+				//c.handleNotify(msg)	//test
+				break
 			case MsgTypeResponse:
 				c.handleResponse(msg)
+				break
 			default:
 				log.Printf("ClientConn.loop unknown msg type: %d \n", msg[0])
 			}

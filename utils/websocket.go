@@ -39,16 +39,16 @@ func (client *WSClient) Connect() error {
 	return nil
 }
 
-func (client *WSClient) Read() []byte {
+func (client *WSClient) Read() ([]byte, error) {
 	t, payload, err := client.conn.ReadMessage()
 	if err != nil {
-		return []byte{}
+		return []byte{}, err
 	}
 
 	if t != websocket.BinaryMessage {
-		return []byte{}
+		return []byte{}, nil
 	}
-	return payload
+	return payload, nil
 }
 
 func (client *WSClient) Send(body []byte) error {
