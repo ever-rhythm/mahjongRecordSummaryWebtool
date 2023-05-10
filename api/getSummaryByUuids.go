@@ -197,6 +197,8 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 			return nil, nil, nil, err
 		}
 
+		//log.Println(oneDetailRecord) //test
+
 		idxZhuyi += 1
 		onePreDesc := fmt.Sprintf("第%d局", idxZhuyi)
 		dictSeatYifa := [4]int{}
@@ -248,6 +250,7 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 				if err != nil || oneHule.Hules == nil {
 				} else {
 					for _, vHule := range oneHule.Hules {
+						//log.Println(oneHule.Hules) //test
 						var cntZ uint32 = 0
 						desc := ""
 						bolMing := false

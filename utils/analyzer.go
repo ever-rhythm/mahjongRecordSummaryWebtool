@@ -44,7 +44,9 @@ func GetRecordFromBytes(bs []byte, st protoreflect.ProtoMessage, oneRecordName s
 			return err
 		}
 	} else {
-		if oneRecordName == "RecordHule" || oneRecordName == "RecordAnGangAddGang" {
+		if oneRecordName == "RecordHule" {
+			idx = 19 // magic
+		} else if oneRecordName == "RecordAnGangAddGang" {
 			idx += 1
 		}
 
