@@ -80,7 +80,7 @@ func GetZhuyiByHandAndLi(hands []string, li []string, bolYifa bool, bolMing bool
 		// yifa
 		if bolYifa {
 			cntYifa += 1
-			desc += "一发 "
+			desc += "一发"
 		}
 
 		// li init
@@ -119,16 +119,16 @@ func GetZhuyiByHandAndLi(hands []string, li []string, bolYifa bool, bolMing bool
 
 		// li
 		if cntLi > 0 {
-			desc += fmt.Sprintf("里%d ", cntLi)
+			desc += fmt.Sprintf("里%d", cntLi)
 		}
 
 		// aka
 		if cntAka > 0 {
 			if cntAka == 3 {
 				cntAka = 5
-				desc += "AS "
+				desc += "AS"
 			} else {
-				desc += fmt.Sprintf("赤%d ", cntAka)
+				desc += fmt.Sprintf("赤%d", cntAka)
 			}
 		}
 	}
@@ -181,6 +181,10 @@ func GetUuidByRecordUrl(arrUrl []string) ([]string, error) {
 		oneLastIdx := strings.LastIndex(oneUrl, "_")
 
 		arrUuid = append(arrUuid, oneUrl[oneIdx+len("paipu="):oneLastIdx])
+	}
+
+	if len(arrUuid) == 0 {
+		return arrUuid, errors.New("empty url")
 	}
 
 	return arrUuid, nil

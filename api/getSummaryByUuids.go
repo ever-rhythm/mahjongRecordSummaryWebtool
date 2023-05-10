@@ -101,7 +101,7 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 		go getMsoulRecordByUuid(chanRes, tmpUuid, account, p)
 
 		if i > 0 && idx == 0 {
-			time.Sleep(4 * time.Second)
+			time.Sleep(10 * time.Second)
 		}
 	}
 
@@ -116,7 +116,6 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 		rspRecords.RecordList = append(rspRecords.RecordList, tmpRes.detail.RecordList...)
 	}
 
-	//return nil, nil, nil, errors.New("test") //test
 	// analyze
 	mapPlayerInfo := map[string]*Player{}
 	mapPlayerIdx := make(map[string]string)
@@ -126,7 +125,7 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 	var zhuyiRows []map[string]string
 	idxZhuyi := 0
 
-	// init uuid seat nickname
+	// build uuid seat nickname
 	for _, oneAccount := range rspRecords.RecordList[0].Accounts {
 		oneNickName := strings.TrimSpace(oneAccount.Nickname)
 		oneSeat := strconv.Itoa(int(oneAccount.Seat))
@@ -190,8 +189,6 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 
 	// record zhuyi
 	for _, oneUuid := range uuids {
-		idxZhuyi += 1
-		onePreDesc := fmt.Sprintf("第%d局 ", idxZhuyi)
 
 		oneDetailRecord := &message.GameDetailRecords{}
 		err = utils.GetRecordFromBytes(mapUuidBytes[oneUuid], oneDetailRecord, "GameDetailRecords")
@@ -200,17 +197,20 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 			return nil, nil, nil, err
 		}
 
+		idxZhuyi += 1
+		onePreDesc := fmt.Sprintf("第%d局", idxZhuyi)
 		dictSeatYifa := [4]int{}
+		dictSeatBaopai := [2]int{}
+		idxSeatBaoapi := -1 // 大三元0 四喜1 其他-1
 		for _, oneAction := range oneDetailRecord.Actions {
 			if oneAction.Result != nil {
 
-				// discard lizhi yifa
+				// discard lizhi set yifa
 				oneDiscard := &message.RecordDiscardTile{}
 				err = utils.GetRecordFromBytes(oneAction.Result, oneDiscard, "RecordDiscardTile")
 				if err != nil {
 				} else {
 					if oneDiscard.IsLiqi {
-						//fmt.Println("liqi ", oneDiscard.Seat) //test
 						dictSeatYifa[oneDiscard.Seat] = 1
 					} else {
 						dictSeatYifa[oneDiscard.Seat] = 0
@@ -218,11 +218,18 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 					continue
 				}
 
-				// chi peng gang cancal yifa
+				// chi peng gang unset yifa
 				oneChiPeng := &message.RecordChiPengGang{}
 				err = utils.GetRecordFromBytes(oneAction.Result, oneChiPeng, "RecordChiPengGang")
 				if err != nil {
 				} else {
+					oneTile := oneChiPeng.Tiles[0]
+					if oneTile == "5z" || oneTile == "6z" || oneTile == "7z" {
+						dictSeatBaopai[0] = int(oneChiPeng.Froms[len(oneChiPeng.Froms)-1])
+					} else if oneTile == "1z" || oneTile == "2z" || oneTile == "3z" || oneTile == "4z" {
+						dictSeatBaopai[1] = int(oneChiPeng.Froms[len(oneChiPeng.Froms)-1])
+					}
+
 					dictSeatYifa = [4]int{}
 					continue
 				}
@@ -234,8 +241,6 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 					dictSeatYifa = [4]int{}
 					continue
 				}
-
-				//fmt.Println("dict yifa", dictSeatYifa) //test
 
 				// hule
 				oneHule := &message.RecordHule{}
@@ -263,14 +268,23 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 							}
 						}
 
-						// calc yiman zhuyi
 						if vHule.Yiman {
-							desc += "役满 "
-
-							// yiman basic zhuyi
-							// undo baopai
+							// calc yiman zhuyi basic and baopai seat
 							if vHule.Baopai > 0 {
 								cntZ += 15
+
+								// 大三元id=37
+								for _, oneFan := range vHule.Fans {
+									if oneFan.Id == 37 {
+										idxSeatBaoapi = 0
+										break
+									}
+								}
+
+								if idxSeatBaoapi == -1 {
+									idxSeatBaoapi = 1
+								}
+
 							} else {
 								if vHule.Zimo {
 									cntZ += 5
@@ -279,15 +293,12 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 								}
 							}
 
-							//fmt.Println(vHule.Baopai) //test
-
-							// hand zhuyi test yifa done
+							// hand zhuyi
 							var arrHand []string
 							arrHand = append(arrHand, vHule.Hand...)
 							arrHand = append(arrHand, arrAnGang...)
 							arrHand = append(arrHand, vHule.HuTile)
 
-							//fmt.Println(dictSeatYifa, vHule.Seat) //test
 							oneCntZ, oneDesc, err := utils.GetZhuyiByHandAndLi(arrHand, vHule.LiDoras, dictSeatYifa[vHule.Seat] == 1, bolMing)
 							if err != nil {
 								log.Println("yiman hand fail", err)
@@ -295,78 +306,95 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 							}
 
 							cntZ += uint32(oneCntZ)
+							desc += "役满"
 							desc += oneDesc
-							dictSeatYifa = [4]int{}
 
 							log.Println("yiman hand ", cntZ, desc, arrHand, vHule.LiDoras, dictSeatYifa[vHule.Seat] == 1)
-
-							// calc normal zhuyi
 						} else {
+							// calc normal zhuyi
 							for _, v2 := range vHule.Fans {
 								// yifa
 								if v2.Id == 30 {
 									cntZ += v2.Val
-									desc += "一发 "
+									desc += "一发"
 								}
 
 								// li
 								if v2.Id == 33 && v2.Val > 0 {
 									cntZ += v2.Val
-									desc += fmt.Sprintf("里%d ", v2.Val)
+									desc += fmt.Sprintf("里%d", v2.Val)
 								}
 
 								// aka
 								if v2.Id == 32 && bolMing == false {
 									if v2.Val == 3 {
 										cntZ += 5
-										desc += "AS "
+										desc += "AS"
 									} else {
 										cntZ += v2.Val
-										desc += fmt.Sprintf("赤%d ", v2.Val)
+										desc += fmt.Sprintf("赤%d", v2.Val)
 									}
 								}
 							}
 						}
 
-						//log.Println("desc and zhuyi ", desc, cntZ)
+						if vHule.Baopai > 0 && 0 != cntZ {
+							for _, oneInfo := range mapUuidInfo[oneUuid] {
+								if idxSeatBaoapi != -1 && int(oneInfo.Seat) == dictSeatBaopai[idxSeatBaoapi] {
+									mapPlayerInfo[oneInfo.Nickname].Zhuyi -= int(cntZ)
+									oneZhuyiRow[mapPlayerIdx[oneInfo.Nickname]] = "-" + strconv.Itoa(int(cntZ))
+								}
 
-						// dec zhuyi by scores
-						for i := 0; i < len(oneHule.DeltaScores); i++ {
-							if oneHule.DeltaScores[i] < 0 {
+								if vHule.Seat == oneInfo.Seat {
+									mapPlayerInfo[oneInfo.Nickname].Zhuyi += int(cntZ)
+									oneZhuyiRow[mapPlayerIdx[oneInfo.Nickname]] = "+" + strconv.Itoa(int(cntZ))
+								}
+							}
+						} else if 0 != cntZ {
+							// dec zhuyi by scores
+							for i := 0; i < len(oneHule.DeltaScores); i++ {
+								if oneHule.DeltaScores[i] < 0 {
+									for _, oneInfo := range mapUuidInfo[oneUuid] {
+										if i == int(oneInfo.Seat) {
+											mapPlayerInfo[oneInfo.Nickname].Zhuyi -= int(cntZ)
+											oneZhuyiRow[mapPlayerIdx[oneInfo.Nickname]] = "-" + strconv.Itoa(int(cntZ))
+											break
+										}
+									}
+								}
+							}
+
+							// inc zhuyi by seat
+							if vHule.Zimo {
 								for _, oneInfo := range mapUuidInfo[oneUuid] {
-									if i == int(oneInfo.Seat) && 0 != cntZ {
-										mapPlayerInfo[oneInfo.Nickname].Zhuyi -= int(cntZ)
-										oneZhuyiRow[mapPlayerIdx[oneInfo.Nickname]] = "-" + strconv.Itoa(int(cntZ))
+									if vHule.Seat == oneInfo.Seat {
+										mapPlayerInfo[oneInfo.Nickname].Zhuyi += int(cntZ) * 3
+										oneZhuyiRow[mapPlayerIdx[oneInfo.Nickname]] = "+" + strconv.Itoa(int(cntZ)*3)
+										break
+									}
+								}
+							} else {
+								for _, oneInfo := range mapUuidInfo[oneUuid] {
+									if vHule.Seat == oneInfo.Seat {
+										mapPlayerInfo[oneInfo.Nickname].Zhuyi += int(cntZ)
+										oneZhuyiRow[mapPlayerIdx[oneInfo.Nickname]] = "+" + strconv.Itoa(int(cntZ))
 										break
 									}
 								}
 							}
 						}
 
-						// inc zhuyi by scores
-						if vHule.Zimo && vHule.Baopai == 0 {
-							for _, oneInfo := range mapUuidInfo[oneUuid] {
-								if vHule.Seat == oneInfo.Seat && 0 != cntZ {
-									mapPlayerInfo[oneInfo.Nickname].Zhuyi += int(cntZ) * 3
-									oneZhuyiRow[mapPlayerIdx[oneInfo.Nickname]] = "+" + strconv.Itoa(int(cntZ)*3)
-									break
-								}
-							}
-						} else {
-							for _, oneInfo := range mapUuidInfo[oneUuid] {
-								if vHule.Seat == oneInfo.Seat && 0 != cntZ {
-									mapPlayerInfo[oneInfo.Nickname].Zhuyi += int(cntZ)
-									oneZhuyiRow[mapPlayerIdx[oneInfo.Nickname]] = "+" + strconv.Itoa(int(cntZ))
-									break
-								}
-							}
-						}
-
+						// desc
 						if len(desc) > 0 {
 							oneZhuyiRow["desc"] = onePreDesc + desc
 							onePreDesc = ""
 							zhuyiRows = append(zhuyiRows, oneZhuyiRow)
 						}
+
+						// reset
+						dictSeatYifa = [4]int{}
+						dictSeatBaopai = [2]int{}
+						idxSeatBaoapi = -1
 					}
 				}
 			}
@@ -376,7 +404,10 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 	// calc total
 	for _, v := range mapPlayerInfo {
 		money := (float32(v.TotalPoint)/1000 + float32(v.Zhuyi)*float32(rateZhuyi)) * float32(ratePt)
-		v.Sum = fmt.Sprintf("%.2f", money)
+		if money > 0 {
+			v.Sum += "+"
+		}
+		v.Sum += fmt.Sprintf("%.2f", money)
 	}
 
 	log.Println(uuids, ptRows, zhuyiRows)

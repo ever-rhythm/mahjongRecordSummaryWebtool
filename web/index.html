@@ -24,7 +24,7 @@
             width: 800px;
             height: 100%;
             margin: 0;
-            padding: 20px;
+            padding: 0;
         }
     </style>
 </head>
@@ -35,15 +35,21 @@
     (function () {
         let amis = amisRequire('amis/embed');
         // 通过替换下面这个配置来生成不同页面
-
         let amisJSON =
-
             {
-                "title": "提示：役满包牌请确认祝仪",
+                "title": "提示：粘贴牌谱到框里，选择祝仪模式，点击生成表格</br>本页面由 成都阿卡雀庄(13811838150)赞助，欢迎线下朋友光顾~",
                 "type":"page",
                 "cssVars": {
                     "--fontFamilyBase":"font-serif",
-                    "--fontSizeBase":"18px"
+                    "--fontSizeBase":"18px",
+                    "--radio-default-default-fontSize":"18px",
+                    "--Form-item-gap":"10px",
+                    "--Page-title-fontSize":"18px",
+                    "--button-size-md-fontSize":"18px",
+                    "--fontSizeLg":"18px",
+                },
+                "style":{
+                    "padding":40,
                 },
                 "hash": "unique",
                 "body": [
@@ -51,196 +57,285 @@
                         "type": "form",
                         "api": "/api/v2",
                         "title": "",
-                        "mode": "horizontal",
+                        "mode": "normal",
+                        "wrapWithPanel": false,
                         "horizontal": {
                             "leftFixed": "sm"
                         },
-                        "actions":[],
+                        "actions": [],
                         "body": [
                             {
-                                "type": "combo",
-                                "name": "comboRecords",
-                                "label": "牌谱链接",
-                                "multiple": true,
-                                "addBtn": {
-                                    "type": "button",
-                                    "label": "新增一行",
-                                    "level":"primary",
-                                    "size":"md",
+                                "type": "flex",
+                                "justify": "flex-start",
+                                "style":{
+                                    "box-sizing":"content-box",
                                 },
-                                "value": [
-                                    {}
-                                ],
                                 "items": [
                                     {
-                                        "name": "url",
-                                        "type": "input-text",
-                                        "placeholder": "雀魂牌谱:https://game.maj-soul.com/1/?paipu=",
-                                        "value": "",
-                                        "unique": true,
-                                        "required": true,
-                                    },
-                                ]
-                            },
-                            {
-                                "type": "input-text",
-                                "name": "mode",
-                                "size": "sm",
-                                "label": "祝仪模式",
-                                "value": "103",
-                                "placeholder": "103",
-                                "required": true,
-                                "addOn": {
-                                    "type":"submit",
-                                    "id":"b_smit",
-                                    "label":"生成表格",
-                                    "level":"primary",
-                                    "size":"md",
-                                    "disabledTip":"请刷新页面",
-                                    "onEvent": {
-                                        "click": { // 监听点击事件
-                                            "actions": [
-                                                {
-                                                    "actionType": "disabled",
-                                                    "componentId": "b_smit",
-                                                }
-                                            ]
+                                        "type": "combo",
+                                        "name": "comboRecords",
+                                        "label": "",
+                                        "multiple": true,
+                                        "style": {
+                                            "width":700,
                                         },
-                                    }
-                                }
+                                        "addBtn": {
+                                            "type": "button",
+                                            "id":"b_add",
+                                            "label": "新增一行",
+                                            "level": "primary",
+                                            "size": "md",
+                                        },
+                                        "value": [
+                                            {}, {}, {}, {},
+                                        ],
+                                        "items": [
+                                            {
+                                                "name": "url",
+                                                "type": "input-text",
+                                                "placeholder": "链接粘这里",
+                                                "value": "",
+                                                "unique": true,
+                                                "required": false,
+                                            },
+                                        ]
+                                    },
+                                ],
                             },
                             {
-                                "name":"report1",
-                                "title": "",
-                                "type":"table",
-                                "source": "$rows",
-                                "rowClassNameExpr": "<%= data.desc == '最终积分' ? 'text-primary font-bold' : '' %>",
-                                "visibleOn": "typeof data.rows !== 'undefined'",
-                                "columns": [
+                                "type": "flex",
+                                "justify": "flex-start",
+                                "style":{
+                                },
+                                "items": [
                                     {
-                                        "name": "desc",
+                                        "type": "flex",
+                                        "justify": "flex-start",
+                                        "style": {
+                                            "padding-left":10,
+                                        },
+                                        "items": [
+                                            {
+                                                "type": "tooltip-wrapper",
+                                                "content": "103 表示k10祝3",
+                                                "placement":"bottom",
+                                                "body": "祝仪模式",
+                                                "className": "mb-1"
+                                            },
+                                        ],
+                                    },
+                                    {
+                                        "name": "mode",
+                                        "type": "radios",
                                         "label": "",
-                                        "width":100,
-                                        "classNameExpr": "<%= \" text-lg text-center text-black font-bold\" %>"
+                                        "mode":"normal",
+                                        "style": {
+                                            "padding":10,
+                                            "padding-top":20,
+                                        },
+                                        "selectFirst": true,
+                                        "options": [
+                                            {
+                                                "label": "103",
+                                                "value": "103",
+                                            },
+                                            {
+                                                "label": "203",
+                                                "value": "203"
+                                            },
+                                            {
+                                                "label": "53",
+                                                "value": "53"
+                                            },
+                                            {
+                                                "label": "23",
+                                                "value": "23"
+                                            },
+                                            {
+                                                "label": "10",
+                                                "value": "10"
+                                            },
+                                        ],
                                     },
                                     {
-                                        "name": "p0",
-                                        "label": "$names.0",
-                                        "width":120,
-                                        "labelClassName": "font-bold text-center",
-                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                        "type": "flex",
+                                        "justify": "flex-start",
+                                        "style":{
+                                            "box-sizing":"content-box",
+                                        },
+                                        "items": [
+                                            {
+                                                "type":"submit",
+                                                "id":"b_smit",
+                                                "label":"生成表格",
+                                                "level":"primary",
+                                                "size":"md",
+                                                "disabledTip":"再次生成请刷新页面",
+                                                "tooltipPlacement":"right",
+                                                "onEvent": {
+                                                    "click": { // 监听点击事件
+                                                        "actions": [
+                                                            {
+                                                                "actionType": "disabled",
+                                                                "componentId": "b_smit",
+                                                            },
+                                                            {
+                                                                "actionType": "hidden",
+                                                                "componentId": "b_add",
+                                                            },
+                                                        ]
+                                                    },
+                                                }
+                                            },
+                                        ],
                                     },
-                                    {
-                                        "name": "p1",
-                                        "label": "$names.1",
-                                        "width":120,
-                                        "labelClassName": "font-bold text-center",
-                                        "classNameExpr": "<%= \"text-lg text-center\" %>"
-                                    },
-                                    {
-                                        "name": "p2",
-                                        "label": "$names.2",
-                                        "width":120,
-                                        "labelClassName": "font-bold text-center",
-                                        "classNameExpr": "<%= \"text-lg text-center\" %>"
-                                    },
-                                    {
-                                        "name": "p3",
-                                        "label": "$names.3",
-                                        "width":120,
-                                        "labelClassName": "font-bold text-center",
-                                        "classNameExpr": "<%= \"text-lg text-center\" %>"
-                                    },
-                                ]
+                                ],
                             },
                             {
-                                "name":"report2",
-                                "title": "",
-                                "type":"table",
-                                "source": "$ptRows",
-                                "visibleOn": "typeof data.ptRows !== 'undefined'",
-                                "columns": [
+                                "type": "flex",
+                                "direction": "column",
+                                "justify": "flex-start",
+                                "alignItems":"flex-start",
+                                "style":{
+                                    "padding-top":10,
+                                },
+                                "items": [
                                     {
-                                        "name": "desc",
-                                        "label": "",
-                                        "width":100,
-                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                        "name":"report1",
+                                        "title": "",
+                                        "type":"table",
+                                        "source": "$rows",
+                                        "rowClassNameExpr": "<%= data.desc == '最终积分' ? 'bg-primary font-bold' : '' %>",
+                                        "visibleOn": "typeof data.rows !== 'undefined'",
+                                        "columns": [
+                                            {
+                                                "name": "desc",
+                                                "label": "",
+                                                "width":100,
+                                                "classNameExpr": "<%= \" text-lg text-center font-bold\" %>"
+                                            },
+                                            {
+                                                "name": "p0",
+                                                "label": "$names.0",
+                                                "width":120,
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                            {
+                                                "name": "p1",
+                                                "label": "$names.1",
+                                                "width":120,
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center\" %>"
+                                            },
+                                            {
+                                                "name": "p2",
+                                                "label": "$names.2",
+                                                "width":120,
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center\" %>"
+                                            },
+                                            {
+                                                "name": "p3",
+                                                "label": "$names.3",
+                                                "width":120,
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center\" %>"
+                                            },
+                                        ]
                                     },
                                     {
-                                        "name": "p0",
-                                        "label": "$names.0",
-                                        "width":120,
-                                        "labelClassName": "font-bold text-center",
-                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                        "name":"report2",
+                                        "title": "",
+                                        "type":"table",
+                                        "source": "$ptRows",
+                                        "visibleOn": "typeof data.ptRows !== 'undefined'",
+                                        "columns": [
+                                            {
+                                                "name": "desc",
+                                                "label": "",
+                                                "width":100,
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                            {
+                                                "name": "p0",
+                                                "label": "$names.0",
+                                                "width":120,
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                            {
+                                                "name": "p1",
+                                                "label": "$names.1",
+                                                "width":120,
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                            {
+                                                "name": "p2",
+                                                "label": "$names.2",
+                                                "width":120,
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                            {
+                                                "name": "p3",
+                                                "label": "$names.3",
+                                                "width":120,
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                        ]
                                     },
                                     {
-                                        "name": "p1",
-                                        "label": "$names.1",
-                                        "width":120,
-                                        "labelClassName": "font-bold text-center",
-                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                        "name":"report3",
+                                        "title": "",
+                                        "type":"table",
+                                        "source": "$zhuyiRows",
+                                        "visibleOn": "typeof data.zhuyiRows !== 'undefined'",
+                                        "columns": [
+                                            {
+                                                "name": "desc",
+                                                "label": "",
+                                                "width":100,
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                            {
+                                                "name": "p0",
+                                                "width":120,
+                                                "label": "$names.0",
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                            {
+                                                "name": "p1",
+                                                "width":120,
+                                                "label": "$names.1",
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                            {
+                                                "name": "p2",
+                                                "width":120,
+                                                "label": "$names.2",
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                            {
+                                                "name": "p3",
+                                                "width":120,
+                                                "label": "$names.3",
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                        ]
                                     },
-                                    {
-                                        "name": "p2",
-                                        "label": "$names.2",
-                                        "width":120,
-                                        "labelClassName": "font-bold text-center",
-                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
-                                    },
-                                    {
-                                        "name": "p3",
-                                        "label": "$names.3",
-                                        "width":120,
-                                        "labelClassName": "font-bold text-center",
-                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
-                                    },
-                                ]
+                                ],
                             },
-                            {
-                                "name":"report3",
-                                "title": "",
-                                "type":"table",
-                                "source": "$zhuyiRows",
-                                "visibleOn": "typeof data.zhuyiRows !== 'undefined'",
-                                "columns": [
-                                    {
-                                        "name": "desc",
-                                        "label": "",
-                                        "width":100,
-                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
-                                    },
-                                    {
-                                        "name": "p0",
-                                        "width":120,
-                                        "label": "$names.0",
-                                        "labelClassName": "font-bold text-center",
-                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
-                                    },
-                                    {
-                                        "name": "p1",
-                                        "width":120,
-                                        "label": "$names.1",
-                                        "labelClassName": "font-bold text-center",
-                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
-                                    },
-                                    {
-                                        "name": "p2",
-                                        "width":120,
-                                        "label": "$names.2",
-                                        "labelClassName": "font-bold text-center",
-                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
-                                    },
-                                    {
-                                        "name": "p3",
-                                        "width":120,
-                                        "label": "$names.3",
-                                        "labelClassName": "font-bold text-center",
-                                        "classNameExpr": "<%= \"text-lg text-center \" %>"
-                                    },
-                                ]
-                            }
-                        ]
-                    }
+
+
+                        ],
+                    },
                 ]
             };
 

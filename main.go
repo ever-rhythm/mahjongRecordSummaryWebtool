@@ -52,7 +52,9 @@ func main() {
 		for _, v := range mapRecords {
 			tmpMap, _ := v.(map[string]interface{})
 			tmpRecord, _ := tmpMap["url"].(string)
-			records = append(records, tmpRecord)
+			if len(tmpRecord) > 0 {
+				records = append(records, tmpRecord)
+			}
 		}
 
 		mode, err := req.Get("mode").String()
