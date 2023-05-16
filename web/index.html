@@ -37,7 +37,7 @@
         // 通过替换下面这个配置来生成不同页面
         let amisJSON =
             {
-                "title": "提示：粘贴牌谱到框里，选择祝仪模式，点击生成表格</br>本页面由 成都阿卡雀庄(13811838150)赞助，欢迎线下朋友光顾~",
+                "title": "提示：粘贴牌谱到框里，选择祝仪模式，点击生成表格",
                 "type":"page",
                 "cssVars": {
                     "--fontFamilyBase":"font-serif",
@@ -100,6 +100,33 @@
                                             },
                                         ]
                                     },
+                                    {
+                                        "type": "flex",
+                                        "justify": "flex-start",
+                                        "direction": "column",
+                                        "style":{
+                                            "padding-left":20,
+                                            "width":200,
+                                        },
+                                        "items": [
+                                            {
+                                                "type": "static-image",
+                                                "style": {
+                                                },
+                                                "height":160,
+                                                "width":160,
+                                                "src": "static/20230516112939.jpg",
+                                            },
+                                            {
+                                                "style": {
+                                                    "width":180,
+                                                    "height":60,
+                                                },
+                                                "type":"tpl",
+                                                "value":"成都阿卡雀庄欢迎您~",
+                                            },
+                                        ],
+                                    },
                                 ],
                             },
                             {
@@ -117,7 +144,7 @@
                                         "items": [
                                             {
                                                 "type": "tooltip-wrapper",
-                                                "content": "103 表示k10祝3",
+                                                "content": "z3即1个祝等于3pt",
                                                 "placement":"bottom",
                                                 "body": "祝仪模式",
                                                 "className": "mb-1"
@@ -136,23 +163,23 @@
                                         "selectFirst": true,
                                         "options": [
                                             {
-                                                "label": "103",
+                                                "label": "k10z3",
                                                 "value": "103",
                                             },
                                             {
-                                                "label": "203",
+                                                "label": "k20z3",
                                                 "value": "203"
                                             },
                                             {
-                                                "label": "53",
+                                                "label": "k5z3",
                                                 "value": "53"
                                             },
                                             {
-                                                "label": "23",
+                                                "label": "k2z3",
                                                 "value": "23"
                                             },
                                             {
-                                                "label": "10",
+                                                "label": "k10",
                                                 "value": "10"
                                             },
                                         ],
@@ -162,6 +189,7 @@
                                         "justify": "flex-start",
                                         "style":{
                                             "box-sizing":"content-box",
+                                            "padding-left":10,
                                         },
                                         "items": [
                                             {
@@ -180,7 +208,7 @@
                                                                 "componentId": "b_smit",
                                                             },
                                                             {
-                                                                "actionType": "hidden",
+                                                                "actionType": "disabled",
                                                                 "componentId": "b_add",
                                                             },
                                                         ]

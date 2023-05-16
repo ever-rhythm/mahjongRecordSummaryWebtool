@@ -84,25 +84,30 @@ func getMsoulRecordByUuid(chanRes chan r, uuid string, account string, p string)
 func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*Player, []map[string]string, []map[string]string, error) {
 
 	mu := sync.Mutex{}
-	mu.Lock()
+	for {
+		if mu.TryLock() {
+			break
+		} else {
+			time.Sleep(time.Second)
+		}
+	}
 	defer mu.Unlock()
 
 	var err error
-	var chanRes = make(chan r, 1)
+	var chanRes = make(chan r, 12)
 	defer close(chanRes)
 
 	var mapUuidBytes = make(map[string][]byte)
 	rspRecords := message.ResGameRecordsDetail{}
 
 	for i := 0; i < len(uuids); i++ {
+		if i > 0 && i%MAX_GONUM == 0 && len(chanRes) < i {
+			time.Sleep(6 * time.Second)
+		}
 		idx := i % MAX_GONUM
 		tmpUuid := uuids[i]
 		account, p := utils.GetMajSoulBotByIdx(idx)
 		go getMsoulRecordByUuid(chanRes, tmpUuid, account, p)
-
-		if i > 0 && idx == 0 {
-			time.Sleep(10 * time.Second)
-		}
 	}
 
 	for i := 0; i < len(uuids); i++ {

@@ -8,6 +8,7 @@ import (
 	"github.com/mahjongRecordSummaryWebtool/utils"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 )
@@ -21,6 +22,9 @@ func main() {
 	gin.DisableConsoleColor()
 	gin.DefaultWriter = io.MultiWriter(logFile)
 	r := gin.Default()
+
+	// static
+	r.StaticFS("/static", http.Dir("./web/static"))
 
 	// html
 	r.LoadHTMLFiles("web/index.html")
