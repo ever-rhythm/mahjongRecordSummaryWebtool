@@ -241,13 +241,17 @@ func GetMajSoulBotByIdx(idx int) (string, string) {
 		"3264373548@qq.com",
 		"evershikieiki@gmail.com",
 		"343669220@qq.com",
-		"1684579478@qq.com",
+		"everhythm@aliyun.com",
+		"everhythm@sina.cn",
+		"everhythm@sohu.com",
 	}
 	p := []string{
 		"77shuafen",
 		"77shuafen",
 		"77shuafen",
 		"887178",
+		"77shuafen",
+		"77shuafen",
 	}
 
 	if idx < len(p) {

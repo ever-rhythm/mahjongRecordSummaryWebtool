@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-const MAX_GONUM = 4
+const MAX_GONUM = 6
 
 type r struct {
 	uuid   string
