@@ -204,6 +204,8 @@ func GetRateZhuyiByMode(mode string) (int, int, error) {
 	mapSupportMode["5"] = stMode{5, 0}
 	mapSupportMode["10"] = stMode{10, 0}
 	mapSupportMode["20"] = stMode{20, 0}
+	mapSupportMode["50"] = stMode{50, 0}
+	mapSupportMode["100"] = stMode{100, 0}
 
 	mapSupportMode["13"] = stMode{1, 3}
 	mapSupportMode["23"] = stMode{2, 3}
