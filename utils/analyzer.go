@@ -155,9 +155,17 @@ func GetZhuyiHandByLi(s string) (string, error) {
 	tp := s[1:2]
 
 	if tp == "z" {
-		num += 1
-		if num > 7 {
-			num = 1
+		if num <= 4 {
+			num += 1
+			if num > 4 {
+				num = 1
+			}
+		} else if num == 5 {
+			num = 6
+		} else if num == 6 {
+			num = 7
+		} else if num == 7 {
+			num = 5
 		}
 	} else if tp == "m" || tp == "p" || tp == "s" {
 		num += 1
@@ -177,10 +185,13 @@ func GetUuidByRecordUrl(arrUrl []string) ([]string, error) {
 	for _, oneUrl := range arrUrl {
 		oneIdx := strings.Index(oneUrl, "paipu=")
 		if oneIdx == -1 {
-			return nil, errors.New("invalid record url " + oneUrl)
+			return nil, errors.New("invalid record url paipu " + oneUrl)
 		}
 
 		oneLastIdx := strings.LastIndex(oneUrl, "_")
+		if oneLastIdx == -1 {
+			return nil, errors.New("invalid record url onelastIdx" + oneUrl)
+		}
 
 		arrUuid = append(arrUuid, oneUrl[oneIdx+len("paipu="):oneLastIdx])
 	}
