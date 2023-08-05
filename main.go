@@ -89,7 +89,7 @@ func main() {
 		mapPlayerInfo, ptRows, zhuyiRows, err := api.GetSummaryByUuids(uuids, ratePt, rateZhuyi)
 		if err != nil {
 			log.Println("GetSummaryByUuids fail ", err)
-			c.JSON(500, err)
+			c.JSON(500, "get record fail")
 			return
 		}
 
