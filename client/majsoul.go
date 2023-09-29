@@ -86,15 +86,22 @@ func New() (*Majsoul, error) {
 
 func lookup(ctx context.Context) (*ServerAddress, *utils.Request, *ClientConn, error) {
 	for _, serverAddress := range ServerAddressList {
+		// http client
 		request := utils.NewRequest(serverAddress.ServerAddress)
-		r := int(rand.Float32()*1000000000) + int(rand.Float32()*1000000000)
-		_, err := request.Get(fmt.Sprintf("1/version.json?randv=%d", r))
-		if err != nil {
-			continue
-		}
+
+		// unuse http get now
+		/*
+			r := int(rand.Float32()*1000000000) + int(rand.Float32()*1000000000)
+			_, err := request.Get(fmt.Sprintf("1/version.json?randv=%d", r))
+			if err != nil {
+				continue
+			}
+
+		*/
+		// ws client
 		cConn, err := NewClientConn(ctx, serverAddress.GatewayAddress)
 		if err != nil {
-			continue
+			return nil, nil, nil, fmt.Errorf("err new client conn fail " + err.Error())
 		}
 		return serverAddress, request, cConn, nil
 	}

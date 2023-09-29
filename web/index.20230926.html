@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8" />
+    <title>祝仪积分生成工具By夜光天楼</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/sdk.css" />
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/helper.css" />
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/iconfont.css" />
+    <!-- 这是默认主题所需的，如果是其他主题则不需要 -->
+    <!-- 从 1.1.0 开始 sdk.css 将不支持 IE 11，如果要支持 IE11 请引用这个 css，并把前面那个删了 -->
+    <!-- <link rel="stylesheet" href="sdk-ie11.css" /> -->
+    <!-- 不过 amis 开发团队几乎没测试过 IE 11 下的效果，所以可能有细节功能用不了，如果发现请报 issue -->
+    <style>
+        html,
+        body,
+        .app-wrapper {
+            position: relative;
+            width: 900px;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+<div id="root" class="app-wrapper"></div>
+<script src="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/sdk.js"></script>
+<script type="text/javascript">
+    (function () {
+        let amis = amisRequire('amis/embed');
+        // 通过替换下面这个配置来生成不同页面
+        let amisJSON =
+            {
+                "title": "提示：粘贴牌谱到框里，选择祝仪模式，点击生成表格。感谢各大雀庄的赞助支持！",
+                "type":"page",
+                "cssVars": {
+                    "--fontFamilyBase":"font-serif",
+                    "--fontSizeBase":"18px",
+                    "--radio-default-default-fontSize":"18px",
+                    "--Form-item-gap":"10px",
+                    "--Page-title-fontSize":"18px",
+                    "--button-size-md-fontSize":"18px",
+                    "--fontSizeLg":"18px",
+                },
+                "style":{
+                    "padding":40,
+                },
+                "hash": "unique",
+                "body": [
+                    {
+                        "type": "form",
+                        "api": "/api/v2",
+                        "title": "",
+                        "mode": "normal",
+                        "wrapWithPanel": false,
+                        "horizontal": {
+                            "leftFixed": "sm"
+                        },
+                        "actions": [],
+                        "body": [
+                            {
+                                "type": "flex",
+                                "justify": "flex-start",
+                                "style":{
+                                    "box-sizing":"content-box",
+                                },
+                                "items": [
+                                    {
+                                        "type": "flex",
+                                        "justify": "flex-start",
+                                        "direction": "column",
+                                        "style": {
+                                            "width": 400,
+
+                                        },
+                                        "items": [
+                                            {
+                                                "type": "combo",
+                                                "name": "comboRecords",
+                                                "label": "",
+                                                "multiple": true,
+                                                "style": {
+                                                    "width":400,
+                                                    "height":260,
+                                                },
+                                                "addBtn": {
+                                                    "type": "button",
+                                                    "id":"b_add",
+                                                    "label": "新增一行",
+                                                    "level": "primary",
+                                                    "size": "md",
+                                                },
+                                                "value": [
+                                                    {}, {}, {}, {},
+                                                ],
+                                                "items": [
+                                                    {
+                                                        "name": "url",
+                                                        "type": "input-text",
+                                                        "placeholder": "链接粘这里",
+                                                        "value": "",
+                                                        "unique": true,
+                                                        "required": false,
+                                                    },
+                                                ]
+                                            },
+                                            {
+                                                "type": "flex",
+                                                "justify": "flex-start",
+                                                "direction": "column",
+                                                "style":{
+                                                    "height":200,
+                                                },
+                                                "items": [
+                                                    {
+                                                        "type": "flex",
+                                                        "justify": "flex-start",
+                                                        "style":{
+                                                            "padding-right":300,
+                                                        },
+                                                        "items": [
+                                                            {
+                                                                "type": "tooltip-wrapper",
+                                                                "content": "z3即1个祝等于3pt，3麻请选择无祝仪模式",
+                                                                "placement":"right",
+                                                                "body": "祝仪模式",
+                                                                "className": "mb-1"
+                                                            },
+                                                        ],
+                                                    },
+                                                    {
+                                                        "name": "mode",
+                                                        "type": "radios",
+                                                        "label": "",
+                                                        "mode":"normal",
+                                                        "style": {
+                                                            "width":400,
+                                                        },
+                                                        "selectFirst": true,
+                                                        "options": [
+                                                            {
+                                                                "label": "k10z3",
+                                                                "value": "103",
+                                                            },
+                                                            {
+                                                                "label": "k20z3",
+                                                                "value": "203"
+                                                            },
+                                                            {
+                                                                "label": "k5z3",
+                                                                "value": "53"
+                                                            },
+                                                            {
+                                                                "label": "k2z3",
+                                                                "value": "23"
+                                                            },
+                                                            {
+                                                                "label": "k10",
+                                                                "value": "10"
+                                                            },
+                                                            {
+                                                                "label": "k20",
+                                                                "value": "20"
+                                                            },
+                                                            {
+                                                                "label": "k5",
+                                                                "value": "5"
+                                                            },
+                                                            {
+                                                                "label": "k50",
+                                                                "value": "50"
+                                                            },
+                                                            {
+                                                                "label": "k100",
+                                                                "value": "100"
+                                                            },
+                                                        ],
+                                                    },
+                                                    {
+                                                        "type": "flex",
+                                                        "justify": "flex-start",
+                                                        "style":{
+                                                            "box-sizing":"content-box",
+                                                            "padding-right":300,
+                                                        },
+                                                        "items": [
+                                                            {
+                                                                "type":"submit",
+                                                                "id":"b_smit",
+                                                                "label":"生成表格",
+                                                                "level":"primary",
+                                                                "size":"md",
+                                                                "disabledTip":"再次生成请刷新页面",
+                                                                "tooltipPlacement":"right",
+                                                                "onEvent": {
+                                                                    "click": { // 监听点击事件
+                                                                        "actions": [
+                                                                            {
+                                                                                "actionType": "disabled",
+                                                                                "componentId": "b_add",
+                                                                            },
+                                                                        ]
+                                                                    },
+                                                                }
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+
+                                        ],
+                                    },
+
+
+                                    {
+                                        "type": "flex",
+                                        "justify": "flex-start",
+                                        "direction": "column",
+                                        "style": {
+                                            "padding-left": 0,
+                                            "width": 320,
+                                        },
+                                        "items": [
+                                            {
+                                                "type": "flex",
+                                                "justify": "flex-start",
+                                                "direction": "row",
+                                                "style":{
+                                                    "padding-left":0,
+                                                    "width":320,
+                                                },
+                                                "items": [
+                                                    {
+                                                        "type": "flex",
+                                                        "justify": "flex-start",
+                                                        "direction": "column",
+                                                        "style":{
+                                                            "padding-left":0,
+                                                            "width":200,
+                                                        },
+                                                        "items": [
+                                                            {
+                                                                "type": "static-image",
+                                                                "style": {
+                                                                },
+                                                                "height":160,
+                                                                "width":160,
+                                                                "src": "static/20230707changsha.jpg",
+                                                            },
+                                                            {
+                                                                "style": {
+                                                                    "width":180,
+                                                                    "height":60,
+                                                                    "padding-left":10,
+                                                                },
+                                                                "type":"tpl",
+                                                                "value":"长沙<span style='color: red'>雁南飞雀庄</span>欢迎您",
+                                                            },
+                                                        ],
+                                                    },
+                                                    {
+                                                        "type": "flex",
+                                                        "justify": "flex-start",
+                                                        "direction": "column",
+                                                        "style":{
+                                                            "padding-left":0,
+                                                            "width":200,
+                                                        },
+                                                        "items": [
+                                                            {
+                                                                "type": "static-image",
+                                                                "style": {
+                                                                },
+                                                                "height":160,
+                                                                "width":160,
+                                                                "src": "static/20230516112939.jpg",
+                                                            },
+                                                            {
+                                                                "style": {
+                                                                    "width":180,
+                                                                    "height":60,
+                                                                    "padding-left":10,
+                                                                },
+                                                                "type":"tpl",
+                                                                "value":"成都<span style='color: green'>阿卡雀庄</span>欢迎您",
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                            {
+                                                "type": "flex",
+                                                "justify": "flex-start",
+                                                "direction": "row",
+                                                "style":{
+                                                    "padding-left":0,
+                                                    "width":320,
+                                                },
+                                                "items": [
+                                                    {
+                                                        "type": "flex",
+                                                        "justify": "flex-start",
+                                                        "direction": "column",
+                                                        "style":{
+                                                            "width":200,
+                                                        },
+                                                        "items": [
+                                                            {
+                                                                "type": "static-image",
+                                                                "style": {
+                                                                },
+                                                                "height":160,
+                                                                "width":160,
+                                                                "src": "static/202306232249.jpg",
+                                                            },
+                                                            {
+                                                                "style": {
+                                                                    "width":180,
+                                                                    "height":60,
+                                                                    "padding-left":10,
+                                                                },
+                                                                "type":"tpl",
+                                                                "value":"西安<span style='color:blue'>AllStar雀庄</br></span>西安<span style='color:blue'>幺玖雀庄</span>欢迎您",
+                                                            },
+                                                        ],
+                                                    },
+                                                    {
+                                                        "type": "flex",
+                                                        "justify": "flex-start",
+                                                        "direction": "column",
+                                                        "style":{
+                                                            "width":200,
+                                                        },
+                                                        "items": [
+                                                            {
+                                                                "type": "static-image",
+                                                                "style": {
+                                                                },
+                                                                "height":160,
+                                                                "width":160,
+                                                                "src": "static/202307nanchang.jpg",
+                                                            },
+                                                            {
+                                                                "style": {
+                                                                    "width":180,
+                                                                    "height":60,
+                                                                    "padding-left":10,
+                                                                },
+                                                                "type":"tpl",
+                                                                "value":"南昌<span style='color: orange' >风月雀庄</span></br>粉白孤独求败！",
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+
+                                ],
+                            },
+
+                            {
+                                "type": "flex",
+                                "direction": "column",
+                                "justify": "flex-start",
+                                "alignItems":"flex-start",
+                                "style":{
+                                    "padding-top":20,
+                                },
+                                "items": [
+                                    {
+                                        "name":"report1",
+                                        "title": "",
+                                        "type":"table",
+                                        "source": "$rows",
+                                        "rowClassNameExpr": "<%= data.desc == '最终积分' ? 'bg-primary font-bold' : '' %>",
+                                        "visibleOn": "typeof data.rows !== 'undefined'",
+                                        "columns": [
+                                            {
+                                                "name": "desc",
+                                                "label": "",
+                                                "width":100,
+                                                "classNameExpr": "<%= \" text-lg text-center font-bold\" %>"
+                                            },
+                                            {
+                                                "name": "p0",
+                                                "label": "$names.0",
+                                                "width":120,
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                            {
+                                                "name": "p1",
+                                                "label": "$names.1",
+                                                "width":120,
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center\" %>"
+                                            },
+                                            {
+                                                "name": "p2",
+                                                "label": "$names.2",
+                                                "width":120,
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center\" %>"
+                                            },
+                                            {
+                                                "name": "p3",
+                                                "label": "$names.3",
+                                                "width":120,
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center\" %>"
+                                            },
+                                        ]
+                                    },
+                                    {
+                                        "name":"report2",
+                                        "title": "",
+                                        "type":"table",
+                                        "source": "$ptRows",
+                                        "visibleOn": "typeof data.ptRows !== 'undefined'",
+                                        "columns": [
+                                            {
+                                                "name": "desc",
+                                                "label": "",
+                                                "width":100,
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                            {
+                                                "name": "p0",
+                                                "label": "$names.0",
+                                                "width":120,
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                            {
+                                                "name": "p1",
+                                                "label": "$names.1",
+                                                "width":120,
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                            {
+                                                "name": "p2",
+                                                "label": "$names.2",
+                                                "width":120,
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                            {
+                                                "name": "p3",
+                                                "label": "$names.3",
+                                                "width":120,
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                        ]
+                                    },
+                                    {
+                                        "name":"report3",
+                                        "title": "",
+                                        "type":"table",
+                                        "source": "$zhuyiRows",
+                                        "visibleOn": "typeof data.zhuyiRows !== 'undefined'",
+                                        "columns": [
+                                            {
+                                                "name": "desc",
+                                                "label": "",
+                                                "width":100,
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                            {
+                                                "name": "p0",
+                                                "width":120,
+                                                "label": "$names.0",
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                            {
+                                                "name": "p1",
+                                                "width":120,
+                                                "label": "$names.1",
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                            {
+                                                "name": "p2",
+                                                "width":120,
+                                                "label": "$names.2",
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                            {
+                                                "name": "p3",
+                                                "width":120,
+                                                "label": "$names.3",
+                                                "labelClassName": "font-bold text-center",
+                                                "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                            },
+                                        ]
+                                    },
+                                ],
+                            },
+
+
+                        ],
+                    },
+                ]
+            };
+
+        let amisScoped = amis.embed('#root', amisJSON);
+    })();
+</script>
+</body>
+</html>

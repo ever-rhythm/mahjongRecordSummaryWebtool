@@ -21,6 +21,8 @@ type r struct {
 	detail *message.ResGameRecordsDetail
 }
 
+var mu sync.Mutex
+
 // test done
 func getMsoulRecordByUuid(chanRes chan r, uuid string, account string, p string) (*message.ResGameRecordsDetail, []byte, error) {
 
@@ -34,12 +36,12 @@ func getMsoulRecordByUuid(chanRes chan r, uuid string, account string, p string)
 	rspLogin, err := mSoul.Login(account, p)
 	if err != nil {
 		log.Println("login fail", err)
-		return nil, nil, errors.New("client 1 fail")
+		return nil, nil, errors.New("client login fail")
 	}
 
 	if rspLogin.Error != nil {
 		log.Println("login err", rspLogin.Error)
-		return nil, nil, errors.New("client 2 fail")
+		return nil, nil, errors.New("client login err")
 	}
 
 	// get details
@@ -80,16 +82,12 @@ func getMsoulRecordByUuid(chanRes chan r, uuid string, account string, p string)
 	return nil, nil, nil
 }
 
-// test done
+// get majsoul record v2
 func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*Player, []map[string]string, []map[string]string, error) {
 
-	mu := sync.Mutex{}
-	for {
-		if mu.TryLock() {
-			break
-		} else {
-			time.Sleep(time.Second)
-		}
+	// mutex
+	if !mu.TryLock() {
+		return nil, nil, nil, errors.New("请求排队中，请稍后提交")
 	}
 	defer mu.Unlock()
 
@@ -113,8 +111,8 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 	for i := 0; i < len(uuids); i++ {
 		tmpRes := <-chanRes
 		if len(tmpRes.uuid) == 0 {
-			log.Println("msoul record fail")
-			return nil, nil, nil, errors.New("msoul record fail")
+			log.Println("majsoul record fail")
+			return nil, nil, nil, errors.New("牌谱获取失败")
 		}
 
 		mapUuidBytes[tmpRes.uuid] = tmpRes.bs
@@ -377,8 +375,8 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 								if vHule.Zimo {
 									for _, oneInfo := range mapUuidInfo[oneUuid] {
 										if vHule.Seat == oneInfo.Seat {
-											mapPlayerInfo[oneInfo.Nickname].Zhuyi += int(cntZ) * 3
-											oneZhuyiRow[mapPlayerIdx[oneInfo.Nickname]] = "+" + strconv.Itoa(int(cntZ)*3)
+											mapPlayerInfo[oneInfo.Nickname].Zhuyi += int(cntZ) * (len(mapPlayerInfo) - 1)
+											oneZhuyiRow[mapPlayerIdx[oneInfo.Nickname]] = "+" + strconv.Itoa(int(cntZ)*(len(mapPlayerInfo)-1))
 											break
 										}
 									}

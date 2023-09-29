@@ -11,33 +11,44 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 )
 
 func main() {
-	logFile, err := os.Create("./gin.log")
+	// init log
+	logFile, err := os.Create("./gin.log." + time.Now().Format("2006-01-02.15-04-05"))
 	if err != nil {
 		panic(err)
 	}
 	log.SetOutput(logFile)
 	gin.DisableConsoleColor()
 	gin.DefaultWriter = io.MultiWriter(logFile)
+	gin.SetMode(gin.DebugMode)
 	r := gin.Default()
 
 	// static
 	r.StaticFS("/static", http.Dir("./web/static"))
 
 	// html
-	r.LoadHTMLFiles("web/index.html")
+	r.LoadHTMLFiles("web/index.html", "web/debug.html")
 	r.GET("/index.html", func(c *gin.Context) {
 		c.HTML(200, "index.html", "index")
 		return
 	})
 
-	// test done
+	r.GET("/debug.html", func(c *gin.Context) {
+		c.HTML(200, "debug.html", "debug")
+		return
+	})
+
+	// post
 	r.POST("/api/v2", func(c *gin.Context) {
 		// get input json
 		b, _ := c.GetRawData()
 		log.Println(string(b))
+		objJsMsg := simplejson.New()
+		objJsMsg.Set("status", 0)
+		objJsMsg.Set("msg", "")
 
 		req, err := simplejson.NewJson(b)
 		if err != nil {
@@ -64,7 +75,8 @@ func main() {
 		mode, err := req.Get("mode").String()
 		if err != nil {
 			log.Println(err)
-			c.JSON(500, "mode invalid")
+			objJsMsg.Set("msg", "祝仪格式有误")
+			c.JSON(500, objJsMsg)
 			return
 		}
 
@@ -72,7 +84,8 @@ func main() {
 		uuids, err := utils.GetUuidByRecordUrl(records)
 		if err != nil {
 			log.Println(err)
-			c.JSON(500, "url invalid")
+			objJsMsg.Set("msg", "牌谱链接有误")
+			c.JSON(500, objJsMsg)
 			return
 		}
 
@@ -88,8 +101,9 @@ func main() {
 		// calc
 		mapPlayerInfo, ptRows, zhuyiRows, err := api.GetSummaryByUuids(uuids, ratePt, rateZhuyi)
 		if err != nil {
-			log.Println("GetSummaryByUuids fail ", err)
-			c.JSON(500, "get record fail")
+			log.Println("GetSummaryByUuids err ", err)
+			objJsMsg.Set("msg", err.Error())
+			c.JSON(200, objJsMsg)
 			return
 		}
 
@@ -126,7 +140,7 @@ func main() {
 
 		objJs := simplejson.New()
 		objJs.Set("status", 0)
-		objJs.Set("msg", "ok")
+		objJs.Set("msg", "成功")
 		objJs.SetPath([]string{"data", "names"}, arrName)
 		objJs.SetPath([]string{"data", "rows"}, rows)
 		objJs.SetPath([]string{"data", "ptRows"}, ptRows)
@@ -143,6 +157,13 @@ func main() {
 		return
 	})
 
+	err = r.Run(":8085")
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+/*
 	r.POST("/api/test", func(c *gin.Context) {
 		b, _ := c.GetRawData()
 		fmt.Println(string(b))
@@ -223,10 +244,7 @@ func main() {
 		c.JSON(200, tmpMap)
 
 	})
-
-	r.Run(":8085")
-	//r.Run(":8086")
-}
+*/
 
 /*
 	var rows []map[string]string

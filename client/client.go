@@ -7,6 +7,7 @@ import (
 	"log"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/mahjongRecordSummaryWebtool/message"
@@ -33,8 +34,22 @@ func NewClientConn(ctx context.Context, addr string) (*ClientConn, error) {
 		WSClient: utils.NewWSClient(addr),
 		notify:   make(chan proto.Message, 32),
 	}
-	err := cConn.WSClient.Connect()
+	retry := 3
+	duration := 100 * time.Millisecond
+	var err error
+
+	// add retry
+	for i := 0; i < retry; i++ {
+		err = cConn.WSClient.Connect()
+		if err != nil {
+			time.Sleep(duration)
+		} else {
+			break
+		}
+	}
+
 	if err != nil {
+		log.Println("ws connect fail", err)
 		return nil, err
 	}
 	go cConn.loop()
