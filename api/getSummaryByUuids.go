@@ -30,17 +30,32 @@ func getMsoulRecordByUuid(chanRes chan r, uuid string, account string, p string)
 	mSoul, err := client.New()
 	if err != nil {
 		log.Println("new client fail", err)
+		chanRes <- r{
+			uuid:   uuid,
+			bs:     nil,
+			detail: nil,
+		}
 		return nil, nil, errors.New("client fail")
 	}
 
 	rspLogin, err := mSoul.Login(account, p)
 	if err != nil {
 		log.Println("login fail", err)
+		chanRes <- r{
+			uuid:   uuid,
+			bs:     nil,
+			detail: nil,
+		}
 		return nil, nil, errors.New("client login fail")
 	}
 
 	if rspLogin.Error != nil {
 		log.Println("login err", rspLogin.Error)
+		chanRes <- r{
+			uuid:   uuid,
+			bs:     nil,
+			detail: nil,
+		}
 		return nil, nil, errors.New("client login err")
 	}
 
@@ -51,6 +66,11 @@ func getMsoulRecordByUuid(chanRes chan r, uuid string, account string, p string)
 	rspRecords, err := mSoul.FetchGameRecordsDetail(mSoul.Ctx, &reqInfo)
 	if err != nil {
 		log.Println("detail fail", err)
+		chanRes <- r{
+			uuid:   uuid,
+			bs:     nil,
+			detail: nil,
+		}
 		return nil, nil, errors.New("detail fail")
 	}
 	log.Println("FetchGameRecordsDetail ok ", uuid)
@@ -63,16 +83,25 @@ func getMsoulRecordByUuid(chanRes chan r, uuid string, account string, p string)
 	resPaipu, err := mSoul.FetchGameRecord(mSoul.Ctx, &reqPaipu)
 	if err != nil {
 		log.Println("paipu fail", err)
+		chanRes <- r{
+			uuid:   uuid,
+			bs:     nil,
+			detail: nil,
+		}
 		return nil, nil, errors.New("record fail")
 	}
 
 	if len(resPaipu.Data) == 0 {
 		log.Println("paipu data fail", err)
+		chanRes <- r{
+			uuid:   uuid,
+			bs:     nil,
+			detail: nil,
+		}
 		return nil, nil, errors.New("record data fail")
 	}
 
 	log.Println("FetchGameRecord ok ", uuid)
-
 	chanRes <- r{
 		uuid:   uuid,
 		bs:     resPaipu.Data,
@@ -110,8 +139,8 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 
 	for i := 0; i < len(uuids); i++ {
 		tmpRes := <-chanRes
-		if len(tmpRes.uuid) == 0 {
-			log.Println("majsoul record fail")
+		if tmpRes.bs == nil {
+			log.Println("majsoul record fail ", tmpRes.uuid)
 			return nil, nil, nil, errors.New("牌谱获取失败")
 		}
 

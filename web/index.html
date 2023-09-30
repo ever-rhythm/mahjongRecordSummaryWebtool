@@ -37,7 +37,6 @@
         // 通过替换下面这个配置来生成不同页面
         let amisJSON =
             {
-                "title": "提示：粘贴牌谱到框里，选择祝仪模式，点击生成表格。感谢各大雀庄的赞助支持！",
                 "type":"page",
                 "cssVars": {
                     "--fontFamilyBase":"font-serif",
@@ -53,6 +52,13 @@
                 },
                 "hash": "unique",
                 "body": [
+                    {
+                        "type":"flex",
+                        "justify": "center",
+                        "items":[
+
+                        ],
+                    },
                     {
                         "type": "form",
                         "api": "/api/v2",
@@ -77,7 +83,7 @@
                                         "justify": "flex-start",
                                         "style":{
                                             "padding-left":0,
-                                            "width":1200,
+                                            "width":900,
                                         },
                                         "mobile": {
                                             "style":{
@@ -90,7 +96,7 @@
                                                 "body": {
                                                     "type": "carousel",
                                                     "auto": true,
-                                                    "interval": 3000,
+                                                    "interval": 4000,
                                                     "thumbMode": "cover",
                                                     "mobile": {
                                                         "thumbMode": "contain",
@@ -118,11 +124,33 @@
                                         ],
                                     },
                                     {
+                                        "type": "steps",
+                                        "style": {
+                                            "width": 800,
+                                        },
+                                        "mobile": {
+                                            "style":{
+                                                "width":"100%",
+                                            },
+                                        },
+                                        "steps": [
+                                            {
+                                                "title": "粘贴牌谱到框里",
+                                            },
+                                            {
+                                                "title": "选择祝仪模式"
+                                            },
+                                            {
+                                                "title": "点击生成表格"
+                                            }
+                                        ]
+                                    },
+                                    {
                                         "type": "flex",
                                         "justify": "center",
                                         "direction": "row",
                                         "style": {
-                                            "width": 1200,
+                                            "width": 900,
                                         },
                                         "mobile": {
                                             "direction": "column",
@@ -143,7 +171,7 @@
                                                         "multiple": true,
                                                         "style": {
                                                             "padding-left":10,
-                                                            "width":600,
+                                                            "width":400,
                                                             "height":260,
                                                         },
                                                         "mobile": {
@@ -183,8 +211,8 @@
                                                 "alignItems":"flex-start",
                                                 "direction": "column",
                                                 "style":{
-                                                    "width":600,
-                                                    "height":200,
+                                                    "width":400,
+                                                    "height":260,
                                                     "padding-left":60,
                                                 },
                                                 "mobile": {
@@ -300,7 +328,7 @@
                                         "alignItems":"flex-start",
                                         "style":{
                                             "padding-top":20,
-                                            "padding-right":480,
+                                            "padding-right":160,
                                         },
                                         "mobile": {
                                             "style":{
