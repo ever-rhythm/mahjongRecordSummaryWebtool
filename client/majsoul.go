@@ -110,7 +110,12 @@ func lookup(ctx context.Context) (*ServerAddress, *utils.Request, *ClientConn, e
 
 func (majsoul *Majsoul) init() {
 	var err error
-	majsoul.Version, err = majsoul.version()
+	// test fix , http can't not connect majsoul
+	//majsoul.Version, err = majsoul.version()
+
+	majsoul.Version.ForceVersion = "0.10.0.w"
+	majsoul.Version.Version = "0.10.281.w"
+	majsoul.Version.Code = "v0.10.281.w/code.js"
 
 	if err != nil {
 		log.Fatalf("Majsoul.init version error: %v \n", err)
