@@ -9,7 +9,7 @@ type ServerAddress struct {
 
 var ServerAddressList = []*ServerAddress{
 	{
-		ServerAddress:  "https://game.maj-soul.net",
+		ServerAddress:  "https://game.maj-soul.com", // net 404
 		GatewayAddress: "wss://gateway-hw.maj-soul.net/gateway",
 		GameAddress:    "wss://gateway-hw.maj-soul.com/game-gateway",
 	},
