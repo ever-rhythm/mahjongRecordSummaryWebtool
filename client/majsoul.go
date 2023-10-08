@@ -113,9 +113,11 @@ func (majsoul *Majsoul) init() {
 	// test fix , http can't not connect majsoul
 	//majsoul.Version, err = majsoul.version()
 
-	majsoul.Version.ForceVersion = "0.10.0.w"
-	majsoul.Version.Version = "0.10.281.w"
-	majsoul.Version.Code = "v0.10.281.w/code.js"
+	tmpVersion := new(Version)
+	tmpVersion.ForceVersion = "0.10.0.w"
+	tmpVersion.Version = "0.10.281.w"
+	tmpVersion.Code = "v0.10.281.w/code.js"
+	majsoul.Version = tmpVersion
 
 	if err != nil {
 		log.Fatalf("Majsoul.init version error: %v \n", err)
