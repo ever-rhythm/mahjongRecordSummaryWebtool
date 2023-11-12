@@ -11,7 +11,6 @@ import (
 	"time"
 )
 
-// test done
 func GetRecordFromBytes(bs []byte, st protoreflect.ProtoMessage, oneRecordName string) error {
 
 	// find split ascii
@@ -71,7 +70,6 @@ func GetHandFromAnGang(s string) []string {
 	return nil
 }
 
-// test done
 func GetZhuyiByHandAndLi(hands []string, li []string, bolYifa bool, bolMing bool) (int, string, error) {
 	cntYifa := 0
 	cntLi := 0
@@ -185,19 +183,30 @@ func GetUuidByRecordUrl(arrUrl []string) ([]string, error) {
 	for _, oneUrl := range arrUrl {
 		oneIdx := strings.Index(oneUrl, "paipu=")
 		if oneIdx == -1 {
-			return nil, errors.New("invalid record url paipu " + oneUrl)
+			return nil, errors.New("url err no paipu " + oneUrl)
 		}
 
 		oneLastIdx := strings.LastIndex(oneUrl, "_")
 		if oneLastIdx == -1 {
-			return nil, errors.New("invalid record url onelastIdx" + oneUrl)
+			return nil, errors.New("url err no underline " + oneUrl)
 		}
 
-		arrUuid = append(arrUuid, oneUrl[oneIdx+len("paipu="):oneLastIdx])
+		cntUnderLine := strings.Count(oneUrl, "_")
+		if cntUnderLine != 1 {
+			return nil, errors.New("url err invalid underline " + oneUrl)
+		}
+
+		oneUuid := oneUrl[oneIdx+len("paipu=") : oneLastIdx]
+		cntSep := strings.Count(oneUuid, "-")
+		if cntSep != 5 {
+			return nil, errors.New("url err invalid sep " + oneUrl)
+		}
+
+		arrUuid = append(arrUuid, oneUuid)
 	}
 
 	if len(arrUuid) == 0 {
-		return arrUuid, errors.New("empty url")
+		return arrUuid, errors.New("url empty list")
 	}
 
 	return arrUuid, nil

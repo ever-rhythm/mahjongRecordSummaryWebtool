@@ -1,4 +1,3 @@
-// Package majsoul https://game.maj-soul.com/1/
 package client
 
 import (
@@ -9,9 +8,9 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/mahjongRecordSummaryWebtool/message"
 	"github.com/mahjongRecordSummaryWebtool/utils"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -63,6 +62,7 @@ type Majsoul struct {
 	GameInfo *message.ResAuthGame // 该字段应在进入游戏桌面后访问
 }
 
+// rm heatbeat
 func New() (*Majsoul, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	serverAddress, request, cConn, err := lookup(ctx)
@@ -84,44 +84,39 @@ func New() (*Majsoul, error) {
 	return majsoul, nil
 }
 
+// fix use global config
 func lookup(ctx context.Context) (*ServerAddress, *utils.Request, *ClientConn, error) {
-	for _, serverAddress := range ServerAddressList {
-		// http client
-		request := utils.NewRequest(serverAddress.ServerAddress)
+	/*
+		for _, serverAddress := range ServerAddressList {
+			// http client
+			request := utils.NewRequest(serverAddress.ServerAddress)
 
-		// unuse http get now
-		/*
-			r := int(rand.Float32()*1000000000) + int(rand.Float32()*1000000000)
-			_, err := request.Get(fmt.Sprintf("1/version.json?randv=%d", r))
+			// ws client
+			cConn, err := NewClientConn(ctx, serverAddress.GatewayAddress)
 			if err != nil {
-				continue
+				return nil, nil, nil, fmt.Errorf("err new client conn fail " + err.Error())
 			}
-
-		*/
-		// ws client
-		cConn, err := NewClientConn(ctx, serverAddress.GatewayAddress)
-		if err != nil {
-			return nil, nil, nil, fmt.Errorf("err new client conn fail " + err.Error())
+			return serverAddress, request, cConn, nil
 		}
-		return serverAddress, request, cConn, nil
+		return nil, nil, nil, fmt.Errorf("no servers were found that could be used")
+
+	*/
+
+	request := utils.NewRequest(MajsoulServerConfig.Host)
+	wsConn, err := NewClientConn(ctx, MajsoulServerConfig.Ws_server)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("new ws client conn fail " + err.Error())
 	}
-	return nil, nil, nil, fmt.Errorf("no servers were found that could be used")
+	return nil, request, wsConn, nil
 }
 
+// fix use global config
 func (majsoul *Majsoul) init() {
-	var err error
-	// test fix , http can't not connect majsoul
-	//majsoul.Version, err = majsoul.version()
-
 	tmpVersion := new(Version)
-	tmpVersion.ForceVersion = "0.10.0.w"
-	tmpVersion.Version = "0.10.281.w"
-	tmpVersion.Code = "v0.10.281.w/code.js"
+	tmpVersion.ForceVersion = MajsoulServerConfig.Force_version
+	tmpVersion.Version = MajsoulServerConfig.Version
+	tmpVersion.Code = MajsoulServerConfig.Code
 	majsoul.Version = tmpVersion
-
-	if err != nil {
-		log.Fatalf("Majsoul.init version error: %v \n", err)
-	}
 }
 
 type Version struct {

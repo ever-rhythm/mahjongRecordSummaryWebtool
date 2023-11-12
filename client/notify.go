@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/mahjongRecordSummaryWebtool/message"
-	"github.com/golang/protobuf/proto"
 )
 
 // IFNotify is the interface that must be implemented by a receiver.
@@ -282,54 +281,58 @@ func decode(data []byte) {
 	}
 }
 
+// disable 1022
 func (majsoul *Majsoul) ActionPrototype(notify *message.ActionPrototype) {
-	data := message.GetActionType(notify.Name)
-	decode(notify.Data)
-	err := proto.Unmarshal(notify.Data, data)
-	if err != nil {
-		log.Printf("ActionPrototype Unmarshal error: %v", err)
-		return
-	}
-	switch notify.Name {
-	case "ActionMJStart":
-		majsoul.Implement.ActionMJStart(data.(*message.ActionMJStart))
-	case "ActionNewCard":
-		majsoul.Implement.ActionNewCard(data.(*message.ActionNewCard))
-	case "ActionNewRound":
-		majsoul.Implement.ActionNewRound(data.(*message.ActionNewRound))
-	case "ActionSelectGap":
-		majsoul.Implement.ActionSelectGap(data.(*message.ActionSelectGap))
-	case "ActionChangeTile":
-		majsoul.Implement.ActionChangeTile(data.(*message.ActionChangeTile))
-	case "ActionRevealTile":
-		majsoul.Implement.ActionRevealTile(data.(*message.ActionRevealTile))
-	case "ActionUnveilTile":
-		majsoul.Implement.ActionUnveilTile(data.(*message.ActionUnveilTile))
-	case "ActionLockTile":
-		majsoul.Implement.ActionLockTile(data.(*message.ActionLockTile))
-	case "ActionDiscardTile":
-		majsoul.Implement.ActionDiscardTile(data.(*message.ActionDiscardTile))
-	case "ActionDealTile":
-		majsoul.Implement.ActionDealTile(data.(*message.ActionDealTile))
-	case "ActionChiPengGang":
-		majsoul.Implement.ActionChiPengGang(data.(*message.ActionChiPengGang))
-	case "ActionGangResult":
-		majsoul.Implement.ActionGangResult(data.(*message.ActionGangResult))
-	case "ActionGangResultEnd":
-		majsoul.Implement.ActionGangResultEnd(data.(*message.ActionGangResultEnd))
-	case "ActionAnGangAddGang":
-		majsoul.Implement.ActionAnGangAddGang(data.(*message.ActionAnGangAddGang))
-	case "ActionBaBei":
-		majsoul.Implement.ActionBaBei(data.(*message.ActionBaBei))
-	case "ActionHule":
-		majsoul.Implement.ActionHule(data.(*message.ActionHule))
-	case "ActionHuleXueZhanMid":
-		majsoul.Implement.ActionHuleXueZhanMid(data.(*message.ActionHuleXueZhanMid))
-	case "ActionHuleXueZhanEnd":
-		majsoul.Implement.ActionHuleXueZhanEnd(data.(*message.ActionHuleXueZhanEnd))
-	case "ActionLiuJu":
-		majsoul.Implement.ActionLiuJu(data.(*message.ActionLiuJu))
-	case "ActionNoTile":
-		majsoul.Implement.ActionNoTile(data.(*message.ActionNoTile))
-	}
+	/*
+		data := message.GetActionType(notify.Name)
+		decode(notify.Data)
+		err := proto.Unmarshal(notify.Data, data)
+		if err != nil {
+			log.Printf("ActionPrototype Unmarshal error: %v", err)
+			return
+		}
+		switch notify.Name {
+		case "ActionMJStart":
+			majsoul.Implement.ActionMJStart(data.(*message.ActionMJStart))
+		case "ActionNewCard":
+			majsoul.Implement.ActionNewCard(data.(*message.ActionNewCard))
+		case "ActionNewRound":
+			majsoul.Implement.ActionNewRound(data.(*message.ActionNewRound))
+		case "ActionSelectGap":
+			majsoul.Implement.ActionSelectGap(data.(*message.ActionSelectGap))
+		case "ActionChangeTile":
+			majsoul.Implement.ActionChangeTile(data.(*message.ActionChangeTile))
+		case "ActionRevealTile":
+			majsoul.Implement.ActionRevealTile(data.(*message.ActionRevealTile))
+		case "ActionUnveilTile":
+			majsoul.Implement.ActionUnveilTile(data.(*message.ActionUnveilTile))
+		case "ActionLockTile":
+			majsoul.Implement.ActionLockTile(data.(*message.ActionLockTile))
+		case "ActionDiscardTile":
+			majsoul.Implement.ActionDiscardTile(data.(*message.ActionDiscardTile))
+		case "ActionDealTile":
+			majsoul.Implement.ActionDealTile(data.(*message.ActionDealTile))
+		case "ActionChiPengGang":
+			majsoul.Implement.ActionChiPengGang(data.(*message.ActionChiPengGang))
+		case "ActionGangResult":
+			majsoul.Implement.ActionGangResult(data.(*message.ActionGangResult))
+		case "ActionGangResultEnd":
+			majsoul.Implement.ActionGangResultEnd(data.(*message.ActionGangResultEnd))
+		case "ActionAnGangAddGang":
+			majsoul.Implement.ActionAnGangAddGang(data.(*message.ActionAnGangAddGang))
+		case "ActionBaBei":
+			majsoul.Implement.ActionBaBei(data.(*message.ActionBaBei))
+		case "ActionHule":
+			majsoul.Implement.ActionHule(data.(*message.ActionHule))
+		case "ActionHuleXueZhanMid":
+			majsoul.Implement.ActionHuleXueZhanMid(data.(*message.ActionHuleXueZhanMid))
+		case "ActionHuleXueZhanEnd":
+			majsoul.Implement.ActionHuleXueZhanEnd(data.(*message.ActionHuleXueZhanEnd))
+		case "ActionLiuJu":
+			majsoul.Implement.ActionLiuJu(data.(*message.ActionLiuJu))
+		case "ActionNoTile":
+			majsoul.Implement.ActionNoTile(data.(*message.ActionNoTile))
+		}
+
+	*/
 }

@@ -47,6 +47,11 @@
                     "--button-size-md-fontSize":"18px",
                     "--fontSizeLg":"18px",
                 },
+                "mobile": {
+                    "cssVars": {
+                        "--fontFamilyBase":"font-serif",
+                    },
+                },
                 "style":{
                     "padding":40,
                 },
@@ -76,6 +81,10 @@
                                 "direction": "column",
                                 "style":{
                                     "box-sizing":"content-box",
+                                },
+                                "mobile": {
+                                    "style":{
+                                    },
                                 },
                                 "items": [
                                     {
@@ -107,10 +116,13 @@
                                                     ],
                                                     "options": [
                                                         {
-                                                            "image": "static/20230928changsha.png",
+                                                            "image": "static/20231112chengdu_duola.png",
                                                         },
                                                         {
-                                                            "image": "static/20230928chengdu.png",
+                                                            "image":"static/20231016xian_gsws_release.jpg",
+                                                        },
+                                                        {
+                                                            "image": "static/20230928changsha.png",
                                                         },
                                                         {
                                                             "image": "static/20230928xian.png",
@@ -186,6 +198,7 @@
                                                             "label": "新增一行",
                                                             "level": "primary",
                                                             "size": "md",
+                                                            "disabledOn":"typeof data.rows !== 'undefined'",
                                                         },
                                                         "value": [
                                                             {}, {}, {}, {},
@@ -194,7 +207,7 @@
                                                             {
                                                                 "name": "url",
                                                                 "type": "input-text",
-                                                                "placeholder": "链接粘这里",
+                                                                "placeholder": "链接粘贴这里",
                                                                 "value": "",
                                                                 "unique": true,
                                                                 "required": false,
@@ -304,16 +317,7 @@
                                                                 "size":"md",
                                                                 "disabledTip":"再次生成请刷新页面",
                                                                 "tooltipPlacement":"right",
-                                                                "onEvent": {
-                                                                    "click": { // 监听点击事件
-                                                                        "actions": [
-                                                                            {
-                                                                                "actionType": "disabled",
-                                                                                "componentId": "b_add",
-                                                                            },
-                                                                        ]
-                                                                    },
-                                                                }
+                                                                "disabledOn":"typeof data.rows !== 'undefined'",
                                                             },
                                                         ],
                                                     },

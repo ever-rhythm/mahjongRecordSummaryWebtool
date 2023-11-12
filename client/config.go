@@ -7,19 +7,17 @@ type ServerAddress struct {
 	GameAddress    string `json:"gameAddress"`
 }
 
-var ServerAddressList = []*ServerAddress{
-	/*
-		{
-			ServerAddress:  "https://game.maj-soul.net", // net 404
-			GatewayAddress: "wss://gateway-hw.maj-soul.net/gateway",
-			GameAddress:    "wss://gateway-hw.maj-soul.com/game-gateway",
-		},
+// majsoul server http and ws config
+type majsoulServerConfig struct {
+	Host          string
+	Version       string
+	Force_version string
+	Code          string
+	Region_urls   [10]string
+	Ws_server     string
+}
 
-	*/
-	// ws connect fail 20231008
-	{
-		ServerAddress:  "https://game.maj-soul.com",
-		GatewayAddress: "wss://gateway-sy.maj-soul.com/gateway",
-		GameAddress:    "wss://gateway-sy.maj-soul.com/game-gateway",
-	},
+// net 404 , use com
+var MajsoulServerConfig = majsoulServerConfig{
+	Host: "https://game.maj-soul.com",
 }

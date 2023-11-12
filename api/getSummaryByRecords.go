@@ -3,10 +3,10 @@ package api
 import (
 	"errors"
 	"fmt"
-	"github.com/golang/protobuf/proto"
 	"github.com/mahjongRecordSummaryWebtool/client"
 	"github.com/mahjongRecordSummaryWebtool/message"
 	"github.com/mahjongRecordSummaryWebtool/utils"
+	"google.golang.org/protobuf/proto"
 	"strconv"
 	"strings"
 	"time"

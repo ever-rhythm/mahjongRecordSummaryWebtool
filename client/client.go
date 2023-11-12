@@ -9,10 +9,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/mahjongRecordSummaryWebtool/message"
 	"github.com/mahjongRecordSummaryWebtool/utils"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
 )
 
 type ClientConn struct {
@@ -86,24 +86,28 @@ receive:
 	}
 }
 
+// disable 1022
 func (c *ClientConn) handleNotify(msg []byte) {
-	wrapper := new(message.Wrapper)
-	err := proto.Unmarshal(msg[1:], wrapper)
-	if err != nil {
-		log.Printf("ClientConn.handleNotify unmarshal error: %v \n", err)
-		return
-	}
-	pm := message.GetNotifyType(wrapper.Name)
-	if pm == nil {
-		log.Printf("ClientConn.handleNotify unknown notify type: %s \n", wrapper.Name)
-		return
-	}
-	err = proto.Unmarshal(wrapper.Data, pm)
-	if err != nil {
-		log.Printf("ClientConn.handleNotify unmarshal error: %v \n", err)
-		return
-	}
-	c.notify <- pm
+	/*
+		wrapper := new(message.Wrapper)
+		err := proto.Unmarshal(msg[1:], wrapper)
+		if err != nil {
+			log.Printf("ClientConn.handleNotify unmarshal error: %v \n", err)
+			return
+		}
+		pm := message.GetNotifyType(wrapper.Name)
+		if pm == nil {
+			log.Printf("ClientConn.handleNotify unknown notify type: %s \n", wrapper.Name)
+			return
+		}
+		err = proto.Unmarshal(wrapper.Data, pm)
+		if err != nil {
+			log.Printf("ClientConn.handleNotify unmarshal error: %v \n", err)
+			return
+		}
+		c.notify <- pm
+
+	*/
 }
 
 func (c *ClientConn) handleResponse(msg []byte) {

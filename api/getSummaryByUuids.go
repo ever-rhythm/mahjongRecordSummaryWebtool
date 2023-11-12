@@ -23,7 +23,6 @@ type r struct {
 
 var mu sync.Mutex
 
-// test done
 func getMsoulRecordByUuid(chanRes chan r, uuid string, account string, p string) (*message.ResGameRecordsDetail, []byte, error) {
 
 	// login
@@ -73,7 +72,7 @@ func getMsoulRecordByUuid(chanRes chan r, uuid string, account string, p string)
 		}
 		return nil, nil, errors.New("detail fail")
 	}
-	log.Println("FetchGameRecordsDetail ok ", uuid)
+	log.Println("FetchGameRecordsDetail ok", uuid)
 
 	// get game record
 	reqPaipu := message.ReqGameRecord{
@@ -134,7 +133,13 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 		idx := i % MAX_GONUM
 		tmpUuid := uuids[i]
 		account, p := utils.GetMajSoulBotByIdx(idx)
-		go getMsoulRecordByUuid(chanRes, tmpUuid, account, p)
+		go func() {
+			_, _, err := getMsoulRecordByUuid(chanRes, tmpUuid, account, p)
+			if err != nil {
+				log.Println("getMsoulRecordByUuid fail ", tmpUuid)
+				return
+			}
+		}()
 	}
 
 	for i := 0; i < len(uuids); i++ {
@@ -345,7 +350,7 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 								desc += "役满"
 								desc += oneDesc
 
-								log.Println("yiman hand ", cntZ, desc, arrHand, vHule.LiDoras, dictSeatYifa[vHule.Seat] == 1)
+								log.Println("yakuman ", oneUuid, cntZ, desc, arrHand, vHule.LiDoras, dictSeatYifa[vHule.Seat] == 1)
 							} else {
 								// calc normal zhuyi
 								for _, v2 := range vHule.Fans {
@@ -447,83 +452,11 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 		v.Sum += fmt.Sprintf("%.2f", money)
 	}
 
-	log.Println(uuids, ptRows, zhuyiRows)
+	// log
+	log.Println("summary ok", uuids, ptRows, zhuyiRows)
 	for _, v := range mapPlayerInfo {
 		log.Println(v)
 	}
 
 	return mapPlayerInfo, ptRows, zhuyiRows, nil
 }
-
-// logout
-/*
-	defer func() {
-		//mSoul.LobbyConn.Close()
-
-		reqLogout := message.ReqLogout{}
-		rspLogout, err := mSoul.Logout(mSoul.Ctx, &reqLogout)
-		if err != nil {
-			log.Println(err)
-		}
-
-		if rspLogout.Error != nil {
-			log.Println(rspLogout.Error)
-		}
-	}()
-
-*/
-
-// get record socket read error ?
-/*
-	type result struct {
-		s  string
-		bs []byte
-	}
-	var mapUuidBytes = make(map[string][]byte)
-	var chanResult = make(chan result, 12)
-	defer close(chanResult)
-
-	for _, oneUuid := range uuids {
-		go func(uuid string) {
-			reqPaipu := message.ReqGameRecord{
-				GameUuid:            uuid,
-				ClientVersionString: mSoul.Version.Web(),
-			}
-			resPaipu, err := mSoul.FetchGameRecord(mSoul.Ctx, &reqPaipu)
-			if err != nil {
-				log.Println("paipu fail", err)
-				chanResult <- result{
-					s:  uuid,
-					bs: nil,
-				}
-			} else {
-				chanResult <- result{
-					s:  uuid,
-					bs: resPaipu.Data,
-				}
-			}
-		}(oneUuid)
-	}
-
-	for i := 0; i < len(uuids); i++ {
-		oneResult := <-chanResult
-		if len(oneResult.bs) == 0 {
-			log.Println("paipu empty" + oneResult.s)
-			return nil, nil, nil, errors.New("paipu fail")
-		}
-		mapUuidBytes[oneResult.s] = oneResult.bs
-	}
-
-*/
-
-// logout 好像没啥用 defer conn loop panic
-/*
-	reqLogout := message.ReqLogout{}
-	rspLogout, err := mSoul.Logout(mSoul.Ctx, &reqLogout)
-	if err != nil {
-		log.Println(err)
-	}
-	if rspLogout.Error != nil {
-		log.Println(rspLogout.Error)
-	}
-*/
