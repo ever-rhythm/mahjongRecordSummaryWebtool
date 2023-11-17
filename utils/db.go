@@ -4,9 +4,14 @@ import (
 	"context"
 	"github.com/jackc/pgx/v5"
 	"log"
+	"time"
 )
 
-var DSN = "postgres://postgres:ygtianlou@localhost:5432/postgres"
+type configDb struct {
+	Dsn string
+}
+
+var ConfigDb = configDb{}
 
 type Table_pt struct {
 	Id           int
@@ -14,7 +19,7 @@ type Table_pt struct {
 	Player_count int
 	State        int
 	Desc         string
-	Timestamp    string // todo dev
+	Timestamp    time.Time
 	Pl_1         string
 	Pl_2         string
 	Pl_3         string
@@ -31,7 +36,7 @@ type Table_pt struct {
 
 // todo query by name
 func QueryPtByConds(pl string, date string) ([]Table_pt, error) {
-	conn, err := pgx.Connect(context.Background(), DSN)
+	conn, err := pgx.Connect(context.Background(), ConfigDb.Dsn)
 	if err != nil {
 		log.Println("db connect fail", err)
 		return nil, err
@@ -43,7 +48,7 @@ func QueryPtByConds(pl string, date string) ([]Table_pt, error) {
 
 // todo insert if not exists
 func InsertPt(onePt Table_pt) (error, error) {
-	conn, err := pgx.Connect(context.Background(), DSN)
+	conn, err := pgx.Connect(context.Background(), ConfigDb.Dsn)
 	if err != nil {
 		log.Println("db connect fail", err)
 		return nil, err
@@ -53,6 +58,7 @@ func InsertPt(onePt Table_pt) (error, error) {
 	return nil, nil
 }
 
+// todo
 func genTable() {
 
 }

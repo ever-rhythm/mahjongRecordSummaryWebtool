@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/bitly/go-simplejson"
 	"github.com/gin-gonic/gin"
@@ -16,6 +17,13 @@ import (
 	"time"
 )
 
+type configGin struct {
+	Domain string
+	Port   string
+}
+
+var ConfigGin = configGin{}
+
 func main() {
 	// init log
 	logFile, err := os.Create("./gin.log." + time.Now().Format("2006-01-02.15-04-05"))
@@ -28,19 +36,30 @@ func main() {
 	gin.SetMode(gin.DebugMode)
 	r := gin.Default()
 
+	// load config
+	err = loadConfigFile()
+	if err != nil {
+		log.Println("load config.json fail", err)
+		os.Exit(0)
+	}
+
 	// init majsoul server config
 	err = initMajsoulConfig()
 	if err != nil {
-		log.Println("init majsoul server config fail", client.MajsoulServerConfig, err)
+		log.Println("http majsoul server config fail", client.MajsoulServerConfig, err)
 		os.Exit(0)
 	}
-	log.Println("init majsoul server config ok", client.MajsoulServerConfig)
 
 	// static
 	r.StaticFS("/static", http.Dir("./web/static"))
+	r.LoadHTMLFiles("web/index.html", "web/debug.html", "web/trend.html")
 
 	// gin get
-	r.LoadHTMLFiles("web/index.html", "web/debug.html", "web/trend.html")
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(200, "index.html", "home")
+		return
+	})
+
 	r.GET("/index.html", func(c *gin.Context) {
 		c.HTML(200, "index.html", "index")
 		return
@@ -112,14 +131,22 @@ func main() {
 			return
 		}
 
-		//log.Println("params", uuids, ratePt, rateZhuyi)
+		// ping
+		acc, pwd := utils.GetMajSoulBotByIdx(len(utils.ConfigMajsoulBot.Acc) - 1)
+		err = api.PingMajsoulLogin(acc, pwd)
+		if err != nil {
+			objJsMsg.Set("msg", "内部错误")
+			c.JSON(500, objJsMsg)
+			log.Println("ping fail, exit for restart")
+			os.Exit(0)
+		}
 
 		// calc
 		mapPlayerInfo, ptRows, zhuyiRows, err := api.GetSummaryByUuids(uuids, ratePt, rateZhuyi)
 		if err != nil {
-			log.Println("GetSummaryByUuids err ", err)
+			log.Println("GetSummaryByUuids fail", err)
 			objJsMsg.Set("msg", err.Error())
-			c.JSON(200, objJsMsg)
+			c.JSON(500, objJsMsg)
 			return
 		}
 
@@ -168,9 +195,8 @@ func main() {
 			return
 		}
 
-		// todo print json log
-		//tmpLog, err := objJs.String()
-		//log.Println("v2 ok", tmpLog)
+		tmpLog, err := objJs.Encode()
+		log.Println("api v2 ok", string(tmpLog))
 		c.JSON(200, tmpMap)
 		return
 	})
@@ -197,16 +223,59 @@ func main() {
 	})
 
 	// gin server
-	err = r.Run(":8085")
+	err = r.Run(ConfigGin.Domain + ":" + ConfigGin.Port)
 	if err != nil {
 		log.Println(err)
 	}
 }
 
-// custom gateway
+// load config json file
+func loadConfigFile() error {
+
+	btConfig, err := os.ReadFile("./config.json")
+	if err != nil {
+		log.Println("load config.json fail")
+		return err
+	}
+	objJsConfig, err := simplejson.NewJson(btConfig)
+	if err != nil {
+		log.Println("conv config.json to json fail")
+		return err
+	}
+
+	// set config
+	ConfigGin.Domain = objJsConfig.Get("server").Get("domain").MustString()
+	ConfigGin.Port = objJsConfig.Get("server").Get("port").MustString()
+	client.MajsoulServerConfig.Host = objJsConfig.Get("MajsoulServerConfig").Get("host").MustString()
+	client.MajsoulServerConfig.Ws_server = objJsConfig.Get("MajsoulServerConfig").Get("ws_server").MustString()
+	utils.ConfigDb.Dsn = objJsConfig.Get("postgre").Get("dsn").MustString()
+	utils.ConfigMajsoulBot.Acc = objJsConfig.Get("MajsoulBot").Get("acc").MustStringArray()
+	utils.ConfigMajsoulBot.Pwd = objJsConfig.Get("MajsoulBot").Get("pwd").MustStringArray()
+	utils.ConfigMode.Mode = objJsConfig.Get("modeMap").Get("mode").MustStringArray()
+	utils.ConfigMode.Rate = objJsConfig.Get("modeMap").Get("rate").MustStringArray()
+	utils.ConfigMode.Zy = objJsConfig.Get("modeMap").Get("zy").MustStringArray()
+
+	// validate config
+	if len(utils.ConfigMajsoulBot.Acc) != len(utils.ConfigMajsoulBot.Pwd) ||
+		len(utils.ConfigMajsoulBot.Acc) == 0 {
+		log.Println("config err, bot acc pwd len not match")
+		return errors.New("bot err")
+	}
+
+	if len(utils.ConfigMode.Mode) != len(utils.ConfigMode.Rate) ||
+		len(utils.ConfigMode.Mode) != len(utils.ConfigMode.Zy) ||
+		len(utils.ConfigMode.Mode) == 0 {
+		log.Println("config err, mode rate zy len not match")
+		return errors.New("mode err")
+	}
+
+	log.Println("load config.json ok", ConfigGin)
+
+	return nil
+}
+
 func initMajsoulConfig() error {
 
-	client.MajsoulServerConfig.Host = "https://game.maj-soul.com"
 	// http client
 	request := utils.NewRequest(client.MajsoulServerConfig.Host)
 	randv := int(rand.Float32()*1000000000) + int(rand.Float32()*1000000000)
@@ -228,51 +297,7 @@ func initMajsoulConfig() error {
 	client.MajsoulServerConfig.Force_version, err = objJsVersion.Get("force_version").String()
 	client.MajsoulServerConfig.Code, err = objJsVersion.Get("code").String()
 
-	// get region
-	rspRegion, err := request.Get("1/v" + client.MajsoulServerConfig.Version + "/config.json")
-	if err != nil {
-		log.Println("get region fail", client.MajsoulServerConfig, err)
-		return err
-	}
+	log.Println("init majsoul server config ok", client.MajsoulServerConfig)
 
-	objJsRegion, err := simplejson.NewJson(rspRegion)
-	if err != nil {
-		log.Println("unpack region fail", err)
-		return err
-	}
-
-	client.MajsoulServerConfig.Region_urls[0], err = objJsRegion.Get("ip").GetIndex(0).Get("region_urls").GetIndex(0).Get("url").String()
-	if err != nil {
-		log.Println("unpack region json fail", err)
-		return err
-	}
-
-	// get ws
-	/*
-		requestLb := utils.NewRequest(client.MajsoulServerConfig.Region_urls[0])
-		rspWs, err := requestLb.Get(fmt.Sprintf("?service=ws-gateway&protocol=ws&ssl=true&rv=%d", randv))
-		if err != nil {
-			log.Println("get ws fail", client.MajsoulServerConfig, err)
-			return err
-		}
-
-		objJsWs, err := simplejson.NewJson(rspWs)
-		if err != nil {
-			log.Println("unpack ws fail", err)
-			return err
-		}
-
-		tmpWs, err := objJsWs.Get("servers").GetIndex(0).String()
-		client.MajsoulServerConfig.Ws_server = "wss://" + tmpWs + "/gateway"
-		if err != nil {
-			log.Println("unpack ws json fail", err)
-			return err
-		}
-
-	*/
-
-	// custom ws todo dev test
-	client.MajsoulServerConfig.Ws_server = "wss://gateway-sy.maj-soul.com:443/gateway"
-	//client.MajsoulServerConfig.Ws_server = "wss://gateway-hw.maj-soul.com:443/gateway"
 	return nil
 }

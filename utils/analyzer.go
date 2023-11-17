@@ -5,11 +5,23 @@ import (
 	"fmt"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"math/rand"
 	"strconv"
 	"strings"
-	"time"
 )
+
+type configMajsoulBot struct {
+	Acc []string
+	Pwd []string
+}
+
+type configMode struct {
+	Mode []string
+	Rate []string
+	Zy   []string
+}
+
+var ConfigMajsoulBot = configMajsoulBot{}
+var ConfigMode = configMode{}
 
 func GetRecordFromBytes(bs []byte, st protoreflect.ProtoMessage, oneRecordName string) error {
 
@@ -213,72 +225,17 @@ func GetUuidByRecordUrl(arrUrl []string) ([]string, error) {
 }
 
 func GetRateZhuyiByMode(mode string) (int, int, error) {
-	type stMode struct {
-		rate  int
-		zhuyi int
+	for i := 0; i < len(ConfigMode.Mode); i++ {
+		if ConfigMode.Mode[i] == mode {
+			rate, _ := strconv.Atoi(ConfigMode.Rate[i])
+			zy, _ := strconv.Atoi(ConfigMode.Zy[i])
+			return rate, zy, nil
+		}
 	}
-
-	mapSupportMode := map[string]stMode{}
-	mapSupportMode["1"] = stMode{1, 0}
-	mapSupportMode["2"] = stMode{2, 0}
-	mapSupportMode["5"] = stMode{5, 0}
-	mapSupportMode["10"] = stMode{10, 0}
-	mapSupportMode["20"] = stMode{20, 0}
-	mapSupportMode["50"] = stMode{50, 0}
-	mapSupportMode["100"] = stMode{100, 0}
-
-	mapSupportMode["13"] = stMode{1, 3}
-	mapSupportMode["23"] = stMode{2, 3}
-	mapSupportMode["53"] = stMode{5, 3}
-	mapSupportMode["103"] = stMode{10, 3}
-	mapSupportMode["203"] = stMode{20, 3}
-
-	v, b := mapSupportMode[mode]
-
-	if !b {
-		return 0, 0, errors.New("mode not support")
-	} else {
-		return v.rate, v.zhuyi, nil
-	}
-}
-
-func GetMajsoulBot() (string, string) {
-	type stBot struct {
-		n string
-		p string
-	}
-
-	mapBot := map[int]stBot{}
-	mapBot[0] = stBot{"3264373548@qq.com", "77shuafen"}
-	mapBot[1] = stBot{"evershikieiki@gmail.com", "77shuafen"}
-	mapBot[2] = stBot{"343669220@qq.com", "77shuafen"}
-
-	idx := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(len(mapBot))
-
-	return mapBot[idx].n, mapBot[idx].p
+	return 0, 0, errors.New("mode not support")
 }
 
 func GetMajSoulBotByIdx(idx int) (string, string) {
-	account := []string{
-		"3264373548@qq.com",
-		"evershikieiki@gmail.com",
-		"343669220@qq.com",
-		"everhythm@aliyun.com",
-		"everhythm@sina.cn",
-		"everhythm@sohu.com",
-	}
-	p := []string{
-		"77shuafen",
-		"77shuafen",
-		"77shuafen",
-		"887178",
-		"77shuafen",
-		"77shuafen",
-	}
-
-	if idx < len(p) {
-		return account[idx], p[idx]
-	} else {
-		return "", ""
-	}
+	idxMod := idx % len(ConfigMajsoulBot.Acc)
+	return ConfigMajsoulBot.Acc[idxMod], ConfigMajsoulBot.Pwd[idxMod]
 }

@@ -1,4 +1,4 @@
-package api
+package test
 
 import (
 	"errors"
@@ -7,6 +7,7 @@ import (
 	"github.com/mahjongRecordSummaryWebtool/message"
 	"github.com/mahjongRecordSummaryWebtool/utils"
 	"google.golang.org/protobuf/proto"
+	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -18,6 +19,22 @@ type Player struct {
 	TotalPoint int32
 	Zhuyi      int
 	Sum        string
+}
+
+func GetMajsoulBot() (string, string) {
+	type stBot struct {
+		n string
+		p string
+	}
+
+	mapBot := map[int]stBot{}
+	mapBot[0] = stBot{"3264373548@qq.com", "77shuafen"}
+	mapBot[1] = stBot{"evershikieiki@gmail.com", "77shuafen"}
+	mapBot[2] = stBot{"343669220@qq.com", "77shuafen"}
+
+	idx := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(len(mapBot))
+
+	return mapBot[idx].n, mapBot[idx].p
 }
 
 func GetSummaryByRecords(records []string, mode string) (map[string]*Player, []map[string]string, []map[string]string, error) {
@@ -42,7 +59,7 @@ func GetSummaryByRecords(records []string, mode string) (map[string]*Player, []m
 		return nil, nil, nil, errors.New("client fail")
 	}
 
-	n, p := utils.GetMajsoulBot()
+	n, p := GetMajsoulBot()
 	rspLogin, err := mSoul.Login(n, p)
 	if err != nil {
 		fmt.Println("login fail", err)

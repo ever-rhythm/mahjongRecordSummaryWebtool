@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/mahjongRecordSummaryWebtool/utils"
 	"log"
+	"time"
 )
 
 // todo conv url to struct
@@ -14,7 +15,7 @@ func addRecordByUuid(uuid string) {
 		Player_count: 0,
 		State:        0,
 		Desc:         "",
-		Timestamp:    "",
+		Timestamp:    time.Time{},
 		Pl_1:         "",
 		Pl_2:         "",
 		Pl_3:         "",

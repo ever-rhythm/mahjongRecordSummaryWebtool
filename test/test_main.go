@@ -1,6 +1,56 @@
 package test
 
 /*
+	// get region
+	rspRegion, err := request.Get("1/v" + client.MajsoulServerConfig.Version + "/config.json")
+	if err != nil {
+		log.Println("get region fail", client.MajsoulServerConfig, err)
+		return err
+	}
+
+	objJsRegion, err := simplejson.NewJson(rspRegion)
+	if err != nil {
+		log.Println("unpack region fail", err)
+		return err
+	}
+
+	client.MajsoulServerConfig.Region_urls[0], err = objJsRegion.Get("ip").GetIndex(0).Get("region_urls").GetIndex(0).Get("url").String()
+	if err != nil {
+		log.Println("unpack region json fail", err)
+		return err
+	}
+
+*/
+
+// get ws
+/*
+	requestLb := utils.NewRequest(client.MajsoulServerConfig.Region_urls[0])
+	rspWs, err := requestLb.Get(fmt.Sprintf("?service=ws-gateway&protocol=ws&ssl=true&rv=%d", randv))
+	if err != nil {
+		log.Println("get ws fail", client.MajsoulServerConfig, err)
+		return err
+	}
+
+	objJsWs, err := simplejson.NewJson(rspWs)
+	if err != nil {
+		log.Println("unpack ws fail", err)
+		return err
+	}
+
+	tmpWs, err := objJsWs.Get("servers").GetIndex(0).String()
+	client.MajsoulServerConfig.Ws_server = "wss://" + tmpWs + "/gateway"
+	if err != nil {
+		log.Println("unpack ws json fail", err)
+		return err
+	}
+
+*/
+
+// custom ws
+//client.MajsoulServerConfig.Ws_server = "wss://gateway-sy.maj-soul.com:443/gateway"
+//client.MajsoulServerConfig.Ws_server = "wss://gateway-hw.maj-soul.com:443/gateway"
+
+/*
 	var rows []map[string]string
 
 	var row = make(map[string]string)

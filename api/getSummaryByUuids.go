@@ -1,10 +1,12 @@
 package api
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/mahjongRecordSummaryWebtool/client"
 	"github.com/mahjongRecordSummaryWebtool/message"
+	"github.com/mahjongRecordSummaryWebtool/test"
 	"github.com/mahjongRecordSummaryWebtool/utils"
 	"log"
 	"strconv"
@@ -22,6 +24,25 @@ type r struct {
 }
 
 var mu sync.Mutex
+
+// ping login
+func PingMajsoulLogin(acc string, pwd string) error {
+	mSoul, err := client.New()
+	if err != nil {
+		return err
+	}
+
+	rspLogin, err := mSoul.Login(acc, pwd)
+	if err != nil {
+		return err
+	}
+
+	if rspLogin.Error != nil {
+		return errors.New("login rsp err")
+	}
+
+	return nil
+}
 
 func getMsoulRecordByUuid(chanRes chan r, uuid string, account string, p string) (*message.ResGameRecordsDetail, []byte, error) {
 
@@ -111,7 +132,7 @@ func getMsoulRecordByUuid(chanRes chan r, uuid string, account string, p string)
 }
 
 // get majsoul record v2
-func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*Player, []map[string]string, []map[string]string, error) {
+func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*test.Player, []map[string]string, []map[string]string, error) {
 
 	// mutex
 	if !mu.TryLock() {
@@ -154,10 +175,10 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 	}
 
 	// analyze
-	mapPlayerInfo := map[string]*Player{}
+	mapPlayerInfo := map[string]*test.Player{}
 	mapPlayerIdx := make(map[string]string)
 	mapIdxPlayer := make(map[string]string)
-	mapUuidInfo := map[string][]*Player{}
+	mapUuidInfo := map[string][]*test.Player{}
 	var ptRows []map[string]string
 	var zhuyiRows []map[string]string
 	idxZhuyi := 0
@@ -174,7 +195,7 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 
 		mapPlayerIdx[oneNickName] = "p" + oneSeat
 		mapIdxPlayer[oneSeat] = oneNickName
-		mapPlayerInfo[oneNickName] = &Player{
+		mapPlayerInfo[oneNickName] = &test.Player{
 			Nickname: oneNickName,
 			Seat:     oneAccount.Seat,
 		}
@@ -194,7 +215,7 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 				return nil, nil, nil, errors.New("different 4 player name " + oneNickName)
 			}
 
-			mapUuidInfo[oneRecord.Uuid] = append(mapUuidInfo[oneRecord.Uuid], &Player{
+			mapUuidInfo[oneRecord.Uuid] = append(mapUuidInfo[oneRecord.Uuid], &test.Player{
 				Nickname: oneNickName,
 				Seat:     oneAccount.Seat,
 			})
@@ -453,10 +474,8 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 	}
 
 	// log
-	log.Println("summary ok", uuids, ptRows, zhuyiRows)
-	for _, v := range mapPlayerInfo {
-		log.Println(v)
-	}
+	tmpLog, _ := json.Marshal(mapPlayerInfo)
+	log.Println("summary ok", uuids, ptRows, zhuyiRows, string(tmpLog))
 
 	return mapPlayerInfo, ptRows, zhuyiRows, nil
 }
