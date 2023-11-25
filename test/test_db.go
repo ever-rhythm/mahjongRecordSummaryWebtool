@@ -6,14 +6,14 @@ type table_acc struct {
 	Acc       string
 	Pwd       string
 	State     int
-	Timestamp string //	todo dev
+	Time_start string //	todo dev
 }
 
 type table_cache struct {
 	Id        int
 	K         string
 	V         string
-	Timestamp string //	todo dev
+	Time_start string //	todo dev
 }
 
 */

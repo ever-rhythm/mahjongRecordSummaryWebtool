@@ -1,11 +1,14 @@
 package api
 
-// todo dev test
-func getTrendingByUname() error {
+import "github.com/mahjongRecordSummaryWebtool/utils"
 
-	// uname not exists
+func GetTrendingByUname(pl string) ([]utils.Table_pt, error) {
 
 	// select all by uname and time
+	pts, err := utils.QueryPtByConds(pl, 0, 0)
+	if err != nil {
+		return nil, err
+	}
 
-	return nil
+	return pts, err
 }

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/mahjongRecordSummaryWebtool/client"
 	"github.com/mahjongRecordSummaryWebtool/message"
-	"github.com/mahjongRecordSummaryWebtool/test"
 	"github.com/mahjongRecordSummaryWebtool/utils"
 	"log"
 	"strconv"
@@ -21,6 +20,28 @@ type r struct {
 	uuid   string
 	bs     []byte
 	detail *message.ResGameRecordsDetail
+}
+
+type Player struct {
+	Nickname   string
+	Seat       uint32
+	TotalPoint int32
+	Zhuyi      int
+	Sum        string
+}
+
+type Players []Player
+
+func (players Players) Len() int {
+	return len(players)
+}
+
+func (players Players) Swap(i, j int) {
+	players[i], players[j] = players[j], players[i]
+}
+
+func (players Players) Less(i, j int) bool {
+	return players[j].TotalPoint < players[i].TotalPoint
 }
 
 var mu sync.Mutex
@@ -44,7 +65,7 @@ func PingMajsoulLogin(acc string, pwd string) error {
 	return nil
 }
 
-func getMsoulRecordByUuid(chanRes chan r, uuid string, account string, p string) (*message.ResGameRecordsDetail, []byte, error) {
+func GetMajsoulRecordByUuid(chanRes chan r, uuid string, account string, p string) (*message.ResGameRecordsDetail, []byte, error) {
 
 	// login
 	mSoul, err := client.New()
@@ -132,7 +153,7 @@ func getMsoulRecordByUuid(chanRes chan r, uuid string, account string, p string)
 }
 
 // get majsoul record v2
-func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*test.Player, []map[string]string, []map[string]string, error) {
+func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*Player, []map[string]string, []map[string]string, error) {
 
 	// mutex
 	if !mu.TryLock() {
@@ -155,9 +176,9 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*t
 		tmpUuid := uuids[i]
 		account, p := utils.GetMajSoulBotByIdx(idx)
 		go func() {
-			_, _, err := getMsoulRecordByUuid(chanRes, tmpUuid, account, p)
+			_, _, err := GetMajsoulRecordByUuid(chanRes, tmpUuid, account, p)
 			if err != nil {
-				log.Println("getMsoulRecordByUuid fail ", tmpUuid)
+				log.Println("GetMajsoulRecordByUuid fail ", tmpUuid)
 				return
 			}
 		}()
@@ -175,10 +196,10 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*t
 	}
 
 	// analyze
-	mapPlayerInfo := map[string]*test.Player{}
+	mapPlayerInfo := map[string]*Player{}
 	mapPlayerIdx := make(map[string]string)
 	mapIdxPlayer := make(map[string]string)
-	mapUuidInfo := map[string][]*test.Player{}
+	mapUuidInfo := map[string][]*Player{}
 	var ptRows []map[string]string
 	var zhuyiRows []map[string]string
 	idxZhuyi := 0
@@ -195,7 +216,7 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*t
 
 		mapPlayerIdx[oneNickName] = "p" + oneSeat
 		mapIdxPlayer[oneSeat] = oneNickName
-		mapPlayerInfo[oneNickName] = &test.Player{
+		mapPlayerInfo[oneNickName] = &Player{
 			Nickname: oneNickName,
 			Seat:     oneAccount.Seat,
 		}
@@ -215,14 +236,14 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*t
 				return nil, nil, nil, errors.New("different 4 player name " + oneNickName)
 			}
 
-			mapUuidInfo[oneRecord.Uuid] = append(mapUuidInfo[oneRecord.Uuid], &test.Player{
+			mapUuidInfo[oneRecord.Uuid] = append(mapUuidInfo[oneRecord.Uuid], &Player{
 				Nickname: oneNickName,
 				Seat:     oneAccount.Seat,
 			})
 		}
 	}
 
-	// record pt test uuid equal done
+	// record pt
 	for _, oneUuid := range uuids {
 		for _, oneRecord := range rspRecords.RecordList {
 			if oneUuid == oneRecord.Uuid {

@@ -1,65 +1,176 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html>
 <head>
-    <meta charset="UTF-8" />
-    <title>祝仪积分生成工具By夜光天楼</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1, maximum-scale=1"
-    />
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/sdk.css" />
-    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/helper.css" />
-    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/iconfont.css" />
-    <!-- 这是默认主题所需的，如果是其他主题则不需要 -->
-    <!-- 从 1.1.0 开始 sdk.css 将不支持 IE 11，如果要支持 IE11 请引用这个 css，并把前面那个删了 -->
-    <!-- <link rel="stylesheet" href="sdk-ie11.css" /> -->
-    <!-- 不过 amis 开发团队几乎没测试过 IE 11 下的效果，所以可能有细节功能用不了，如果发现请报 issue -->
-    <style>
-        html,
-        body,
-        .app-wrapper {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
-    </style>
+    <meta charset="utf-8" />
+    <title>trending</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 </head>
-<body>
-<div id="root" class="app-wrapper"></div>
-<script src="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/sdk.js"></script>
+<body style="background-color: #100C2A;">
+<!-- 为 ECharts 准备一个定义了宽高的 DOM -->
+<div id="main2" style="top:100px;width: 1200px;height:200px;position: relative;margin: auto;">
+    <span style="padding-left:5px;font-weight:bold;font-size:18px;color: #EEF1FA">整体信息</span><br/><br/><br/>
+    <span id='s0' style="padding-left:5px;font-weight:bold;font-size:18px;color: #4992ff"></span><br/>
+    <span id='s1' style="padding-left:5px;font-weight:bold;font-size:18px;color: #4992ff"></span><br/>
+    <span id='s2' style="padding-left:5px;font-weight:bold;font-size:18px;color: #4992ff"></span>
+</div>
+<div id="main1" style="top:100px;width: 1200px;height:200px;position: relative;margin: auto;"></div>
+<div id="main" style="top:100px;width: 1200px;height:600px;position: relative;margin: auto;"></div>
 <script type="text/javascript">
-    (function () {
-        let amis = amisRequire('amis/embed');
-        // 通过替换下面这个配置来生成不同页面
-        let amisJSON = {
-            "type": "page",
-            "body": {
-                "type": "chart",
-                "api": "post:/api/trend",
-                "config": {
-                    "xAxis": {
-                        "type": "category",
-                        "data": []
+    var playerName = "夜光天楼"
+    // var playerName = "宇宇宇丽"
+    // var playerName = "你好你好369"
+    // var playerName = "老板我要加个蛋"
+    // var playerName = "若泽泽泽泽泽"
+    // var playerName = "宫永咲Sakkki"
+    // var playerName = "旺旺超大礼包"
+    var ratePt = 100
+    var rateZy = 30
+    var data = {
+        pl:playerName,
+        ratePt:ratePt,
+        rateZy:rateZy,
+    };
+
+    var myChart = echarts.init(document.getElementById('main'), 'dark');
+    var chartBar = echarts.init(document.getElementById('main1'), 'dark');
+    var jsonData = JSON.stringify(data);
+    $.ajax({
+        type:'POST',
+        url: '/api/trend',
+        contentType: "application/json",
+        data: jsonData,
+        success: function(result) {
+            document.getElementById('s0').innerHTML = '账号名称：' + playerName
+            document.getElementById('s1').innerHTML = '总对局数：' + result.data.cntTotal
+            document.getElementById('s2').innerHTML = '最终积分：' + result.data.lineTotal[result.data.cntTotal - 1]
+
+            myChart.setOption({
+                title: {
+                    text:  '积分趋势'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross',
                     },
-                    "yAxis": {
-                        "type": "value"
+                    position:['40%', '5%']
+                },
+                legend: {
+                },
+                grid:{
+                    top:'middle',
+                },
+                xAxis: {
+                    type: 'category',
+                    data: result.data.date
+                },
+                yAxis: {
+                    type: 'value',
+                    interval: 500,
+                },
+                series: [
+                    {
+                        name: '两者合计',
+                        type: 'line',
+                        data: result.data.lineTotal
                     },
-                    "series": [
-                        {
-                            "data": "${line || []}",
-                            "type": "line"
+                    {
+                        name: '纯pt',
+                        type: 'line',
+                        data: result.data.linePt
+                    },
+                    {
+                        name: '纯zy',
+                        type: 'line',
+                        data: result.data.lineZy
+                    },
+                ]
+            });
+
+            chartBar.setOption(
+                {
+                    title: {
+                        text:  '顺位分布'
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
                         }
+                    },
+                    legend: {},
+                    grid: {
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'value'
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: ['顺位']
+                    },
+                    series: [
+                        {
+                            name: '1位',
+                            type: 'bar',
+                            stack: 'total',
+                            label: {
+                                show: true,
+                                formatter: Math.round(result.data.cnt1 / result.data.cntTotal * 10000) / 100 + "%",
+                            },
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: [result.data.cnt1]
+                        },
+                        {
+                            name: '2位',
+                            type: 'bar',
+                            stack: 'total',
+                            label: {
+                                show: true,
+                                formatter: Math.round(result.data.cnt2 / result.data.cntTotal * 10000) / 100 + "%",
+                            },
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: [result.data.cnt2]
+                        },
+                        {
+                            name: '3位',
+                            type: 'bar',
+                            stack: 'total',
+                            label: {
+                                show: true,
+                                formatter: Math.round(result.data.cnt3 / result.data.cntTotal * 10000) / 100 + "%",
+                            },
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: [result.data.cnt3]
+                        },
+                        {
+                            name: '4位',
+                            type: 'bar',
+                            stack: 'total',
+                            label: {
+                                show: true,
+                                formatter: Math.round(result.data.cnt4 / result.data.cntTotal * 10000) / 100 + "%",
+                            },
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: [result.data.cnt4]
+                        },
                     ]
                 }
-            }
+            );
+        },
+        error: function(xhr, status, error) {
         }
+    })
 
-        let amisScoped = amis.embed('#root', amisJSON);
-    })();
 </script>
 </body>
 </html>

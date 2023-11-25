@@ -1,65 +1,120 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html>
 <head>
-    <meta charset="UTF-8" />
-    <title>祝仪积分生成工具By夜光天楼</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1, maximum-scale=1"
-    />
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/sdk.css" />
-    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/helper.css" />
-    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/iconfont.css" />
-    <!-- 这是默认主题所需的，如果是其他主题则不需要 -->
-    <!-- 从 1.1.0 开始 sdk.css 将不支持 IE 11，如果要支持 IE11 请引用这个 css，并把前面那个删了 -->
-    <!-- <link rel="stylesheet" href="sdk-ie11.css" /> -->
-    <!-- 不过 amis 开发团队几乎没测试过 IE 11 下的效果，所以可能有细节功能用不了，如果发现请报 issue -->
-    <style>
-        html,
-        body,
-        .app-wrapper {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <title>rank</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 </head>
-<body>
-<div id="root" class="app-wrapper"></div>
-<script src="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/sdk.js"></script>
+<body style="background-color: #100C2A;">
+<div id="main" style="top:100px;width: 1500px;height:1500px;position: relative;margin: auto;"></div>
 <script type="text/javascript">
-    (function () {
-        let amis = amisRequire('amis/embed');
-        // 通过替换下面这个配置来生成不同页面
-        let amisJSON = {
-            "type": "page",
-            "body": {
-                "type": "chart",
-                "api": "post:/api/trend",
-                "config": {
-                    "xAxis": {
-                        "type": "category",
-                        "data": []
-                    },
-                    "yAxis": {
-                        "type": "value"
-                    },
-                    "series": [
-                        {
-                            "data": "${line || []}",
-                            "type": "line"
-                        }
-                    ]
-                }
-            }
-        }
+  var ratePt = 100
+  var rateZy = 30
+  var data = {
+    ratePt:ratePt,
+    rateZy:rateZy,
+  };
 
-        let amisScoped = amis.embed('#root', amisJSON);
-    })();
+  var chartBar = echarts.init(document.getElementById('main'), 'dark');
+  var jsonData = JSON.stringify(data);
+  $.ajax({
+    type:'POST',
+    url: '/api/rank',
+    contentType: "application/json",
+    data: jsonData,
+    success: function(result) {
+
+      chartBar.setOption(
+              {
+                title: {
+                  text:  '排行榜'
+                },
+                tooltip: {
+                  trigger: 'axis',
+                  axisPointer: {
+                    type: 'shadow'
+                  }
+                },
+                legend: {
+                  data: ['pt', 'zy', 'cnt', 'total']
+                },
+                grid: {
+                  containLabel: true
+                },
+                xAxis: {
+                  type: 'value',
+                  interval:500,
+                },
+                yAxis: {
+                  type: 'category',
+                  axisTick: {
+                    show: false
+                  },
+                  data: result.data.date
+                },
+                series: [
+                  {
+                    name: 'pt',
+                    type: 'bar',
+                    stack: 'total',
+                    label: {
+                      show: true,
+                    },
+                    emphasis: {
+                      focus: 'series'
+                    },
+                    data: result.data.linePt
+                  },
+                  {
+                    name: 'zy',
+                    type: 'bar',
+                    stack: 'total',
+                    label: {
+                      show: true,
+                    },
+                    emphasis: {
+                      focus: 'series'
+                    },
+                    data: result.data.lineZy
+                  },
+                  {
+                    name: 'cnt',
+                    type: 'bar',
+                    stack: 'total',
+                    label: {
+                      show: true,
+                    },
+                    emphasis: {
+                      focus: 'series'
+                    },
+                    data: result.data.lineCnt
+                  },
+                  {
+                    name: 'total',
+                    type: 'bar',
+                    stack: 'total',
+                    label: {
+                      show: true,
+                    },
+                    emphasis: {
+                      focus: 'series'
+                    },
+                    data: result.data.lineTotal
+                  },
+                ]
+              }
+      );
+    },
+    error: function(xhr, status, error) {
+    }
+  })
+
 </script>
 </body>
 </html>
+
+<!--
+
+
+-->

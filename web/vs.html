@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>vs</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+<body style="background-color: #100C2A;">
+<div id="main" style="top:100px;width: 1200px;height:1500px;position: relative;margin: auto;"></div>
+<script type="text/javascript">
+    var playerName = "夜光天楼"
+    // var playerName = "你好你好369"
+    // var playerName = "老板我要加个蛋"
+    // var playerName = "若泽泽泽泽泽"
+    // var playerName = "宫永咲Sakkki"
+    // var playerName = "旺旺超大礼包"
+    var ratePt = 100
+    var rateZy = 30
+    var data = {
+        pl:playerName,
+        ratePt:ratePt,
+        rateZy:rateZy,
+    };
+
+    var chartBar = echarts.init(document.getElementById('main'), 'dark');
+    var jsonData = JSON.stringify(data);
+    $.ajax({
+        type:'POST',
+        url: '/api/competitor',
+        contentType: "application/json",
+        data: jsonData,
+        success: function(result) {
+
+            chartBar.setOption(
+                {
+                    title: {
+                        text:  '对手情况'
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    legend: {
+                        data: ['bpt', 'bzy', 'btotal', 'cnt']
+                    },
+                    grid: {
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'value',
+                        interval:500,
+                    },
+                    yAxis: {
+                        type: 'category',
+                        axisTick: {
+                            show: false
+                        },
+                        data: result.data.date
+                    },
+                    series: [
+                        {
+                            name: 'bpt',
+                            type: 'bar',
+                            stack: 'total',
+                            label: {
+                                show: true,
+                            },
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: result.data.linePt
+                        },
+                        {
+                            name: 'bzy',
+                            type: 'bar',
+                            stack: 'total',
+                            label: {
+                                show: true,
+                            },
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: result.data.lineZy
+                        },
+                        {
+                            name: 'cnt',
+                            type: 'bar',
+                            stack: 'total',
+                            label: {
+                                show: true,
+                            },
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: result.data.lineCnt
+                        }
+                    ]
+                }
+            );
+        },
+        error: function(xhr, status, error) {
+        }
+    })
+
+</script>
+</body>
+</html>
+
+<!--
+
+                        {
+                            name: 'btotal',
+                            type: 'bar',
+                            stack: 'total',
+                            label: {
+                                show: true,
+                            },
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: result.data.lineTotal
+                        },
+-->
