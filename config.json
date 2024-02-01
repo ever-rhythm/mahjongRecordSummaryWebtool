@@ -1,0 +1,65 @@
+{
+  "server": {
+    "domain": "",
+    "port": "80"
+  },
+  "MajsoulServerConfig": {
+    "host": "https://game.maj-soul.com",
+    "ws_server": "wss://gateway-hw.maj-soul.com:443/gateway"
+  },
+  "postgre": {
+    "dsn": "postgres://postgres:ygtianlou@localhost:5432/pgtest"
+  },
+  "MajsoulBot": {
+    "acc": [
+      "15110244096@189.cn"
+    ],
+    "pwd": [
+      "77shuafen"
+    ]
+  },
+  "modeMap": {
+    "mode": [
+      "2",
+      "5",
+      "10",
+      "20",
+      "50",
+      "100",
+      "23",
+      "53",
+      "103",
+      "203",
+      "303",
+      "503"
+    ],
+    "rate": [
+      "2",
+      "5",
+      "10",
+      "20",
+      "50",
+      "100",
+      "2",
+      "5",
+      "10",
+      "20",
+      "30",
+      "50"
+    ],
+    "zy": [
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "3",
+      "3",
+      "3",
+      "3",
+      "3",
+      "3"
+    ]
+  }
+}

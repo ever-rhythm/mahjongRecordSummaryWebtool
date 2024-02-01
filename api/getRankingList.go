@@ -32,6 +32,17 @@ func (players Ranks) Less(i, j int) bool {
 }
 
 func GetRankingList() ([]Rank, error) {
+	// init care list
+	/*
+		var mapCarePl = make(map[string]int)
+		var arrCarePl = []string{}
+
+		for i:=0;i<len(arrCarePl);i++{
+			mapCarePl[arrCarePl[i]] = 1
+		}
+
+	*/
+
 	// select all by uname and time
 	pts, err := utils.QueryPts(0, 0)
 	if err != nil {
@@ -44,7 +55,7 @@ func GetRankingList() ([]Rank, error) {
 		onePls := []string{pts[i].Pl_1, pts[i].Pl_2, pts[i].Pl_3, pts[i].Pl_4}
 		for j := 0; j < len(onePls); j++ {
 			_, b := mapPlInfo[onePls[j]]
-			if !b {
+			if !b && len(onePls[j]) > 0 {
 				oneRank := Rank{Pl: onePls[j]}
 				mapPlInfo[onePls[j]] = &oneRank
 			}
@@ -57,10 +68,12 @@ func GetRankingList() ([]Rank, error) {
 		oneZys := []int{pts[i].Zy_1, pts[i].Zy_2, pts[i].Zy_3, pts[i].Zy_4}
 
 		for j := 0; j < len(onePls); j++ {
-			mapPlInfo[onePls[j]].Pt += onePts[j]
-			mapPlInfo[onePls[j]].Zy += oneZys[j]
-			mapPlInfo[onePls[j]].Total += onePts[j]/100 + oneZys[j]*30
-			mapPlInfo[onePls[j]].Cnt += 1
+			if len(onePls[j]) > 0 {
+				mapPlInfo[onePls[j]].Pt += onePts[j]
+				mapPlInfo[onePls[j]].Zy += oneZys[j]
+				mapPlInfo[onePls[j]].Total += onePts[j]/100 + oneZys[j]*30
+				mapPlInfo[onePls[j]].Cnt += 1
+			}
 		}
 	}
 

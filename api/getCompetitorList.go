@@ -44,7 +44,7 @@ func GetCompetitorList(pl string) ([]Competitor, error) {
 		onePls := []string{pts[i].Pl_1, pts[i].Pl_2, pts[i].Pl_3, pts[i].Pl_4}
 		for j := 0; j < len(onePls); j++ {
 			_, b := mapPlInfo[onePls[j]]
-			if !b && onePls[j] != pl {
+			if !b && onePls[j] != pl && len(onePls[j]) > 0 {
 				oneCompetitor := Competitor{Pl: onePls[j]}
 				mapPlInfo[onePls[j]] = &oneCompetitor
 			}
@@ -71,7 +71,7 @@ func GetCompetitorList(pl string) ([]Competitor, error) {
 		}
 
 		for j := 0; j < len(onePls); j++ {
-			if j == curPlIdx {
+			if j == curPlIdx || len(onePls[j]) == 0 {
 				continue
 			} else {
 				mapPlInfo[onePls[j]].Pt += onePts[j]

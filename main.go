@@ -39,20 +39,27 @@ func main() {
 	// load config
 	err = loadConfigFile()
 	if err != nil {
-		log.Println("load config.json fail", err)
-		os.Exit(0)
+		log.Fatalln("load config.json fail", err)
 	}
 
 	// init majsoul server config
 	err = initMajsoulConfig()
 	if err != nil {
-		log.Println("http majsoul server config fail", client.MajsoulServerConfig, err)
-		os.Exit(0)
+		log.Fatalln("http majsoul server config fail", client.MajsoulServerConfig, err)
 	}
 
 	// static
 	r.StaticFS("/static", http.Dir("./web/static"))
 
+	// get
+	r.LoadHTMLFiles("web/index.html")
+	r.GET("/", func(c *gin.Context) { c.HTML(200, "index.html", "home"); return })
+	r.GET("/index.html", func(c *gin.Context) { c.HTML(200, "index.html", "index"); return })
+
+	// post
+	r.POST("/api/v2", summary)
+
+	/* bak for non-display
 	// get
 	r.LoadHTMLFiles("web/index.html", "web/debug.html", "web/trend.html", "web/add.html", "web/vs.html", "web/rank.html")
 	r.GET("/", func(c *gin.Context) { c.HTML(200, "index.html", "home"); return })
@@ -70,11 +77,12 @@ func main() {
 	r.POST("/api/competitor", competitor)
 	r.POST("/api/rank", rank)
 
+	*/
+
 	// server
 	err = r.Run(ConfigGin.Domain + ":" + ConfigGin.Port)
 	if err != nil {
-		log.Println(err)
-		os.Exit(0)
+		log.Fatalln(err)
 	}
 }
 
@@ -93,13 +101,18 @@ func rank(c *gin.Context) {
 	var totals []int
 	var dates []string
 	var cnts []int
+	var pers []int
+	numLimit := 0
 
 	for i := 0; i < len(rets); i++ {
-		dates = append(dates, rets[i].Pl)
-		pts = append(pts, rets[i].Pt/100)
-		zys = append(zys, rets[i].Zy*30)
-		totals = append(totals, rets[i].Total)
-		cnts = append(cnts, rets[i].Cnt)
+		if rets[i].Cnt >= numLimit {
+			dates = append(dates, rets[i].Pl)
+			pts = append(pts, rets[i].Pt/100)
+			zys = append(zys, rets[i].Zy*30)
+			totals = append(totals, rets[i].Total)
+			cnts = append(cnts, rets[i].Cnt)
+			pers = append(pers, rets[i].Total/rets[i].Cnt)
+		}
 	}
 
 	objJs.SetPath([]string{"data", "date"}, dates)
@@ -107,6 +120,7 @@ func rank(c *gin.Context) {
 	objJs.SetPath([]string{"data", "lineZy"}, zys)
 	objJs.SetPath([]string{"data", "lineTotal"}, totals)
 	objJs.SetPath([]string{"data", "lineCnt"}, cnts)
+	objJs.SetPath([]string{"data", "linePer"}, pers)
 
 	c.JSON(200, objJs.MustMap())
 	return
@@ -135,6 +149,7 @@ func competitor(c *gin.Context) {
 	var totals []int
 	var dates []string
 	var cnts []int
+	var pers []int
 
 	for i := 0; i < len(rets); i++ {
 		dates = append(dates, rets[i].Pl)
@@ -142,6 +157,7 @@ func competitor(c *gin.Context) {
 		zys = append(zys, rets[i].Bzy*30)
 		totals = append(totals, rets[i].Btotal)
 		cnts = append(cnts, rets[i].Cnt)
+		pers = append(pers, rets[i].Btotal/rets[i].Cnt)
 	}
 
 	objJs.SetPath([]string{"data", "date"}, dates)
@@ -149,6 +165,7 @@ func competitor(c *gin.Context) {
 	objJs.SetPath([]string{"data", "lineZy"}, zys)
 	objJs.SetPath([]string{"data", "lineTotal"}, totals)
 	objJs.SetPath([]string{"data", "lineCnt"}, cnts)
+	objJs.SetPath([]string{"data", "linePer"}, pers)
 
 	c.JSON(200, objJs.MustMap())
 	return
@@ -183,22 +200,27 @@ func trend(c *gin.Context) {
 	}
 
 	for i := 0; i < len(rets); i++ {
-		var onePt, oneZy int
+		var onePt, oneZy, oneRate int
+		oneRate = 1
+		if rets[i].Rate != 0 {
+			//continue
+			oneRate = rets[i].Rate / 10
+		}
 		if rets[i].Pl_1 == oneName {
-			onePt = rets[i].Pt_1 / ratePt
-			oneZy = rets[i].Zy_1 * rateZy
+			onePt = rets[i].Pt_1 / ratePt * oneRate
+			oneZy = rets[i].Zy_1 * rateZy * oneRate
 			cnt1 += 1
 		} else if rets[i].Pl_2 == oneName {
-			onePt = rets[i].Pt_2 / ratePt
-			oneZy = rets[i].Zy_2 * rateZy
+			onePt = rets[i].Pt_2 / ratePt * oneRate
+			oneZy = rets[i].Zy_2 * rateZy * oneRate
 			cnt2 += 1
 		} else if rets[i].Pl_3 == oneName {
-			onePt = rets[i].Pt_3 / ratePt
-			oneZy = rets[i].Zy_3 * rateZy
+			onePt = rets[i].Pt_3 / ratePt * oneRate
+			oneZy = rets[i].Zy_3 * rateZy * oneRate
 			cnt3 += 1
 		} else if rets[i].Pl_4 == oneName {
-			onePt = rets[i].Pt_4 / ratePt
-			oneZy = rets[i].Zy_4 * rateZy
+			onePt = rets[i].Pt_4 / ratePt * oneRate
+			oneZy = rets[i].Zy_4 * rateZy * oneRate
 			cnt4 += 1
 		}
 
@@ -215,7 +237,7 @@ func trend(c *gin.Context) {
 	objJs.SetPath([]string{"data", "linePt"}, pts)
 	objJs.SetPath([]string{"data", "lineZy"}, zys)
 	objJs.SetPath([]string{"data", "lineTotal"}, totals)
-	objJs.SetPath([]string{"data", "cntTotal"}, len(rets))
+	objJs.SetPath([]string{"data", "cntTotal"}, len(totals))
 	objJs.SetPath([]string{"data", "cnt1"}, cnt1)
 	objJs.SetPath([]string{"data", "cnt2"}, cnt2)
 	objJs.SetPath([]string{"data", "cnt3"}, cnt3)
@@ -342,7 +364,7 @@ func summary(c *gin.Context) {
 	// calc
 	mapPlayerInfo, ptRows, zhuyiRows, err := api.GetSummaryByUuids(uuids, ratePt, rateZhuyi)
 	if err != nil {
-		log.Println("GetSummaryByUuids fail", err)
+		log.Println("GetSummaryByUuids err", err)
 		objJsMsg.Set("msg", err.Error())
 		c.JSON(500, objJsMsg)
 		return

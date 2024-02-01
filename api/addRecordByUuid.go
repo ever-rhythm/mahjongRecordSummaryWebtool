@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"fmt"
+	"github.com/mahjongRecordSummaryWebtool/client"
 	"github.com/mahjongRecordSummaryWebtool/message"
 	"github.com/mahjongRecordSummaryWebtool/utils"
 	"log"
@@ -13,6 +14,107 @@ import (
 )
 
 var muPt sync.Mutex
+
+var objMajsoul *client.Majsoul
+var hasInit = false
+var readCount = 0
+
+func getMajsoulRecordByUuid(chanRes chan r, uuid string, account string, p string) (*message.ResGameRecordsDetail, []byte, error) {
+
+	// login
+	if !hasInit {
+		hasInit = true
+		readCount += 1
+		tmpMajSoul, err := client.New()
+		if err != nil {
+			log.Println("new client fail", err)
+			chanRes <- r{
+				uuid:   uuid,
+				bs:     nil,
+				detail: nil,
+			}
+			return nil, nil, errors.New("client fail")
+		}
+
+		rspLogin, err := tmpMajSoul.Login(account, p)
+		if err != nil {
+			log.Println("login fail", err)
+			chanRes <- r{
+				uuid:   uuid,
+				bs:     nil,
+				detail: nil,
+			}
+			return nil, nil, errors.New("client login fail")
+		}
+
+		if rspLogin.Error != nil {
+			log.Println("login err", rspLogin.Error)
+			chanRes <- r{
+				uuid:   uuid,
+				bs:     nil,
+				detail: nil,
+			}
+			return nil, nil, errors.New("client login err")
+		}
+
+		objMajsoul = tmpMajSoul
+	}
+
+	// get details
+	reqInfo := message.ReqGameRecordsDetail{
+		UuidList: []string{uuid},
+	}
+	rspRecords, err := objMajsoul.FetchGameRecordsDetail(objMajsoul.Ctx, &reqInfo)
+	if err != nil {
+		log.Println("detail fail", err)
+		chanRes <- r{
+			uuid:   uuid,
+			bs:     nil,
+			detail: nil,
+		}
+		return nil, nil, errors.New("detail fail")
+	}
+	log.Println("FetchGameRecordsDetail ok", uuid)
+
+	// get game record
+	reqPaipu := message.ReqGameRecord{
+		GameUuid:            uuid,
+		ClientVersionString: objMajsoul.Version.Web(),
+	}
+	resPaipu, err := objMajsoul.FetchGameRecord(objMajsoul.Ctx, &reqPaipu)
+	if err != nil {
+		log.Println("paipu fail", err)
+		chanRes <- r{
+			uuid:   uuid,
+			bs:     nil,
+			detail: nil,
+		}
+		return nil, nil, errors.New("record fail")
+	}
+
+	if len(resPaipu.Data) == 0 {
+		if len(resPaipu.DataUrl) != 0 {
+			log.Println("data url", resPaipu.DataUrl)
+		}
+
+		log.Println("paipu data fail", err)
+		chanRes <- r{
+			uuid:   uuid,
+			bs:     nil,
+			detail: nil,
+		}
+		return nil, nil, errors.New("record data fail")
+	}
+
+	log.Println("FetchGameRecord ok ", uuid)
+	chanRes <- r{
+		uuid:   uuid,
+		bs:     resPaipu.Data,
+		detail: rspRecords,
+	}
+
+	return nil, nil, nil
+}
 
 // add one uuid
 func AddRecordByUuid(uuid string) error {
@@ -25,7 +127,7 @@ func AddRecordByUuid(uuid string) error {
 	// get record by uuid
 	acc, pwd := utils.GetMajSoulBotByIdx(len(utils.ConfigMajsoulBot.Acc) - 1)
 
-	_, _, err := GetMajsoulRecordByUuid(chanRes, uuid, acc, pwd)
+	_, _, err := getMajsoulRecordByUuid(chanRes, uuid, acc, pwd)
 	if err != nil {
 		log.Println("GetMajsoulRecordByUuid fail ", uuid)
 		return err
