@@ -351,20 +351,26 @@ func summary(c *gin.Context) {
 		return
 	}
 
-	// ping
+	// ping login , if fail then renew version code
 	acc, pwd := utils.GetMajSoulBotByIdx(len(utils.ConfigMajsoulBot.Acc) - 1)
 	err = api.PingMajsoulLogin(acc, pwd)
 	if err != nil {
+		log.Println("ping fail, renew version code", err)
+
+		err = initMajsoulConfig()
+		if err != nil {
+			log.Fatalln("http majsoul server config fail", client.MajsoulServerConfig, err)
+		}
+
 		objJsMsg.Set("msg", "内部错误")
 		c.JSON(500, objJsMsg)
-		log.Println("ping fail, exit for restart")
-		os.Exit(0)
+		return
 	}
 
 	// calc
 	mapPlayerInfo, ptRows, zhuyiRows, err := api.GetSummaryByUuids(uuids, ratePt, rateZhuyi)
 	if err != nil {
-		log.Println("GetSummaryByUuids err", err)
+		log.Println("GetSummaryByUuids fail", err)
 		objJsMsg.Set("msg", err.Error())
 		c.JSON(500, objJsMsg)
 		return

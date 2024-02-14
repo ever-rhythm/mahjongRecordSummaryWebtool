@@ -162,7 +162,8 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 	defer mu.Unlock()
 
 	var err error
-	var chanRes = make(chan r, 12)
+	bolPaipuFail := false
+	var chanRes = make(chan r, 1)
 	defer close(chanRes)
 
 	var mapUuidBytes = make(map[string][]byte)
@@ -170,7 +171,7 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 
 	for i := 0; i < len(uuids); i++ {
 		if i > 0 && i%MAX_GONUM == 0 && len(chanRes) < i {
-			time.Sleep(6 * time.Second)
+			time.Sleep(4 * time.Second)
 		}
 		idx := i % MAX_GONUM
 		tmpUuid := uuids[i]
@@ -184,15 +185,20 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 		}()
 	}
 
+	// wait for channel receive all
 	for i := 0; i < len(uuids); i++ {
 		tmpRes := <-chanRes
 		if tmpRes.bs == nil {
 			log.Println("majsoul record fail ", tmpRes.uuid)
-			return nil, nil, nil, errors.New("牌谱获取失败")
+			bolPaipuFail = true
+		} else {
+			mapUuidBytes[tmpRes.uuid] = tmpRes.bs
+			rspRecords.RecordList = append(rspRecords.RecordList, tmpRes.detail.RecordList...)
 		}
+	}
 
-		mapUuidBytes[tmpRes.uuid] = tmpRes.bs
-		rspRecords.RecordList = append(rspRecords.RecordList, tmpRes.detail.RecordList...)
+	if bolPaipuFail {
+		return nil, nil, nil, errors.New("牌谱获取失败")
 	}
 
 	// analyze
