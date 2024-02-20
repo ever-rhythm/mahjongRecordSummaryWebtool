@@ -7,6 +7,7 @@ import (
 
 type Rank struct {
 	Pl     string
+	Rate   int
 	Cnt    int
 	Pt     int
 	Zy     int
