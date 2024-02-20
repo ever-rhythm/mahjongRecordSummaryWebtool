@@ -7,14 +7,28 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 </head>
 <body style="background-color: #100C2A;">
-<div id="main" style="top:100px;width: 1200px;height:1500px;position: relative;margin: auto;"></div>
+<div id="main" style="top:100px;width: 1200px;height:2000px;position: relative;margin: auto;"></div>
 <script type="text/javascript">
-    var playerName = "夜光天楼"
+
     // var playerName = "你好你好369"
     // var playerName = "老板我要加个蛋"
     // var playerName = "若泽泽泽泽泽"
     // var playerName = "宫永咲Sakkki"
     // var playerName = "旺旺超大礼包"
+    // var playerName = "都筑Haruka"
+    // var playerName = "家菲猫猫"
+    // var playerName = "将错就错不错"
+    // var playerName = "魔王佩丝特"
+    // var playerName = "kaanyuyu"
+    // var playerName = "老宏帆"
+    // var playerName = "鬼手敌敌畏"
+    // var playerName = "桃里桃气桃白白"
+
+    var playerName = "夜光天楼"
+    // var playerName = "清欣"
+    // var playerName = "小猪版纳"
+    // var playerName = "打爆傻傻"
+
     var ratePt = 100
     var rateZy = 30
     var data = {
@@ -44,7 +58,6 @@
                         }
                     },
                     legend: {
-                        data: ['bpt', 'bzy', 'btotal', 'cnt']
                     },
                     grid: {
                         containLabel: true
@@ -96,7 +109,19 @@
                                 focus: 'series'
                             },
                             data: result.data.lineCnt
-                        }
+                        },
+                        {
+                            name: 'per',
+                            type: 'bar',
+                            stack: 'total',
+                            label: {
+                                show: true,
+                            },
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: result.data.linePer
+                        },
                     ]
                 }
             );

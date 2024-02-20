@@ -37,7 +37,13 @@ func GetGroupRank(code string, date string) ([]Rank, error) {
 	}
 
 	// query paipu
-	retPaipu, err := utils.QueryPaipu(retGroup[0].Group_Id, date)
+	dateEnd, err := utils.GetNextMonthDate(date)
+	if err != nil {
+		log.Println("get dateEnd fail", date)
+		return nil, err
+	}
+
+	retPaipu, err := utils.QueryPaipu(retGroup[0].Group_Id, date, dateEnd)
 	if err != nil {
 		log.Println("query paipu fail")
 		return nil, err

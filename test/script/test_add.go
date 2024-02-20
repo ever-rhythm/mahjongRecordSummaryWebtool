@@ -1,5 +1,6 @@
 package main
 
+/*
 import (
 	"bytes"
 	"context"
@@ -135,3 +136,4 @@ func main() {
 		time.Sleep(time.Second / 2)
 	}
 }
+*/

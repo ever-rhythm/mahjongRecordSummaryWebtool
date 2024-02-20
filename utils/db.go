@@ -40,7 +40,8 @@ type TableGroup struct {
 }
 
 type TablePlayer struct {
-	Name string
+	Name     string
+	Group_Id int
 }
 
 type TablePaipu struct {
@@ -63,6 +64,30 @@ type TablePaipu struct {
 	Zy_2 int
 	Zy_3 int
 	Zy_4 int
+}
+
+func InsertPlayer(onePlayer TablePlayer) (int, error) {
+	conn, err := pgx.Connect(context.Background(), ConfigDb.Dsn)
+	if err != nil {
+		log.Println("db connect fail", err)
+		return 0, err
+	}
+	defer conn.Close(context.Background())
+
+	batch := &pgx.Batch{}
+	batch.Queue(`insert into public.player(name, group_id) values($1, $2) on conflict (name) do nothing `,
+		onePlayer.Name,
+		onePlayer.Group_Id,
+	)
+
+	br := conn.SendBatch(context.Background(), batch)
+	ct, err := br.Exec()
+	if err != nil {
+		log.Println("db batch fail", err, ct.RowsAffected())
+		return 0, err
+	}
+
+	return int(ct.RowsAffected()), nil
 }
 
 func InsertPaipu(onePaipu TablePaipu) (int, error) {
@@ -132,7 +157,7 @@ func QueryGroupPlayerPaipu(groupId int, pl string, dateStart string, dateEnd str
 	return rets, err
 }
 
-func QueryPaipu(groupId int, date string) ([]TablePaipu, error) {
+func QueryPaipu(groupId int, dateStart string, dateEnd string) ([]TablePaipu, error) {
 	conn, err := pgx.Connect(context.Background(), ConfigDb.Dsn)
 	if err != nil {
 		log.Println("db connect fail", err)
@@ -140,8 +165,8 @@ func QueryPaipu(groupId int, date string) ([]TablePaipu, error) {
 	}
 	defer conn.Close(context.Background())
 
-	sqlQuery := `select * from public.paipu where group_id = $1 and time_start >= $2 order by time_start asc`
-	rows, err := conn.Query(context.Background(), sqlQuery, groupId, date)
+	sqlQuery := `select * from public.paipu where group_id = $1 and time_start >= $2 and time_start < $3 order by time_start asc`
+	rows, err := conn.Query(context.Background(), sqlQuery, groupId, dateStart, dateEnd)
 	if err != nil {
 		log.Println("db query fail", err)
 		return nil, err
@@ -164,7 +189,7 @@ func QueryPlayer(groupId int) ([]TablePlayer, error) {
 	}
 	defer conn.Close(context.Background())
 
-	sqlQuery := `select name from public.player where group_id = $1`
+	sqlQuery := `select name,group_id from public.player where group_id = $1`
 	rows, err := conn.Query(context.Background(), sqlQuery, groupId)
 	if err != nil {
 		log.Println("db query fail", err)

@@ -19,5 +19,7 @@
 record/
 main/
 .uuid
+config.json
 /vendor/
 /bin/
+/test/

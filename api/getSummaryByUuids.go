@@ -208,10 +208,6 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 	mapIdxPlayer := make(map[string]string)
 	mapUuidInfo := map[string][]*Player{}
 
-	bolRecordPaipu := false
-	if ratePt == 50 && rateZhuyi == 3 {
-		bolRecordPaipu = true
-	}
 	var ptRows []map[string]string
 	var zhuyiRows []map[string]string
 	idxZhuyi := 0
@@ -517,6 +513,11 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 	log.Println("summary ok", uuids, ptRows, zhuyiRows, string(tmpLog))
 
 	// db record paipu
+	bolRecordPaipu := false
+	if ratePt == 50 && rateZhuyi == 3 {
+		bolRecordPaipu = true
+	}
+
 	if bolRecordPaipu {
 		for _, oneRecord := range rspRecords.RecordList {
 			var players []Player
@@ -553,6 +554,7 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 			// sort
 			sort.Sort(Players(players))
 
+			// save paipu
 			onePaipu := utils.TablePaipu{
 				Paipu_Url:    oneRecord.Uuid,
 				Player_Count: len(oneRecord.Accounts),
@@ -578,6 +580,21 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 				log.Println("InsertPaipu fail", err)
 			} else {
 				log.Println("InsertPaipu ok", onePaipu)
+			}
+
+			// save player
+			for i := 0; i < 4; i++ {
+				onePlayer := utils.TablePlayer{
+					Name:     players[i].Nickname,
+					Group_Id: 503,
+				}
+
+				_, err := utils.InsertPlayer(onePlayer)
+				if err != nil {
+					log.Println("InsertPlayer fail", err)
+				} else {
+					log.Println("InsertPlayer ok", onePlayer)
+				}
 			}
 		}
 	}
