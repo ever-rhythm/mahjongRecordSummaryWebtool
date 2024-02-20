@@ -10,12 +10,17 @@
   "postgre": {
     "dsn": "postgres://postgres:ygtianlou@localhost:5432/pgtest"
   },
+  "echarts": {
+    "offsetTotal":4000,
+    "offsetPt": 3000,
+    "offsetZy": 1000
+  },
   "MajsoulBot": {
     "acc": [
-      "15110244096@189.cn"
+      "15792174564@189.cn"
     ],
     "pwd": [
-      "77shuafen"
+      "7&mjgettop"
     ]
   },
   "modeMap": {
