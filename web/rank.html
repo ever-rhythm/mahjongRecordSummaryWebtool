@@ -2,119 +2,155 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>rank</title>
+  <title>榜单</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 </head>
 <body style="background-color: #100C2A;">
-<div id="main" style="top:100px;width: 1500px;height:1500px;position: relative;margin: auto;"></div>
+<div id="main" style="top:100px;width:100%;height:1200px;position: relative;margin: auto;"></div>
 <script type="text/javascript">
-  var ratePt = 100
-  var rateZy = 30
-  var data = {
-    ratePt:ratePt,
-    rateZy:rateZy,
-  };
+  let chartBar = echarts.init(document.getElementById('main'), 'dark');
+  window.addEventListener('resize', function() {
+    chartBar.resize();
+  });
 
-  var chartBar = echarts.init(document.getElementById('main'), 'dark');
-  var jsonData = JSON.stringify(data);
-  $.ajax({
-    type:'POST',
-    url: '/api/rank',
-    contentType: "application/json",
-    data: jsonData,
-    success: function(result) {
+  let herfPrefix = 'http://127.0.0.1'
+  // let herfPrefix = 'http://120.24.252.53'
+  let intervalX = 10000
+  let queryString = new URLSearchParams(window.location.search)
+  let code = queryString.get('code')
+  let date = queryString.get('date')
 
-      chartBar.setOption(
-              {
-                title: {
-                  text:  '排行榜'
-                },
-                tooltip: {
-                  trigger: 'axis',
-                  axisPointer: {
-                    type: 'shadow'
-                  }
-                },
-                legend: {
-                  data: ['pt', 'zy', 'cnt', 'total']
-                },
-                grid: {
-                  containLabel: true
-                },
-                xAxis: {
-                  type: 'value',
-                  interval:500,
-                },
-                yAxis: {
-                  type: 'category',
-                  axisTick: {
-                    show: false
+  if (date == null || date.length === 0) {
+    let d = new Date()
+    let month = (d.getMonth()+1 < 10 ? '0'+(d.getMonth()+1):d.getMonth()+1) ;
+    date = d.getFullYear().toString() + '-' + month + '-01'
+    alert(date)
+  }
+
+  chartBar.on('click', function(params) {
+    window.open(herfPrefix + '/trend.html' + '?code=' + code + '&date=' + date + '&pl=' + encodeURIComponent(params.name));
+  });
+
+  if (code == null) {
+    alert('参数缺失')
+  } else {
+    $.ajax({
+      type:'POST',
+      url: '/api/group_rank',
+      contentType: "application/json",
+      data: JSON.stringify({
+        code:code,
+        date:date,
+      }),
+      success: function(result) {
+        chartBar.setOption(
+                {
+                  title: {
+                    text:  '榜单',
+                    padding: [5, 100],
                   },
-                  data: result.data.date
-                },
-                series: [
+                  tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                      type: 'shadow'
+                    },
+                    formatter: function (params) {
+                      let strTips = '昵称：' + params[0].name + '</br></br>'
+
+                      if (params[0] != null && params[0].value != null ){
+                        strTips += '合计：' + (params[0].value - result.data.absMinTotal).toString() + '</br>'
+                      }
+                      if (params[1] != null && params[1].value != null) {
+                        strTips += '点数：' + (params[1].value - result.data.absMinPt).toString() + '</br>'
+                      }
+                      if (params[2] != null && params[2].value != null ){
+                        strTips += '祝仪：' + (params[2].value - result.data.absMinZy).toString() + '</br>'
+                      }
+
+                      return strTips
+                    }
+                  },
+                  legend: {},
+                  grid: {
+                    containLabel: true,
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                  },
+                  xAxis: {
+                    type: 'value',
+                    boundaryGap: [0, 0.1],
+                    interval:intervalX,
+                  },
+                  yAxis: {
+                    type: 'category',
+                    // axisTick: {show: false},
+                    data: result.data.player
+                  },
+                  series: [
+                    {
+                      name: '合计',
+                      type: 'bar',
+                      // stack: 'total',
+                      label: {
+                        show: true,
+                        position:'insideLeft',
+                        formatter: function (params) {
+                          return '合计 ' + (params.value - result.data.absMinTotal).toString()
+                        }
+                      },
+                      // emphasis: {focus: 'series'},
+                      itemStyle: {
+                        color:'#7cffb2',
+                      },
+                      data: result.data.lineTotal,
+                    },
+                    {
+                      name: '点数',
+                      type: 'bar',
+                      stack: 'total',
+                      label: {
+                        show: true,
+                        position:'insideLeft',
+                        formatter: function (params) {
+                          return '点数 ' + (params.value - result.data.absMinPt).toString()
+                        }
+                      },
+                      // emphasis: {focus: 'series'},
+                      itemStyle: {
+                        color:'#4992ff',
+                      },
+                      data: result.data.linePt
+                    },
                   {
-                    name: 'pt',
+                    name: '祝仪',
                     type: 'bar',
                     stack: 'total',
                     label: {
                       show: true,
+                      position:'insideLeft',
+                      formatter: function (params) {
+                        return '祝仪 ' + (params.value - result.data.absMinZy).toString()
+                      }
                     },
-                    emphasis: {
-                      focus: 'series'
-                    },
-                    data: result.data.linePt
-                  },
-                  {
-                    name: 'zy',
-                    type: 'bar',
-                    stack: 'total',
-                    label: {
-                      show: true,
-                    },
-                    emphasis: {
-                      focus: 'series'
+                    // emphasis: {focus: 'series'},
+                    itemStyle: {
+                      color:'#fddd60',
                     },
                     data: result.data.lineZy
                   },
-                  {
-                    name: 'cnt',
-                    type: 'bar',
-                    stack: 'total',
-                    label: {
-                      show: true,
-                    },
-                    emphasis: {
-                      focus: 'series'
-                    },
-                    data: result.data.lineCnt
-                  },
-                  {
-                    name: 'total',
-                    type: 'bar',
-                    stack: 'total',
-                    label: {
-                      show: true,
-                    },
-                    emphasis: {
-                      focus: 'series'
-                    },
-                    data: result.data.lineTotal
-                  },
-                ]
-              }
-      );
-    },
-    error: function(xhr, status, error) {
-    }
-  })
 
+
+                  ]
+                }
+        );
+      },
+      error: function(xhr, status, error) {
+        alert(error)
+      }
+    })
+  }
 </script>
 </body>
 </html>
-
-<!--
-
-
--->

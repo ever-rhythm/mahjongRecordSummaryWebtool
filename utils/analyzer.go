@@ -7,6 +7,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type configMajsoulBot struct {
@@ -238,4 +239,19 @@ func GetRateZhuyiByMode(mode string) (int, int, error) {
 func GetMajSoulBotByIdx(idx int) (string, string) {
 	idxMod := idx % len(ConfigMajsoulBot.Acc)
 	return ConfigMajsoulBot.Acc[idxMod], ConfigMajsoulBot.Pwd[idxMod]
+}
+
+// 只适用于 02-01 这种格式，不然 addDate 可能跨2个月
+func GetNextMonthDate(date string) (string, error) {
+	if len(date) != 10 {
+		return "", errors.New("err format")
+	}
+
+	tmpDate := date[:len(date)-3] + "-01"
+	newDate, err := time.Parse("2006-01-02", tmpDate)
+	if err != nil {
+		return "", err
+	}
+
+	return newDate.AddDate(0, 1, 0).Format("2006-01-02"), nil
 }

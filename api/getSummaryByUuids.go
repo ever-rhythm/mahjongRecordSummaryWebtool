@@ -8,6 +8,7 @@ import (
 	"github.com/mahjongRecordSummaryWebtool/message"
 	"github.com/mahjongRecordSummaryWebtool/utils"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -206,6 +207,11 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 	mapPlayerIdx := make(map[string]string)
 	mapIdxPlayer := make(map[string]string)
 	mapUuidInfo := map[string][]*Player{}
+
+	bolRecordPaipu := false
+	if ratePt == 50 && rateZhuyi == 3 {
+		bolRecordPaipu = true
+	}
 	var ptRows []map[string]string
 	var zhuyiRows []map[string]string
 	idxZhuyi := 0
@@ -245,6 +251,7 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 			mapUuidInfo[oneRecord.Uuid] = append(mapUuidInfo[oneRecord.Uuid], &Player{
 				Nickname: oneNickName,
 				Seat:     oneAccount.Seat,
+				Zhuyi:    0,
 			})
 		}
 	}
@@ -428,25 +435,28 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 							}
 
 							if vHule.Baopai > 0 && 0 != cntZ {
-								for _, oneInfo := range mapUuidInfo[oneUuid] {
+								for oneIdx, oneInfo := range mapUuidInfo[oneUuid] {
 									if idxSeatBaoapi != -1 && int(oneInfo.Seat) == dictSeatBaopai[idxSeatBaoapi] {
 										mapPlayerInfo[oneInfo.Nickname].Zhuyi -= int(cntZ)
 										oneZhuyiRow[mapPlayerIdx[oneInfo.Nickname]] = "-" + strconv.Itoa(int(cntZ))
+										mapUuidInfo[oneUuid][oneIdx].Zhuyi -= int(cntZ)
 									}
 
 									if vHule.Seat == oneInfo.Seat {
 										mapPlayerInfo[oneInfo.Nickname].Zhuyi += int(cntZ)
 										oneZhuyiRow[mapPlayerIdx[oneInfo.Nickname]] = "+" + strconv.Itoa(int(cntZ))
+										mapUuidInfo[oneUuid][oneIdx].Zhuyi += int(cntZ)
 									}
 								}
 							} else if 0 != cntZ {
 								// dec zhuyi by scores
 								for i := 0; i < len(oneHule.DeltaScores); i++ {
 									if oneHule.DeltaScores[i] < 0 {
-										for _, oneInfo := range mapUuidInfo[oneUuid] {
+										for oneIdx, oneInfo := range mapUuidInfo[oneUuid] {
 											if i == int(oneInfo.Seat) {
 												mapPlayerInfo[oneInfo.Nickname].Zhuyi -= int(cntZ)
 												oneZhuyiRow[mapPlayerIdx[oneInfo.Nickname]] = "-" + strconv.Itoa(int(cntZ))
+												mapUuidInfo[oneUuid][oneIdx].Zhuyi -= int(cntZ)
 												break
 											}
 										}
@@ -455,18 +465,20 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 
 								// inc zhuyi by seat
 								if vHule.Zimo {
-									for _, oneInfo := range mapUuidInfo[oneUuid] {
+									for oneIdx, oneInfo := range mapUuidInfo[oneUuid] {
 										if vHule.Seat == oneInfo.Seat {
 											mapPlayerInfo[oneInfo.Nickname].Zhuyi += int(cntZ) * (len(mapPlayerInfo) - 1)
 											oneZhuyiRow[mapPlayerIdx[oneInfo.Nickname]] = "+" + strconv.Itoa(int(cntZ)*(len(mapPlayerInfo)-1))
+											mapUuidInfo[oneUuid][oneIdx].Zhuyi += int(cntZ) * (len(mapPlayerInfo) - 1)
 											break
 										}
 									}
 								} else {
-									for _, oneInfo := range mapUuidInfo[oneUuid] {
+									for oneIdx, oneInfo := range mapUuidInfo[oneUuid] {
 										if vHule.Seat == oneInfo.Seat {
 											mapPlayerInfo[oneInfo.Nickname].Zhuyi += int(cntZ)
 											oneZhuyiRow[mapPlayerIdx[oneInfo.Nickname]] = "+" + strconv.Itoa(int(cntZ))
+											mapUuidInfo[oneUuid][oneIdx].Zhuyi += int(cntZ)
 											break
 										}
 									}
@@ -503,6 +515,72 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 	// log
 	tmpLog, _ := json.Marshal(mapPlayerInfo)
 	log.Println("summary ok", uuids, ptRows, zhuyiRows, string(tmpLog))
+
+	// db record paipu
+	if bolRecordPaipu {
+		for _, oneRecord := range rspRecords.RecordList {
+			var players []Player
+			for i := 0; i < 4; i++ {
+				onePlayer := Player{}
+				players = append(players, onePlayer)
+			}
+
+			// nickname
+			for i := 0; i < len(oneRecord.Accounts); i++ {
+				players[i].Nickname = strings.TrimSpace(oneRecord.Accounts[i].Nickname)
+				players[i].Seat = oneRecord.Accounts[i].Seat
+			}
+
+			// pt
+			for i := 0; i < len(oneRecord.Result.Players); i++ {
+				for j := 0; j < len(players); j++ {
+					if oneRecord.Result.Players[i].Seat == players[j].Seat {
+						players[j].TotalPoint = oneRecord.Result.Players[i].TotalPoint
+						break
+					}
+				}
+			}
+
+			// zy
+			for _, oneInfo := range mapUuidInfo[oneRecord.Uuid] {
+				for i := 0; i < len(players); i++ {
+					if oneInfo.Nickname == players[i].Nickname {
+						players[i].Zhuyi = oneInfo.Zhuyi
+					}
+				}
+			}
+
+			// sort
+			sort.Sort(Players(players))
+
+			onePaipu := utils.TablePaipu{
+				Paipu_Url:    oneRecord.Uuid,
+				Player_Count: len(oneRecord.Accounts),
+				Time_Start:   time.Unix(int64(oneRecord.StartTime), 0),
+				Rate:         "503",
+				Group_Id:     503,
+				Pl_1:         players[0].Nickname,
+				Pl_2:         players[1].Nickname,
+				Pl_3:         players[2].Nickname,
+				Pl_4:         players[3].Nickname,
+				Pt_1:         int(players[0].TotalPoint),
+				Pt_2:         int(players[1].TotalPoint),
+				Pt_3:         int(players[2].TotalPoint),
+				Pt_4:         int(players[3].TotalPoint),
+				Zy_1:         players[0].Zhuyi,
+				Zy_2:         players[1].Zhuyi,
+				Zy_3:         players[2].Zhuyi,
+				Zy_4:         players[3].Zhuyi,
+			}
+
+			_, err := utils.InsertPaipu(onePaipu)
+			if err != nil {
+				log.Println("InsertPaipu fail", err)
+			} else {
+				log.Println("InsertPaipu ok", onePaipu)
+			}
+		}
+	}
 
 	return mapPlayerInfo, ptRows, zhuyiRows, nil
 }

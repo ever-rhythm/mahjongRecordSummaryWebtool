@@ -9,13 +9,9 @@
             content="width=device-width, initial-scale=1, maximum-scale=1"
     />
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/sdk.css" />
-    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/helper.css" />
-    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/iconfont.css" />
-    <!-- 这是默认主题所需的，如果是其他主题则不需要 -->
-    <!-- 从 1.1.0 开始 sdk.css 将不支持 IE 11，如果要支持 IE11 请引用这个 css，并把前面那个删了 -->
-    <!-- <link rel="stylesheet" href="sdk-ie11.css" /> -->
-    <!-- 不过 amis 开发团队几乎没测试过 IE 11 下的效果，所以可能有细节功能用不了，如果发现请报 issue -->
+    <link rel="stylesheet" href="https://cdn.staticfile.net/amis/2.8.0/sdk.css" />
+    <link rel="stylesheet" href="https://cdn.staticfile.net/amis/2.8.0/helper.css" />
+    <link rel="stylesheet" href="https://cdn.staticfile.net/amis/2.8.0/iconfont.css" />
     <style>
         html,
         body,
@@ -30,7 +26,7 @@
 </head>
 <body>
 <div id="root" class="app-wrapper"></div>
-<script src="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/sdk.js"></script>
+<script src="https://cdn.staticfile.net/amis/2.8.0/sdk.js"></script>
 <script type="text/javascript">
     (function () {
         let amis = amisRequire('amis/embed');
@@ -90,7 +86,7 @@
                                 "items": [
                                     {
                                         "type": "html",
-                                        "html": "网址 <a href=\"http://www.mjget.top/\">www.mjget.top</a> 欢迎收藏"
+                                        "html": "公告：雀魂晚高峰延迟，如报错请稍等1分钟后再试",
                                     },
                                     {
                                         "type": "flex",
@@ -121,28 +117,28 @@
                                                     ],
                                                     "options": [
                                                         {
-                                                            "image":"static/hzsx_20240127234214_release.png",
+                                                            "image":"http://120.24.252.53/static/hzsx_20240127234214_release.png",
                                                         },
                                                         {
-                                                            "image":"static/shxy_release_20231129122024.jpg",
+                                                            "image":"http://120.24.252.53/static/shxy_release_20231129122024.jpg",
                                                         },
                                                         {
-                                                            "image":"static/szyf_release_20231222002356.png",
+                                                            "image":"http://120.24.252.53/static/szyf_release_20231222002356.png",
                                                         },
                                                         {
-                                                            "image": "static/20231112chengdu_duola.png",
+                                                            "image": "http://120.24.252.53/static/20231112chengdu_duola.png",
                                                         },
                                                         {
-                                                            "image":"static/20231016xian_gsws_release.jpg",
+                                                            "image":"http://120.24.252.53/static/20231016xian_gsws_release.jpg",
                                                         },
                                                         {
-                                                            "image": "static/20230928changsha.png",
+                                                            "image": "http://120.24.252.53/static/20230928changsha.png",
                                                         },
                                                         {
-                                                            "image": "static/20230928xian.png",
+                                                            "image": "http://120.24.252.53/static/20230928xian.png",
                                                         },
                                                         {
-                                                            "image": "static/20230928nanchang.png",
+                                                            "image": "http://120.24.252.53/static/20230928nanchang.png",
                                                         },
                                                     ]
                                                 }
@@ -153,6 +149,7 @@
                                         "type": "steps",
                                         "style": {
                                             "width": 900,
+                                            "padding-top":0,
                                         },
                                         "mobile": {
                                             "style":{
@@ -161,7 +158,7 @@
                                         },
                                         "steps": [
                                             {
-                                                "title": "粘贴牌谱到框里",
+                                                "title": "粘贴牌谱链接",
                                             },
                                             {
                                                 "title": "选择祝仪模式"
@@ -197,13 +194,14 @@
                                                         "multiple": true,
                                                         "style": {
                                                             "padding-left":10,
-                                                            "width":450,
+                                                            "padding-top":20,
+                                                            "width":400,
                                                             "height":200,
                                                         },
                                                         "mobile": {
                                                             "style":{
                                                                 "padding-left":0,
-                                                                "width":300,
+                                                                "width":400,
                                                             },
                                                         },
                                                         "addBtn": {
@@ -215,10 +213,13 @@
                                                             "disabledOn":"typeof data.rows !== 'undefined'",
                                                         },
                                                         "value": [
-                                                            {}, {}, {},
+                                                            {}, {},
                                                         ],
                                                         "items": [
                                                             {
+                                                                "style":{
+                                                                    "padding-bottom":2,
+                                                                },
                                                                 "name": "url",
                                                                 "type": "input-text",
                                                                 "placeholder": "链接粘贴这里",
@@ -241,6 +242,7 @@
                                                     "width":450,
                                                     "height":200,
                                                     "padding-left":40,
+                                                    "padding-top":-20,
                                                 },
                                                 "mobile": {
                                                     "direction": "column",
@@ -254,16 +256,21 @@
                                                         "type": "flex",
                                                         "justify": "flex-start",
                                                         "style":{
-                                                            "padding-bottom":10,
+                                                            "padding-bottom":0,
                                                         },
                                                         "items": [
                                                             {
                                                                 "type": "tooltip-wrapper",
-                                                                "content": "103即1个祝等于3pt，3麻可选择无祝仪模式",
-                                                                "placement":"right",
+                                                                "content": "3麻可选择无祝模式",
+                                                                "placement":"top",
                                                                 "body": "祝仪模式",
                                                                 "className": "mb-1"
                                                             },
+                                                            {
+                                                                "type": "remark",
+                                                                "content": "103表示k10z3，即1个祝等于3pt，10表示k10不带祝",
+                                                                "shape": "circle"
+                                                            }
                                                         ],
                                                     },
                                                     {
@@ -272,13 +279,13 @@
                                                         "label": "",
                                                         "mode":"normal",
                                                         "style": {
-                                                            "width":400,
-                                                            "padding-bottom":10,
+                                                            "width":460,
+                                                            "padding-bottom":0,
                                                         },
                                                         "mobile": {
                                                             "style":{
                                                                 "width":"100%",
-                                                                "padding-bottom":10,
+                                                                "padding-bottom":0,
                                                             },
                                                         },
                                                         "selectFirst": true,
@@ -308,7 +315,7 @@
                                                                 "value": "53"
                                                             },
                                                             {
-                                                                "label": "k10",
+                                                                "label": "10",
                                                                 "value": "10"
                                                             },
                                                             {
@@ -327,6 +334,10 @@
                                                                 "label": "5",
                                                                 "value": "5"
                                                             },
+                                                            {
+                                                                "label": "8",
+                                                                "value": "8"
+                                                            },
                                                         ],
                                                     },
                                                     {
@@ -334,11 +345,11 @@
                                                         "justify": "flex-start",
                                                         "style":{
                                                             "box-sizing":"content-box",
-                                                            "padding-top":10,
+                                                            "padding-top":0,
                                                         },
                                                         "mobile": {
                                                             "style":{
-                                                                "padding-top":10,
+                                                                "padding-top":0,
                                                             },
                                                         },
                                                         "items": [

@@ -10,6 +10,7 @@ import (
 	"github.com/mahjongRecordSummaryWebtool/utils"
 	"io"
 	"log"
+	"math"
 	"math/rand"
 	"net/http"
 	"os"
@@ -22,7 +23,14 @@ type configGin struct {
 	Port   string
 }
 
+type configDisplay struct {
+	OffsetTotal int
+	OffsetPt    int
+	OffsetZy    int
+}
+
 var ConfigGin = configGin{}
+var ConfigDisplay = configDisplay{}
 
 func main() {
 	// init log
@@ -52,12 +60,16 @@ func main() {
 	r.StaticFS("/static", http.Dir("./web/static"))
 
 	// get
-	r.LoadHTMLFiles("web/index.html")
+	r.LoadHTMLFiles("web/index.html", "web/rank.html", "web/trend.html")
 	r.GET("/", func(c *gin.Context) { c.HTML(200, "index.html", "home"); return })
 	r.GET("/index.html", func(c *gin.Context) { c.HTML(200, "index.html", "index"); return })
+	r.GET("/rank.html", func(c *gin.Context) { c.HTML(200, "rank.html", "rank"); return })
+	r.GET("/trend.html", func(c *gin.Context) { c.HTML(200, "trend.html", "trend"); return })
 
 	// post
 	r.POST("/api/v2", summary)
+	r.POST("/api/group_rank", groupRank)
+	r.POST("/api/group_player_trend", groupPlayerTrend)
 
 	/* bak for non-display
 	// get
@@ -84,6 +96,161 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+}
+
+func groupPlayerTrend(c *gin.Context) {
+	objJs := okRet()
+
+	b, _ := c.GetRawData()
+	req, err := simplejson.NewJson(b)
+	if err != nil {
+		log.Println(err)
+		objJs.Set("msg", "请求格式有误")
+		c.JSON(500, objJs)
+		return
+	}
+
+	code := req.Get("code").MustString()
+	date := req.Get("date").MustString()
+	pl := req.Get("player").MustString()
+
+	if len(code) == 0 || len(pl) == 0 || len(date) == 0 {
+		objJs.Set("msg", "请求参数有误")
+		c.JSON(500, objJs)
+		return
+	}
+
+	ret, err := api.GetGroupPlayerTrend(code, pl, date)
+	if err != nil {
+		log.Println(err)
+		objJs.Set("msg", "查询有误")
+		c.JSON(500, objJs)
+		return
+	}
+
+	var idxs []int
+	var pts []int
+	var zys []int
+	var totals []int
+	cntPlacing := [4]int{}
+	curPt := 0
+	curZy := 0
+	curTotal := 0
+
+	for k, onePaipu := range ret {
+		ratePt, rateZy, err := utils.GetRateZhuyiByMode(onePaipu.Rate)
+		if err != nil {
+			ratePt = 0
+			rateZy = 0
+		}
+
+		arrPl := []string{onePaipu.Pl_1, onePaipu.Pl_2, onePaipu.Pl_3, onePaipu.Pl_4}
+		arrPt := []int{onePaipu.Pt_1, onePaipu.Pt_2, onePaipu.Pt_3, onePaipu.Pt_4}
+		arrZy := []int{onePaipu.Zy_1, onePaipu.Zy_2, onePaipu.Zy_3, onePaipu.Zy_4}
+
+		for i := 0; i < len(arrPl); i++ {
+			if arrPl[i] == pl {
+				cntPlacing[i] += 1
+				curPt += ratePt * arrPt[i] / 1000
+				curZy += rateZy * arrZy[i] * ratePt
+				curTotal += ratePt*arrPt[i]/1000 + rateZy*arrZy[i]*ratePt
+
+				pts = append(pts, curPt)
+				zys = append(zys, curZy)
+				totals = append(totals, curTotal)
+
+				idxs = append(idxs, k)
+				break
+			}
+		}
+	}
+
+	objJs.SetPath([]string{"data", "date"}, idxs)
+	objJs.SetPath([]string{"data", "linePt"}, pts)
+	objJs.SetPath([]string{"data", "lineZy"}, zys)
+	objJs.SetPath([]string{"data", "lineTotal"}, totals)
+	objJs.SetPath([]string{"data", "cntTotal"}, len(totals))
+	objJs.SetPath([]string{"data", "cnt1"}, cntPlacing[0])
+	objJs.SetPath([]string{"data", "cnt2"}, cntPlacing[1])
+	objJs.SetPath([]string{"data", "cnt3"}, cntPlacing[2])
+	objJs.SetPath([]string{"data", "cnt4"}, cntPlacing[3])
+
+	c.JSON(200, objJs.MustMap())
+	return
+}
+
+func groupRank(c *gin.Context) {
+	objJs := okRet()
+
+	b, _ := c.GetRawData()
+	req, err := simplejson.NewJson(b)
+	if err != nil {
+		log.Println(err)
+		objJs.Set("msg", "请求格式有误")
+		c.JSON(500, objJs)
+		return
+	}
+
+	code := req.Get("code").MustString()
+	date := req.Get("date").MustString()
+
+	if len(code) == 0 || len(date) == 0 {
+		objJs.Set("msg", "请求参数有误")
+		c.JSON(500, objJs)
+		return
+	}
+
+	ret, err := api.GetGroupRank(code, date)
+	if err != nil {
+		log.Println(err)
+		objJs.Set("msg", "查询有误")
+		c.JSON(500, objJs)
+		return
+	}
+
+	var players []string
+	var totals []int
+	var pts []int
+	var zys []int
+
+	minLine := make(map[string]int)
+	minLine["total"] = math.MaxInt
+	minLine["pt"] = math.MaxInt
+	minLine["zy"] = math.MaxInt
+
+	for _, oneRank := range ret {
+		if oneRank.Zy < minLine["zy"] {
+			minLine["zy"] = oneRank.Zy
+		}
+		if oneRank.Pt < minLine["pt"] {
+			minLine["pt"] = oneRank.Pt
+		}
+	}
+
+	absMinPt := int(math.Abs(float64(minLine["pt"]))) + ConfigDisplay.OffsetPt
+	absMinZy := int(math.Abs(float64(minLine["zy"]))) + ConfigDisplay.OffsetZy
+	absMinTotal := absMinPt + absMinZy
+
+	for _, oneRank := range ret {
+		players = append(players, oneRank.Pl)
+		totals = append(totals, oneRank.Total+absMinTotal)
+		pts = append(pts, oneRank.Pt+absMinPt)
+		zys = append(zys, oneRank.Zy+absMinZy)
+	}
+
+	//log.Println(minLine)
+	//log.Println(totals, pts, zys)
+
+	objJs.SetPath([]string{"data", "player"}, players)
+	objJs.SetPath([]string{"data", "lineTotal"}, totals)
+	objJs.SetPath([]string{"data", "linePt"}, pts)
+	objJs.SetPath([]string{"data", "lineZy"}, zys)
+	objJs.SetPath([]string{"data", "absMinTotal"}, absMinTotal)
+	objJs.SetPath([]string{"data", "absMinPt"}, absMinPt)
+	objJs.SetPath([]string{"data", "absMinZy"}, absMinZy)
+
+	c.JSON(200, objJs.MustMap())
+	return
 }
 
 func rank(c *gin.Context) {
@@ -376,8 +543,7 @@ func summary(c *gin.Context) {
 		return
 	}
 
-	// output
-	// build names
+	// output build names
 	var arrName []string
 	for i := 0; i < 4; i++ {
 		for _, oneInfo := range mapPlayerInfo {
@@ -452,6 +618,9 @@ func loadConfigFile() error {
 	utils.ConfigMode.Mode = objJsConfig.Get("modeMap").Get("mode").MustStringArray()
 	utils.ConfigMode.Rate = objJsConfig.Get("modeMap").Get("rate").MustStringArray()
 	utils.ConfigMode.Zy = objJsConfig.Get("modeMap").Get("zy").MustStringArray()
+	ConfigDisplay.OffsetTotal = objJsConfig.Get("echarts").Get("offsetTotal").MustInt()
+	ConfigDisplay.OffsetPt = objJsConfig.Get("echarts").Get("offsetPt").MustInt()
+	ConfigDisplay.OffsetZy = objJsConfig.Get("echarts").Get("offsetZy").MustInt()
 
 	// validate config
 	if len(utils.ConfigMajsoulBot.Acc) != len(utils.ConfigMajsoulBot.Pwd) ||

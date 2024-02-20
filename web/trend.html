@@ -2,175 +2,256 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>trending</title>
+    <title>战绩</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 </head>
 <body style="background-color: #100C2A;">
 <!-- 为 ECharts 准备一个定义了宽高的 DOM -->
-<div id="main2" style="top:100px;width: 1200px;height:200px;position: relative;margin: auto;">
-    <span style="padding-left:5px;font-weight:bold;font-size:18px;color: #EEF1FA">整体信息</span><br/><br/><br/>
-    <span id='s0' style="padding-left:5px;font-weight:bold;font-size:18px;color: #4992ff"></span><br/>
-    <span id='s1' style="padding-left:5px;font-weight:bold;font-size:18px;color: #4992ff"></span><br/>
-    <span id='s2' style="padding-left:5px;font-weight:bold;font-size:18px;color: #4992ff"></span>
+<div id="main2" style="top:100px;width: 1200px;height:300px;position: relative;margin: auto;display: flex">
+    <div id="maininfo" style="width: 500px;height:100%;position:relative;margin: auto;">
+        <span style="padding-left:100px;font-weight:bold;font-size:18px;color: #EEF1FA">对局信息</span><br/><br/><br/>
+        <span id='s0' style="padding-left:100px;font-weight:bold;font-size:18px;color: #4992ff"></span><br/>
+        <span id='s1' style="padding-left:100px;font-weight:bold;font-size:18px;color: #4992ff"></span><br/>
+        <span id='s2' style="padding-left:100px;font-weight:bold;font-size:18px;color: #4992ff"></span>
+    </div>
+    <div id="main1" style="height:100%;margin: auto;flex: 1"></div>
 </div>
-<div id="main1" style="top:100px;width: 1200px;height:200px;position: relative;margin: auto;"></div>
-<div id="main" style="top:100px;width: 1200px;height:600px;position: relative;margin: auto;"></div>
+<div id="main" style="top:100px;width: 1200px;height:800px;position: relative;margin: auto;"></div>
 <script type="text/javascript">
-    var playerName = "夜光天楼"
-    // var playerName = "宇宇宇丽"
-    // var playerName = "你好你好369"
-    // var playerName = "老板我要加个蛋"
-    // var playerName = "若泽泽泽泽泽"
-    // var playerName = "宫永咲Sakkki"
-    // var playerName = "旺旺超大礼包"
-    var ratePt = 100
-    var rateZy = 30
-    var data = {
-        pl:playerName,
-        ratePt:ratePt,
-        rateZy:rateZy,
-    };
+    let myChart = echarts.init(document.getElementById('main'), 'dark');
+    let chartBar = echarts.init(document.getElementById('main1'), 'dark');
+    let params = new URLSearchParams(window.location.search)
+    let code = params.get('code')
+    let date = params.get('date')
+    let player = params.get('pl')
+    /*
+    var colorPalette = [
+        '#4992ff',
+        '#7cffb2',
+        '#fddd60',
+        '#ff6e76',
+        '#58d9f9',
+        '#05c091',
+        '#ff8a45',
+        '#8d48e3',
+        '#dd79ff'
+    ];
 
-    var myChart = echarts.init(document.getElementById('main'), 'dark');
-    var chartBar = echarts.init(document.getElementById('main1'), 'dark');
-    var jsonData = JSON.stringify(data);
-    $.ajax({
-        type:'POST',
-        url: '/api/trend',
-        contentType: "application/json",
-        data: jsonData,
-        success: function(result) {
-            document.getElementById('s0').innerHTML = '账号名称：' + playerName
-            document.getElementById('s1').innerHTML = '总对局数：' + result.data.cntTotal
-            document.getElementById('s2').innerHTML = '最终积分：' + result.data.lineTotal[result.data.cntTotal - 1]
+     */
+    if (code == null || date == null || player == null) {
+        alert('参数缺失')
+    } else {
+        $.ajax({
+            type:'POST',
+            url: '/api/group_player_trend',
+            contentType: "application/json",
+            data: JSON.stringify({
+                code:code,
+                date:date,
+                player:player,
+            }),
+            success: function(result) {
+                document.getElementById('s0').innerHTML = '账号名称：' + player
+                document.getElementById('s1').innerHTML = '对局总数：' + result.data.cntTotal
+                document.getElementById('s2').innerHTML = '最终积分：' + result.data.lineTotal[result.data.cntTotal - 1]
 
-            myChart.setOption({
-                title: {
-                    text:  '积分趋势'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross',
-                    },
-                    position:['40%', '5%']
-                },
-                legend: {
-                },
-                grid:{
-                    top:'middle',
-                },
-                xAxis: {
-                    type: 'category',
-                    data: result.data.date
-                },
-                yAxis: {
-                    type: 'value',
-                    interval: 500,
-                },
-                series: [
-                    {
-                        name: '两者合计',
-                        type: 'line',
-                        data: result.data.lineTotal
-                    },
-                    {
-                        name: '纯pt',
-                        type: 'line',
-                        data: result.data.linePt
-                    },
-                    {
-                        name: '纯zy',
-                        type: 'line',
-                        data: result.data.lineZy
-                    },
-                ]
-            });
-
-            chartBar.setOption(
-                {
+                myChart.setOption({
                     title: {
-                        text:  '顺位分布'
+                        text:  '积分趋势',
+                        padding: [5, 100],
                     },
                     tooltip: {
                         trigger: 'axis',
                         axisPointer: {
-                            type: 'shadow'
-                        }
+                            type: 'cross',
+                        },
+                        position:['40%', '10%']
                     },
-                    legend: {},
-                    grid: {
-                        containLabel: true
+                    legend: {
+                    },
+                    grid:{
+                        top:'middle',
                     },
                     xAxis: {
-                        type: 'value'
+                        type: 'category',
+                        data: result.data.date
                     },
                     yAxis: {
-                        type: 'category',
-                        data: ['顺位']
+                        type: 'value',
+                        interval: 1000,
                     },
                     series: [
                         {
-                            name: '1位',
-                            type: 'bar',
-                            stack: 'total',
-                            label: {
-                                show: true,
-                                formatter: Math.round(result.data.cnt1 / result.data.cntTotal * 10000) / 100 + "%",
+                            name: '点数',
+                            type: 'line',
+                            smooth: false,
+                            data: result.data.linePt,
+                            itemStyle: {
+                                color:'#4992ff',
                             },
-                            emphasis: {
-                                focus: 'series'
-                            },
-                            data: [result.data.cnt1]
                         },
                         {
-                            name: '2位',
-                            type: 'bar',
-                            stack: 'total',
-                            label: {
-                                show: true,
-                                formatter: Math.round(result.data.cnt2 / result.data.cntTotal * 10000) / 100 + "%",
+                            name: '祝仪',
+                            type: 'line',
+                            smooth: false,
+                            data: result.data.lineZy,
+                            itemStyle: {
+                                color:'#fddd60',
                             },
-                            emphasis: {
-                                focus: 'series'
-                            },
-                            data: [result.data.cnt2]
                         },
                         {
-                            name: '3位',
-                            type: 'bar',
-                            stack: 'total',
-                            label: {
-                                show: true,
-                                formatter: Math.round(result.data.cnt3 / result.data.cntTotal * 10000) / 100 + "%",
+                            name: '合计',
+                            type: 'line',
+                            smooth: false,
+                            data: result.data.lineTotal,
+                            itemStyle: {
+                                color:'#7cffb2',
                             },
-                            emphasis: {
-                                focus: 'series'
-                            },
-                            data: [result.data.cnt3]
-                        },
-                        {
-                            name: '4位',
-                            type: 'bar',
-                            stack: 'total',
-                            label: {
-                                show: true,
-                                formatter: Math.round(result.data.cnt4 / result.data.cntTotal * 10000) / 100 + "%",
-                            },
-                            emphasis: {
-                                focus: 'series'
-                            },
-                            data: [result.data.cnt4]
                         },
                     ]
-                }
-            );
-        },
-        error: function(xhr, status, error) {
-        }
-    })
+                });
 
+                chartBar.setOption({
+                    title: {
+                        text: '顺位统计',
+                        left: 'center',
+                        top: 'center',
+                    },
+                    series: [
+                        {
+                            type: 'pie',
+                            radius: ['50%', '70%'],
+                            // bottom: 20,
+                            label: {
+                                // alignTo: 'edge',
+                                formatter: '{name|{b} {c}战}\n{per|{d}%}',
+                                minMargin: 5,
+                                edgeDistance: 10,
+                                lineHeight: 15,
+                                rich: {
+                                    time: {
+                                        color: '#999'
+                                    }
+                                }
+                            },
+                            data: [
+                                {
+                                    name: '2位',
+                                    value: result.data.cnt2,
+                                    itemStyle: {
+                                        color:'#7cffb2',
+                                    }
+                                },
+                                {
+                                    name: '3位',
+                                    value: result.data.cnt3,
+                                    itemStyle: {
+                                        color:'#fddd60',
+                                    }
+                                },
+                                {
+                                    name: '4位',
+                                    value: result.data.cnt4,
+                                    itemStyle: {
+                                        color:'#ff6e76',
+                                    }
+                                },
+                                {
+                                    name: '1位',
+                                    value: result.data.cnt1,
+                                    itemStyle: {
+                                        color:'#4992ff',
+                                    }
+                                },
+                            ],
+                        }
+                    ],
+                });
+            },
+            error: function(xhr, status, error) {
+                alert(error)
+            }
+        })
+    }
+/*
+{
+                        title: {
+                            text: '顺位分布',
+                        },
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'shadow'
+                            }
+                        },
+                        legend: {},
+                        grid: {
+                            containLabel: true
+                        },
+                        xAxis: {
+                            type: 'value'
+                        },
+                        yAxis: {
+                            type: 'category',
+                            data: ['顺位']
+                        },
+                        series: [
+                            {
+                                name: '1位',
+                                type: 'bar',
+                                stack: 'total',
+                                label: {
+                                    show: true,
+                                    formatter: Math.round(result.data.cnt1 / result.data.cntTotal * 10000) / 100 + "%",
+                                },
+                                emphasis: {
+                                    focus: 'series'
+                                },
+                                data: [result.data.cnt1]
+                            },
+                            {
+                                name: '2位',
+                                type: 'bar',
+                                stack: 'total',
+                                label: {
+                                    show: true,
+                                    formatter: Math.round(result.data.cnt2 / result.data.cntTotal * 10000) / 100 + "%",
+                                },
+                                emphasis: {
+                                    focus: 'series'
+                                },
+                                data: [result.data.cnt2]
+                            },
+                            {
+                                name: '3位',
+                                type: 'bar',
+                                stack: 'total',
+                                label: {
+                                    show: true,
+                                    formatter: Math.round(result.data.cnt3 / result.data.cntTotal * 10000) / 100 + "%",
+                                },
+                                emphasis: {
+                                    focus: 'series'
+                                },
+                                data: [result.data.cnt3]
+                            },
+                            {
+                                name: '4位',
+                                type: 'bar',
+                                stack: 'total',
+                                label: {
+                                    show: true,
+                                    formatter: Math.round(result.data.cnt4 / result.data.cntTotal * 10000) / 100 + "%",
+                                },
+                                emphasis: {
+                                    focus: 'series'
+                                },
+                                data: [result.data.cnt4]
+                            },
+                        ]
+                    }
+ */
 </script>
 </body>
 </html>
