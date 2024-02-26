@@ -512,13 +512,13 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 	tmpLog, _ := json.Marshal(mapPlayerInfo)
 	log.Println("summary ok", uuids, ptRows, zhuyiRows, string(tmpLog))
 
-	// db record paipu
-	bolRecordPaipu := false
-	if ratePt == 50 && rateZhuyi == 3 {
-		bolRecordPaipu = true
+	// check db record paipu
+	var pls []string
+	for i := 0; i < len(rspRecords.RecordList[0].Accounts); i++ {
+		pls = append(pls, strings.TrimSpace(rspRecords.RecordList[0].Accounts[i].Nickname))
 	}
 
-	if bolRecordPaipu {
+	if CheckIfRecord(ratePt, rateZhuyi, pls) {
 		for _, oneRecord := range rspRecords.RecordList {
 			var players []Player
 			for i := 0; i < 4; i++ {
@@ -600,4 +600,23 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 	}
 
 	return mapPlayerInfo, ptRows, zhuyiRows, nil
+}
+
+func CheckIfRecord(ratePt int, rateZy int, pls []string) bool {
+
+	if ratePt == 50 && rateZy == 3 {
+		return true
+	}
+
+	rets, err := utils.QueryPlayerByNames(pls)
+	if err != nil {
+		log.Println("QueryPlayerByNames fail", err)
+		return false
+	}
+
+	if len(rets) > 0 {
+		return true
+	}
+
+	return false
 }

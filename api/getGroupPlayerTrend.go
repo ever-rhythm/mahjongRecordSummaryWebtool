@@ -6,31 +6,43 @@ import (
 	"log"
 )
 
-func GetGroupPlayerTrend(code string, pl string, date string) ([]utils.TablePaipu, error) {
+func GetGroupPlayerTrend(code string, pl string, date string) ([]utils.TablePaipu, []string, error) {
 
 	// query code
 	retGroup, err := utils.QueryGroup(code)
 	if err != nil {
 		log.Println("QueryGroup fail")
-		return nil, err
+		return nil, nil, err
 	}
 
 	if len(retGroup) == 0 {
-		return nil, errors.New("invalid code")
+		return nil, nil, errors.New("invalid code")
 	}
 
-	// query paipu
+	// query player
+	retPlayer, err := utils.QueryPlayersByName(pl)
+	if err != nil {
+		log.Println("QueryPlayersByName fail", err)
+		return nil, nil, err
+	}
+
 	dateEnd, err := utils.GetNextMonthDate(date)
 	if err != nil {
 		log.Println("next month date invalid")
-		return nil, err
+		return nil, nil, err
 	}
 
-	retPaipu, err := utils.QueryGroupPlayerPaipu(retGroup[0].Group_Id, pl, date, dateEnd)
+	var pls []string
+	for _, onePlayer := range retPlayer {
+		pls = append(pls, onePlayer.Name)
+	}
+
+	// query paipu
+	retPaipu, err := utils.QueryGroupPlayerPaipu(retGroup[0].Group_Id, pls, date, dateEnd)
 	if err != nil {
 		log.Println("QueryGroupPlayerPaipu fail")
-		return nil, err
+		return nil, nil, err
 	}
 
-	return retPaipu, nil
+	return retPaipu, pls, nil
 }

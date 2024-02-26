@@ -3,13 +3,15 @@
 <head>
     <meta charset="utf-8" />
     <title>战绩</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>-->
+    <script src="https://cdn.staticfile.net/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdn.staticfile.net/jquery/3.7.1/jquery.min.js"></script>
 </head>
 <body style="background-color: #100C2A;">
 <!-- 为 ECharts 准备一个定义了宽高的 DOM -->
-<div id="main2" style="top:100px;width: 1200px;height:300px;position: relative;margin: auto;display: flex">
-    <div id="maininfo" style="width: 500px;height:100%;position:relative;margin: auto;">
+<div id="main2" style="top:100px;width: 960px;height:300px;position: relative;margin: auto;display: flex">
+    <div id="maininfo" style="width: 400px;height:100%;position:relative;margin: auto;">
         <span style="padding-left:100px;font-weight:bold;font-size:18px;color: #EEF1FA">对局信息</span><br/><br/><br/>
         <span id='s0' style="padding-left:100px;font-weight:bold;font-size:18px;color: #4992ff"></span><br/>
         <span id='s1' style="padding-left:100px;font-weight:bold;font-size:18px;color: #4992ff"></span><br/>
@@ -17,11 +19,12 @@
     </div>
     <div id="main1" style="height:100%;margin: auto;flex: 1"></div>
 </div>
-<div id="main" style="top:100px;width: 1200px;height:800px;position: relative;margin: auto;"></div>
+<div id="main" style="top:100px;width: 960px;height:800px;position: relative;margin: auto;"></div>
 <script type="text/javascript">
     let myChart = echarts.init(document.getElementById('main'), 'dark');
     let chartBar = echarts.init(document.getElementById('main1'), 'dark');
     let params = new URLSearchParams(window.location.search)
+    let intervalY = 5000
     let code = params.get('code')
     let date = params.get('date')
     let player = params.get('pl')
@@ -79,7 +82,7 @@
                     },
                     yAxis: {
                         type: 'value',
-                        interval: 1000,
+                        interval: intervalY,
                     },
                     series: [
                         {

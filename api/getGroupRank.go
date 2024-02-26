@@ -7,6 +7,34 @@ import (
 	"sort"
 )
 
+type Rank struct {
+	Pl             string
+	PlayerId       int
+	ParentPlayerId int
+	Rate           int
+	Cnt            int
+	Pt             int
+	Zy             int
+	Total          int
+	Bpt            int
+	Bzy            int
+	Btotal         int
+}
+
+type Ranks []Rank
+
+func (players Ranks) Len() int {
+	return len(players)
+}
+
+func (players Ranks) Swap(i, j int) {
+	players[i], players[j] = players[j], players[i]
+}
+
+func (players Ranks) Less(i, j int) bool {
+	return players[j].Total > players[i].Total
+}
+
 func GetGroupRank(code string, date string) ([]Rank, error) {
 
 	// query group code
@@ -32,7 +60,9 @@ func GetGroupRank(code string, date string) ([]Rank, error) {
 	mapPlayer2Rank := make(map[string]*Rank)
 	for _, onePlayer := range retPlayer {
 		mapPlayer2Rank[onePlayer.Name] = &Rank{
-			Pl: onePlayer.Name,
+			Pl:             onePlayer.Name,
+			PlayerId:       onePlayer.Player_Id,
+			ParentPlayerId: onePlayer.Parent_Player_Id,
 		}
 	}
 
@@ -49,8 +79,6 @@ func GetGroupRank(code string, date string) ([]Rank, error) {
 		return nil, err
 	}
 
-	//log.Println("len paipu", len(retPaipu))
-
 	for _, onePaipu := range retPaipu {
 		arrPl := []string{onePaipu.Pl_1, onePaipu.Pl_2, onePaipu.Pl_3, onePaipu.Pl_4}
 		arrPt := []int{onePaipu.Pt_1, onePaipu.Pt_2, onePaipu.Pt_3, onePaipu.Pt_4}
@@ -65,10 +93,25 @@ func GetGroupRank(code string, date string) ([]Rank, error) {
 		for i := 0; i < len(arrPl); i++ {
 			_, exist := mapPlayer2Rank[arrPl[i]]
 			if exist {
-				mapPlayer2Rank[arrPl[i]].Pt += arrPt[i] * ratePt / 1000
-				mapPlayer2Rank[arrPl[i]].Zy += arrZy[i] * rateZy * ratePt
-				mapPlayer2Rank[arrPl[i]].Cnt += 1
-				mapPlayer2Rank[arrPl[i]].Total += ratePt*arrPt[i]/1000 + rateZy*arrZy[i]*ratePt
+				onePt := arrPt[i] * ratePt / 1000
+				oneZy := arrZy[i] * rateZy * ratePt
+
+				if mapPlayer2Rank[arrPl[i]].ParentPlayerId != 0 {
+					for _, oneRank := range mapPlayer2Rank {
+						if oneRank.PlayerId == mapPlayer2Rank[arrPl[i]].ParentPlayerId {
+							mapPlayer2Rank[oneRank.Pl].Pt += onePt
+							mapPlayer2Rank[oneRank.Pl].Zy += oneZy
+							mapPlayer2Rank[oneRank.Pl].Cnt += 1
+							mapPlayer2Rank[oneRank.Pl].Total += onePt + oneZy
+							break
+						}
+					}
+				} else {
+					mapPlayer2Rank[arrPl[i]].Pt += onePt
+					mapPlayer2Rank[arrPl[i]].Zy += oneZy
+					mapPlayer2Rank[arrPl[i]].Cnt += 1
+					mapPlayer2Rank[arrPl[i]].Total += onePt + oneZy
+				}
 			}
 		}
 	}

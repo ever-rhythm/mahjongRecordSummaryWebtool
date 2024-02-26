@@ -1,12 +1,16 @@
 package api
 
 import (
+	"errors"
 	"github.com/mahjongRecordSummaryWebtool/utils"
+	"log"
 	"sort"
+	"strconv"
 )
 
 type Competitor struct {
 	Pl     string
+	Rate   int
 	Cnt    int
 	Pt     int
 	Zy     int
@@ -27,13 +31,30 @@ func (players Competitors) Swap(i, j int) {
 }
 
 func (players Competitors) Less(i, j int) bool {
-	//return players[j].Cnt > players[i].Cnt
 	return players[j].Btotal > players[i].Btotal
 }
 
-func GetCompetitorList(pl string) ([]Competitor, error) {
+func GetCompetitors(code string, pl string, date string) ([]Competitor, error) {
 
-	pts, err := utils.QueryPtByConds(pl, 0, 0)
+	// query code
+	retGroup, err := utils.QueryGroup(code)
+	if err != nil {
+		log.Println("QueryGroup fail")
+		return nil, err
+	}
+
+	if len(retGroup) == 0 {
+		return nil, errors.New("invalid code")
+	}
+
+	dateEnd, err := utils.GetNextMonthDate(date)
+	if err != nil {
+		log.Println("next month date invalid")
+		return nil, err
+	}
+
+	// query paipu
+	pts, err := utils.QueryGroupPlayerPaipu(retGroup[0].Group_Id, []string{pl}, date, dateEnd)
 	if err != nil {
 		return nil, err
 	}
@@ -51,12 +72,21 @@ func GetCompetitorList(pl string) ([]Competitor, error) {
 		}
 	}
 
-	//log.Println(mapPlInfo) // test
-
 	for i := 0; i < len(pts); i++ {
 		onePls := []string{pts[i].Pl_1, pts[i].Pl_2, pts[i].Pl_3, pts[i].Pl_4}
 		onePts := []int{pts[i].Pt_1, pts[i].Pt_2, pts[i].Pt_3, pts[i].Pt_4}
 		oneZys := []int{pts[i].Zy_1, pts[i].Zy_2, pts[i].Zy_3, pts[i].Zy_4}
+		oneRate, err := strconv.Atoi(pts[i].Rate)
+		if err != nil {
+			log.Println("rate err", err)
+			continue
+		}
+
+		oneRatePt, oneRateZy, err := utils.GetRateZhuyiByMode(pts[i].Rate)
+		if err != nil {
+			log.Println("rate err", err)
+			continue
+		}
 
 		curPlIdx := 0
 		curPt := 0
@@ -74,13 +104,19 @@ func GetCompetitorList(pl string) ([]Competitor, error) {
 			if j == curPlIdx || len(onePls[j]) == 0 {
 				continue
 			} else {
-				mapPlInfo[onePls[j]].Pt += onePts[j]
-				mapPlInfo[onePls[j]].Zy += oneZys[j]
-				mapPlInfo[onePls[j]].Total += onePts[j]/100 + oneZys[j]*30
+				onePt := onePts[j] * oneRatePt / 1000
+				oneZy := oneZys[j] * oneRateZy * oneRatePt
+				oneBpt := (curPt - onePts[j]) * oneRatePt / 1000
+				oneBzy := (curZy - oneZys[j]) * oneRateZy * oneRatePt
+
+				mapPlInfo[onePls[j]].Pt += onePt
+				mapPlInfo[onePls[j]].Zy += oneZy
+				mapPlInfo[onePls[j]].Total += onePt + oneZy
 				mapPlInfo[onePls[j]].Cnt += 1
-				mapPlInfo[onePls[j]].Bpt += curPt - onePts[j]
-				mapPlInfo[onePls[j]].Bzy += curZy - oneZys[j]
-				mapPlInfo[onePls[j]].Btotal += (curPt-onePts[j])/100 + (curZy-oneZys[j])*30
+				mapPlInfo[onePls[j]].Rate = oneRate
+				mapPlInfo[onePls[j]].Bpt += oneBpt
+				mapPlInfo[onePls[j]].Bzy += oneBzy
+				mapPlInfo[onePls[j]].Btotal += oneBpt + oneBzy
 			}
 		}
 	}
@@ -93,8 +129,6 @@ func GetCompetitorList(pl string) ([]Competitor, error) {
 	}
 
 	sort.Sort(Competitors(arrCompetitor))
-
-	//log.Println(arrCompetitor) // test
 
 	return arrCompetitor, err
 }

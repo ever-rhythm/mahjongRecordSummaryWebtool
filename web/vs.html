@@ -2,54 +2,35 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>vs</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <title>对手</title>
+    <script src="https://cdn.staticfile.net/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdn.staticfile.net/jquery/3.7.1/jquery.min.js"></script>
 </head>
 <body style="background-color: #100C2A;">
 <div id="main" style="top:100px;width: 1200px;height:2000px;position: relative;margin: auto;"></div>
 <script type="text/javascript">
+    let chartBar = echarts.init(document.getElementById('main'), 'dark');
 
-    // var playerName = "你好你好369"
-    // var playerName = "老板我要加个蛋"
-    // var playerName = "若泽泽泽泽泽"
-    // var playerName = "宫永咲Sakkki"
-    // var playerName = "旺旺超大礼包"
-    // var playerName = "都筑Haruka"
-    // var playerName = "家菲猫猫"
-    // var playerName = "将错就错不错"
-    // var playerName = "魔王佩丝特"
-    // var playerName = "kaanyuyu"
-    // var playerName = "老宏帆"
-    // var playerName = "鬼手敌敌畏"
-    // var playerName = "桃里桃气桃白白"
+    let params = new URLSearchParams(window.location.search)
+    let intervalX = 500
+    let code = params.get('code')
+    let date = params.get('date')
+    let player = params.get('pl')
 
-    var playerName = "夜光天楼"
-    // var playerName = "清欣"
-    // var playerName = "小猪版纳"
-    // var playerName = "打爆傻傻"
-
-    var ratePt = 100
-    var rateZy = 30
-    var data = {
-        pl:playerName,
-        ratePt:ratePt,
-        rateZy:rateZy,
-    };
-
-    var chartBar = echarts.init(document.getElementById('main'), 'dark');
-    var jsonData = JSON.stringify(data);
     $.ajax({
         type:'POST',
         url: '/api/competitor',
         contentType: "application/json",
-        data: jsonData,
+        data: JSON.stringify({
+            date: date,
+            code: code,
+            player: player
+        }),
         success: function(result) {
-
             chartBar.setOption(
                 {
                     title: {
-                        text:  '对手情况'
+                        text:  '对手'
                     },
                     tooltip: {
                         trigger: 'axis',
@@ -64,14 +45,14 @@
                     },
                     xAxis: {
                         type: 'value',
-                        interval:500,
+                        interval:intervalX,
                     },
                     yAxis: {
                         type: 'category',
                         axisTick: {
                             show: false
                         },
-                        data: result.data.date
+                        data: result.data.pls
                     },
                     series: [
                         {
@@ -127,25 +108,10 @@
             );
         },
         error: function(xhr, status, error) {
+            alert(status)
         }
     })
 
 </script>
 </body>
 </html>
-
-<!--
-
-                        {
-                            name: 'btotal',
-                            type: 'bar',
-                            stack: 'total',
-                            label: {
-                                show: true,
-                            },
-                            emphasis: {
-                                focus: 'series'
-                            },
-                            data: result.data.lineTotal
-                        },
--->
