@@ -553,14 +553,19 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 
 			// sort
 			sort.Sort(Players(players))
+			rate := strconv.Itoa(ratePt) + strconv.Itoa(rateZhuyi)
+			groupId, err := strconv.Atoi(rate)
+			if err != nil {
+				groupId = 0
+			}
 
 			// save paipu
 			onePaipu := utils.TablePaipu{
 				Paipu_Url:    oneRecord.Uuid,
 				Player_Count: len(oneRecord.Accounts),
 				Time_Start:   time.Unix(int64(oneRecord.StartTime), 0),
-				Rate:         "503",
-				Group_Id:     503,
+				Rate:         rate,
+				Group_Id:     groupId,
 				Pl_1:         players[0].Nickname,
 				Pl_2:         players[1].Nickname,
 				Pl_3:         players[2].Nickname,
@@ -575,18 +580,18 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 				Zy_4:         players[3].Zhuyi,
 			}
 
-			_, err := utils.InsertPaipu(onePaipu)
+			retCnt, err := utils.InsertPaipu(onePaipu)
 			if err != nil {
 				log.Println("InsertPaipu fail", err)
 			} else {
-				log.Println("InsertPaipu ok", onePaipu)
+				log.Println("InsertPaipu ok", retCnt, onePaipu)
 			}
 
 			// save player
 			for i := 0; i < 4; i++ {
 				onePlayer := utils.TablePlayer{
 					Name:     players[i].Nickname,
-					Group_Id: 503,
+					Group_Id: groupId,
 				}
 
 				_, err := utils.InsertPlayer(onePlayer)
@@ -602,21 +607,31 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 	return mapPlayerInfo, ptRows, zhuyiRows, nil
 }
 
+// todo bugfix for insert
 func CheckIfRecord(ratePt int, rateZy int, pls []string) bool {
 
 	if ratePt == 50 && rateZy == 3 {
 		return true
 	}
 
-	rets, err := utils.QueryPlayerByNames(pls)
-	if err != nil {
-		log.Println("QueryPlayerByNames fail", err)
-		return false
+	for i := 0; i < len(pls); i++ {
+		if pls[i] == "夜光天楼" {
+			return true
+		}
 	}
 
-	if len(rets) > 0 {
-		return true
-	}
+	/*
+		rets, err := utils.QueryPlayerByNames(pls)
+		if err != nil {
+			log.Println("QueryPlayerByNames fail", err)
+			return false
+		}
+
+		if len(rets) > 0 {
+			return true
+		}
+
+	*/
 
 	return false
 }

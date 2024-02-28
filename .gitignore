@@ -11,6 +11,7 @@
 *.out
 
 .idea
+.uuid
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
@@ -18,8 +19,12 @@
 *.linux
 record/
 main/
-.uuid
-config.json
 /vendor/
 /bin/
 /test/
+
+
+build.sh
+config.*json
+gin.log*
+

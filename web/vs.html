@@ -12,10 +12,39 @@
     let chartBar = echarts.init(document.getElementById('main'), 'dark');
 
     let params = new URLSearchParams(window.location.search)
-    let intervalX = 500
+    // let intervalX = 500
     let code = params.get('code')
     let date = params.get('date')
     let player = params.get('pl')
+
+    chartBar.showLoading('default', {
+        maskColor: '#100C2A',
+        color: '#4992ff',
+        textColor: '#4992ff',
+    });
+
+    let colorLight =
+        ['#5470c6',
+            '#91cc75',
+            '#fac858',
+            '#ee6666',
+            '#73c0de',
+            '#3ba272',
+            '#fc8452',
+            '#9a60b4',
+            '#ea7ccc'];
+
+    let colorPalette = [
+        '#4992ff',
+        '#7cffb2',
+        '#fddd60',
+        '#ff6e76',
+        '#58d9f9',
+        '#05c091',
+        '#ff8a45',
+        '#8d48e3',
+        '#dd79ff'
+    ];
 
     $.ajax({
         type:'POST',
@@ -27,6 +56,8 @@
             player: player
         }),
         success: function(result) {
+            chartBar.hideLoading();
+
             chartBar.setOption(
                 {
                     title: {
@@ -45,7 +76,7 @@
                     },
                     xAxis: {
                         type: 'value',
-                        interval:intervalX,
+                        // interval:intervalX,
                     },
                     yAxis: {
                         type: 'category',

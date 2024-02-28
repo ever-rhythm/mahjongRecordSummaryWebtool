@@ -58,6 +58,23 @@ type TablePaipu struct {
 	Zy_4 int
 }
 
+type StTrendPaipu struct {
+	Paipu_Url string
+
+	Pl_1 string
+	Pl_2 string
+	Pl_3 string
+	Pl_4 string
+	Pt_1 int
+	Pt_2 int
+	Pt_3 int
+	Pt_4 int
+	Zy_1 int
+	Zy_2 int
+	Zy_3 int
+	Zy_4 int
+}
+
 func InsertPlayer(onePlayer TablePlayer) (int, error) {
 	conn, err := pgx.Connect(context.Background(), ConfigDb.Dsn)
 	if err != nil {
@@ -221,7 +238,7 @@ func QueryPlayersByName(pl string) ([]StQueryPlayersByName, error) {
 
 	if len(rets) > 0 && rets[0].Player_Id != 0 {
 		sqlQueryPls := `select name,group_id,player_id,parent_player_id from public.player where parent_player_id = $1`
-		rowsPl, err := conn.Query(context.Background(), sqlQueryPls, rets[0].Parent_Player_Id)
+		rowsPl, err := conn.Query(context.Background(), sqlQueryPls, rets[0].Player_Id)
 		if err != nil {
 			log.Println("db query fail", err)
 			return nil, err

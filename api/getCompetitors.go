@@ -72,6 +72,8 @@ func GetCompetitors(code string, pl string, date string) ([]Competitor, error) {
 		}
 	}
 
+	//log.Println(retGroup[0].Group_Id, []string{pl}, date, dateEnd, len(pts)) // test
+
 	for i := 0; i < len(pts); i++ {
 		onePls := []string{pts[i].Pl_1, pts[i].Pl_2, pts[i].Pl_3, pts[i].Pl_4}
 		onePts := []int{pts[i].Pt_1, pts[i].Pt_2, pts[i].Pt_3, pts[i].Pt_4}

@@ -10,7 +10,6 @@ import (
 	"github.com/mahjongRecordSummaryWebtool/utils"
 	"io"
 	"log"
-	"math"
 	"math/rand"
 	"net/http"
 	"os"
@@ -125,8 +124,26 @@ func groupPlayerTrend(c *gin.Context) {
 	curPt := 0
 	curZy := 0
 	curTotal := 0
+	var paipuDetails []utils.StTrendPaipu
 
 	for k, onePaipu := range ret {
+		oneDetail := utils.StTrendPaipu{
+			Paipu_Url: onePaipu.Paipu_Url,
+			Pl_1:      onePaipu.Pl_1,
+			Pl_2:      onePaipu.Pl_2,
+			Pl_3:      onePaipu.Pl_3,
+			Pl_4:      onePaipu.Pl_4,
+			Pt_1:      onePaipu.Pt_1,
+			Pt_2:      onePaipu.Pt_2,
+			Pt_3:      onePaipu.Pt_3,
+			Pt_4:      onePaipu.Pt_4,
+			Zy_1:      onePaipu.Zy_1,
+			Zy_2:      onePaipu.Zy_2,
+			Zy_3:      onePaipu.Zy_3,
+			Zy_4:      onePaipu.Zy_4,
+		}
+		paipuDetails = append(paipuDetails, oneDetail)
+
 		ratePt, rateZy, err := utils.GetRateZhuyiByMode(onePaipu.Rate)
 		if err != nil {
 			ratePt = 0
@@ -150,7 +167,6 @@ func groupPlayerTrend(c *gin.Context) {
 					pts = append(pts, curPt)
 					zys = append(zys, curZy)
 					totals = append(totals, curTotal)
-
 					idxs = append(idxs, k)
 					break
 				}
@@ -167,6 +183,7 @@ func groupPlayerTrend(c *gin.Context) {
 	objJs.SetPath([]string{"data", "cnt2"}, cntPlacing[1])
 	objJs.SetPath([]string{"data", "cnt3"}, cntPlacing[2])
 	objJs.SetPath([]string{"data", "cnt4"}, cntPlacing[3])
+	objJs.SetPath([]string{"data", "lineDetail"}, paipuDetails)
 
 	c.JSON(200, objJs.MustMap())
 	return
@@ -203,41 +220,35 @@ func groupRank(c *gin.Context) {
 
 	var players []string
 	var totals []int
-	var pts []int
-	var zys []int
+	var negaTotals []int
+	/*
+		minTotal := math.MaxInt
 
-	minLine := make(map[string]int)
-	minLine["total"] = math.MaxInt
-	minLine["pt"] = math.MaxInt
-	minLine["zy"] = math.MaxInt
-
-	for _, oneRank := range ret {
-		if oneRank.Zy < minLine["zy"] {
-			minLine["zy"] = oneRank.Zy
+		for _, oneRank := range ret {
+			if oneRank.Total < minTotal {
+				minTotal = oneRank.Total
+			}
 		}
-		if oneRank.Pt < minLine["pt"] {
-			minLine["pt"] = oneRank.Pt
-		}
-	}
+		absMinTotal := int(math.Abs(float64(minTotal)))
 
-	absMinPt := int(math.Abs(float64(minLine["pt"]))) + ConfigDisplay.OffsetPt
-	absMinZy := int(math.Abs(float64(minLine["zy"]))) + ConfigDisplay.OffsetZy
-	absMinTotal := absMinPt + absMinZy
+	*/
 
 	for _, oneRank := range ret {
 		players = append(players, oneRank.Pl)
-		totals = append(totals, oneRank.Total+absMinTotal)
-		pts = append(pts, oneRank.Pt+absMinPt)
-		zys = append(zys, oneRank.Zy+absMinZy)
+		if oneRank.Total > 0 {
+			totals = append(totals, oneRank.Total)
+			negaTotals = append(negaTotals, 0)
+		} else {
+			totals = append(totals, 0)
+			negaTotals = append(negaTotals, oneRank.Total)
+		}
+		//totals = append(totals, oneRank.Total+absMinTotal)
 	}
 
 	objJs.SetPath([]string{"data", "player"}, players)
 	objJs.SetPath([]string{"data", "lineTotal"}, totals)
-	objJs.SetPath([]string{"data", "linePt"}, pts)
-	objJs.SetPath([]string{"data", "lineZy"}, zys)
-	objJs.SetPath([]string{"data", "absMinTotal"}, absMinTotal)
-	objJs.SetPath([]string{"data", "absMinPt"}, absMinPt)
-	objJs.SetPath([]string{"data", "absMinZy"}, absMinZy)
+	objJs.SetPath([]string{"data", "lineNegaTotal"}, negaTotals)
+	//objJs.SetPath([]string{"data", "absMinTotal"}, absMinTotal)
 
 	c.JSON(200, objJs.MustMap())
 	return
@@ -442,6 +453,8 @@ func competitor(c *gin.Context) {
 		c.JSON(500, objJs.MustMap())
 		return
 	}
+
+	//log.Println(code, pl, date) // test
 
 	ret, err := api.GetCompetitors(code, pl, date)
 	if err != nil {

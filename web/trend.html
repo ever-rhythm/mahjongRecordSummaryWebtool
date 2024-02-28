@@ -15,12 +15,27 @@
         <span style="padding-left:100px;font-weight:bold;font-size:18px;color: #EEF1FA">对局信息</span><br/><br/><br/>
         <span id='s0' style="padding-left:100px;font-weight:bold;font-size:18px;color: #4992ff"></span><br/>
         <span id='s1' style="padding-left:100px;font-weight:bold;font-size:18px;color: #4992ff"></span><br/>
-        <span id='s2' style="padding-left:100px;font-weight:bold;font-size:18px;color: #4992ff"></span>
+        <span id='s2' style="padding-left:100px;font-weight:bold;font-size:18px;color: #4992ff"></span><br/>
+        <span id='s3' style="padding-left:100px;font-weight:bold;font-size:18px;color: #4992ff"></span><br/>
+        <span id='s4' style="padding-left:100px;font-weight:bold;font-size:18px;color: #4992ff"></span>
     </div>
     <div id="main1" style="height:100%;margin: auto;flex: 1"></div>
 </div>
 <div id="main" style="top:100px;width: 960px;height:800px;position: relative;margin: auto;"></div>
 <script type="text/javascript">
+    const getLength = (str) => {
+        let charCount = 0;
+        for (const char of str) {
+            if (char.codePointAt(0) > 127) {
+                charCount += 2;
+            } else {
+                charCount += 1;
+            }
+        }
+
+        return charCount;
+    }
+
     let myChart = echarts.init(document.getElementById('main'), 'dark');
     let chartBar = echarts.init(document.getElementById('main1'), 'dark');
     let params = new URLSearchParams(window.location.search)
@@ -28,20 +43,14 @@
     let code = params.get('code')
     let date = params.get('date')
     let player = params.get('pl')
-    /*
-    var colorPalette = [
-        '#4992ff',
-        '#7cffb2',
-        '#fddd60',
-        '#ff6e76',
-        '#58d9f9',
-        '#05c091',
-        '#ff8a45',
-        '#8d48e3',
-        '#dd79ff'
-    ];
 
-     */
+    myChart.showLoading('default', {
+        fontSize: 30,
+        maskColor: '#100C2A',
+        color: '#4992ff',
+        textColor: '#4992ff',
+    });
+
     if (code == null || date == null || player == null) {
         alert('参数缺失')
     } else {
@@ -55,13 +64,21 @@
                 player:player,
             }),
             success: function(result) {
-                document.getElementById('s0').innerHTML = '账号名称：' + player
-                document.getElementById('s1').innerHTML = '对局总数：' + result.data.cntTotal
-                document.getElementById('s2').innerHTML = '最终积分：' + result.data.lineTotal[result.data.cntTotal - 1]
+                myChart.hideLoading();
+
+                document.getElementById('s0').innerHTML = '昵称：' + player
+                document.getElementById('s1').innerHTML = '总数：' + result.data.cntTotal
+                document.getElementById('s2').innerHTML = '积分：' + result.data.lineTotal[result.data.cntTotal - 1]
+                document.getElementById('s3').innerHTML = '点数：' + result.data.linePt[result.data.cntTotal - 1]
+                document.getElementById('s4').innerHTML = '祝仪：' + result.data.lineZy[result.data.cntTotal - 1]
+
+                myChart.on('click', function (params) {
+                    window.open('https://game.maj-soul.com/1/?paipu=' + encodeURIComponent(result.data.lineDetail[params.dataIndex].Paipu_Url));
+                })
 
                 myChart.setOption({
                     title: {
-                        text:  '积分趋势',
+                        text:  '积分趋势（点击跳转牌谱）',
                         padding: [5, 100],
                     },
                     tooltip: {
@@ -69,7 +86,23 @@
                         axisPointer: {
                             type: 'cross',
                         },
-                        position:['40%', '10%']
+                        position:['40%', '5%'],
+                        formatter: function (params) {
+                            let strTips = ''
+                            let oneDetail = result.data.lineDetail[params[0].dataIndex]
+                            let sizeSp = 15
+
+                            strTips += '积分：' + result.data.lineTotal[params[0].dataIndex] + '</br>'
+                            strTips += '点数：' + result.data.linePt[params[0].dataIndex] + '</br>'
+                            strTips += '祝仪：' + result.data.lineZy[params[0].dataIndex] + '</br>'
+                            strTips += '</br>'
+                            strTips += oneDetail.Pl_1 + '&nbsp'.repeat(getLength(oneDetail.Pl_1) > sizeSp ? 0 : sizeSp - getLength(oneDetail.Pl_1)) + '点数 ' + oneDetail.Pt_1 + ' 祝仪 ' + oneDetail.Zy_1 + '</br>'
+                            strTips += oneDetail.Pl_2 + '&nbsp'.repeat(getLength(oneDetail.Pl_2) > sizeSp ? 0 : sizeSp - getLength(oneDetail.Pl_2)) + '点数 ' + oneDetail.Pt_2 + ' 祝仪 ' + oneDetail.Zy_2 + '</br>'
+                            strTips += oneDetail.Pl_3 + '&nbsp'.repeat(getLength(oneDetail.Pl_3) > sizeSp ? 0 : sizeSp - getLength(oneDetail.Pl_3)) + '点数 ' + oneDetail.Pt_3 + ' 祝仪 ' + oneDetail.Zy_3 + '</br>'
+                            strTips += oneDetail.Pl_4 + '&nbsp'.repeat(getLength(oneDetail.Pl_4) > sizeSp ? 0 : sizeSp - getLength(oneDetail.Pl_4)) + '点数 ' + oneDetail.Pt_4 + ' 祝仪 ' + oneDetail.Zy_4 + '</br>'
+
+                            return strTips
+                        }
                     },
                     legend: {
                     },
@@ -177,84 +210,6 @@
             }
         })
     }
-/*
-{
-                        title: {
-                            text: '顺位分布',
-                        },
-                        tooltip: {
-                            trigger: 'axis',
-                            axisPointer: {
-                                type: 'shadow'
-                            }
-                        },
-                        legend: {},
-                        grid: {
-                            containLabel: true
-                        },
-                        xAxis: {
-                            type: 'value'
-                        },
-                        yAxis: {
-                            type: 'category',
-                            data: ['顺位']
-                        },
-                        series: [
-                            {
-                                name: '1位',
-                                type: 'bar',
-                                stack: 'total',
-                                label: {
-                                    show: true,
-                                    formatter: Math.round(result.data.cnt1 / result.data.cntTotal * 10000) / 100 + "%",
-                                },
-                                emphasis: {
-                                    focus: 'series'
-                                },
-                                data: [result.data.cnt1]
-                            },
-                            {
-                                name: '2位',
-                                type: 'bar',
-                                stack: 'total',
-                                label: {
-                                    show: true,
-                                    formatter: Math.round(result.data.cnt2 / result.data.cntTotal * 10000) / 100 + "%",
-                                },
-                                emphasis: {
-                                    focus: 'series'
-                                },
-                                data: [result.data.cnt2]
-                            },
-                            {
-                                name: '3位',
-                                type: 'bar',
-                                stack: 'total',
-                                label: {
-                                    show: true,
-                                    formatter: Math.round(result.data.cnt3 / result.data.cntTotal * 10000) / 100 + "%",
-                                },
-                                emphasis: {
-                                    focus: 'series'
-                                },
-                                data: [result.data.cnt3]
-                            },
-                            {
-                                name: '4位',
-                                type: 'bar',
-                                stack: 'total',
-                                label: {
-                                    show: true,
-                                    formatter: Math.round(result.data.cnt4 / result.data.cntTotal * 10000) / 100 + "%",
-                                },
-                                emphasis: {
-                                    focus: 'series'
-                                },
-                                data: [result.data.cnt4]
-                            },
-                        ]
-                    }
- */
 </script>
 </body>
 </html>
