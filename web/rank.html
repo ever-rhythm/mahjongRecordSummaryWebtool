@@ -55,8 +55,8 @@
 
         let barOption = {
           title: {
-            text:  '503榜单',
-            padding: [5, 100],
+            text:  '排行榜',
+            padding: [5, 50],
           },
           tooltip: {
             trigger: 'axis',
@@ -137,7 +137,7 @@
         // resize
         chartBar.resize({
           width: 960,
-          height: barHeight * result.data.lineTotal.length * 1.2
+          height: barHeight * result.data.lineTotal.length > 1800 ? 1800 : barHeight * result.data.lineTotal.length
         });
 
         chartBar.setOption(barOption);
