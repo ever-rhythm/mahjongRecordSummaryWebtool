@@ -36,6 +36,17 @@ type StQueryPlayersByName struct {
 	Parent_Player_Id int
 }
 
+type StQueryGroupRank struct {
+	Name  string
+	Pt    int
+	Zy    int
+	Total int
+	Cnt_1 int
+	Cnt_2 int
+	Cnt_3 int
+	Cnt_4 int
+}
+
 type TablePaipu struct {
 	Id           int
 	Paipu_Url    string
@@ -140,6 +151,35 @@ func InsertPaipu(onePaipu TablePaipu) (int, error) {
 	}
 
 	return int(ct.RowsAffected()), nil
+}
+
+func InsertUpdateGroupRankPlayer(onePaipu TablePaipu) (int, error) {
+	return 0, nil
+}
+
+func QueryGroupRank(groupId int, dateStart string) ([]StQueryGroupRank, error) {
+	conn, err := pgx.Connect(context.Background(), ConfigDb.Dsn)
+	if err != nil {
+		log.Println("db connect fail", err)
+		return nil, err
+	}
+	defer conn.Close(context.Background())
+
+	sqlQuery := `select name,pt,zy,total,cnt_1,cnt_2,cnt_3,cnt_4 from public.group_rank where group_id = $1 and time_start = $2`
+
+	rows, err := conn.Query(context.Background(), sqlQuery, groupId, dateStart)
+	if err != nil {
+		log.Println("db query fail", err)
+		return nil, err
+	}
+
+	rets, err := pgx.CollectRows(rows, pgx.RowToStructByName[StQueryGroupRank])
+	if err != nil {
+		log.Println("db query fail", err)
+		return nil, err
+	}
+
+	return rets, nil
 }
 
 func QueryGroupPlayerPaipu(groupId int, pls []string, dateStart string, dateEnd string) ([]TablePaipu, error) {

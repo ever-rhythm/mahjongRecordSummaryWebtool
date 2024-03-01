@@ -10,11 +10,10 @@
   "postgre": {
     "dsn": "postgres://postgres:ygtianlou@localhost:5432/pgtest"
   },
-  "echarts": {
-    "offsetTotal":4000,
-    "offsetPt": 3000,
-    "offsetZy": 1000
-  },
+  "recordContestUid": [
+    "15698",
+    "16147"
+  ],
   "MajsoulBot": {
     "acc": [
       "15792174564@189.cn"

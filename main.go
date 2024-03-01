@@ -22,14 +22,7 @@ type configGin struct {
 	Port   string
 }
 
-type configDisplay struct {
-	OffsetTotal int
-	OffsetPt    int
-	OffsetZy    int
-}
-
 var ConfigGin = configGin{}
-var ConfigDisplay = configDisplay{}
 
 func main() {
 	// init log
@@ -425,7 +418,7 @@ func testSummary(c *gin.Context) {
 		return
 	}
 
-	ret := api.CheckIfRecord(ratePt, rateZhuyi, records)
+	ret := api.CheckIfRecord(ratePt, rateZhuyi, records, "")
 	log.Println(records, ret)
 
 	c.JSON(200, objJsMsg.MustMap())
@@ -515,9 +508,7 @@ func loadConfigFile() error {
 	utils.ConfigMode.Mode = objJsConfig.Get("modeMap").Get("mode").MustStringArray()
 	utils.ConfigMode.Rate = objJsConfig.Get("modeMap").Get("rate").MustStringArray()
 	utils.ConfigMode.Zy = objJsConfig.Get("modeMap").Get("zy").MustStringArray()
-	ConfigDisplay.OffsetTotal = objJsConfig.Get("echarts").Get("offsetTotal").MustInt()
-	ConfigDisplay.OffsetPt = objJsConfig.Get("echarts").Get("offsetPt").MustInt()
-	ConfigDisplay.OffsetZy = objJsConfig.Get("echarts").Get("offsetZy").MustInt()
+	utils.ConfigMode.RecordContestIds = objJsConfig.Get("recordContestUid").MustStringArray()
 
 	// validate config
 	if len(utils.ConfigMajsoulBot.Acc) != len(utils.ConfigMajsoulBot.Pwd) ||

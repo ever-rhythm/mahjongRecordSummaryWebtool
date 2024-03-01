@@ -88,7 +88,48 @@
           },
           yAxis: {
             type: 'category',
-            data: result.data.player
+            data: result.data.player,
+            /*
+            axisLabel: {
+              formatter: (value) => {
+                let plSize =result.data.player.length
+
+                if ( plSize - 1 >= 0 && value === result.data.player[plSize- 1]) {
+                  return '{x|}' + ' ' + value
+                } else if ( plSize - 2 >= 0 && value === result.data.player[plSize- 2]) {
+                  return '{b|}' + ' ' + value
+                } else if ( plSize - 3 >= 0 && value === result.data.player[plSize- 3]) {
+                  return '{c|}' + ' ' + value
+                } else {
+                  return value
+                }
+              },
+              rich: {
+                x: {
+                  height: 30,
+                  width:20,
+                  backgroundColor: {
+                    image: 'http://120.24.252.53/static/d7b749bda618f536_1.png',
+                  }
+                },
+                b: {
+                  height: 30,
+                  width:20,
+                  backgroundColor: {
+                    image: 'http://120.24.252.53/static/d7b749bda618f536_2.png',
+                  }
+                },
+                c: {
+                  height: 30,
+                  width:20,
+                  backgroundColor: {
+                    image: 'http://120.24.252.53/static/d7b749bda618f536_3.png',
+                  }
+                },
+              },
+            }
+
+             */
           },
           series: [
             {
@@ -99,7 +140,7 @@
                 position:'insideLeft',
                 formatter: function (params) {
                   return '合计 ' + (params.value + result.data.lineNegaTotal[params.dataIndex]).toString()
-                }
+                },
               },
               data: result.data.lineTotal,
               barMinHeight: barHeight,

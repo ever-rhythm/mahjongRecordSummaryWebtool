@@ -16,9 +16,10 @@ type configMajsoulBot struct {
 }
 
 type configMode struct {
-	Mode []string
-	Rate []string
-	Zy   []string
+	Mode             []string
+	Rate             []string
+	Zy               []string
+	RecordContestIds []string
 }
 
 var ConfigMajsoulBot = configMajsoulBot{}

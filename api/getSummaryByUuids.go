@@ -211,6 +211,7 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 	var ptRows []map[string]string
 	var zhuyiRows []map[string]string
 	idxZhuyi := 0
+	contestUid := ""
 
 	// build uuid seat nickname
 	for _, oneAccount := range rspRecords.RecordList[0].Accounts {
@@ -231,6 +232,7 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 	}
 
 	for _, oneRecord := range rspRecords.RecordList {
+		contestUid = strconv.Itoa(int(oneRecord.Config.Meta.ContestUid))
 		for _, oneAccount := range oneRecord.Accounts {
 			oneNickName := strings.TrimSpace(oneAccount.Nickname)
 
@@ -518,7 +520,7 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 		pls = append(pls, strings.TrimSpace(rspRecords.RecordList[0].Accounts[i].Nickname))
 	}
 
-	if CheckIfRecord(ratePt, rateZhuyi, pls) {
+	if CheckIfRecord(ratePt, rateZhuyi, pls, contestUid) {
 		for _, oneRecord := range rspRecords.RecordList {
 			var players []Player
 			for i := 0; i < 4; i++ {
@@ -607,31 +609,19 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 	return mapPlayerInfo, ptRows, zhuyiRows, nil
 }
 
-// todo bugfix for insert
-func CheckIfRecord(ratePt int, rateZy int, pls []string) bool {
+func CheckIfRecord(ratePt int, rateZy int, pls []string, contestUid string) bool {
 
-	if ratePt == 50 && rateZy == 3 {
+	bolRecordContestUid := false
+	for i := 0; i < len(utils.ConfigMode.RecordContestIds); i++ {
+		if contestUid == utils.ConfigMode.RecordContestIds[i] {
+			bolRecordContestUid = true
+			break
+		}
+	}
+
+	if ratePt == 50 && rateZy == 3 && bolRecordContestUid {
 		return true
 	}
-
-	for i := 0; i < len(pls); i++ {
-		if pls[i] == "夜光天楼" {
-			return true
-		}
-	}
-
-	/*
-		rets, err := utils.QueryPlayerByNames(pls)
-		if err != nil {
-			log.Println("QueryPlayerByNames fail", err)
-			return false
-		}
-
-		if len(rets) > 0 {
-			return true
-		}
-
-	*/
 
 	return false
 }
