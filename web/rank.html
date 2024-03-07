@@ -17,7 +17,9 @@
   // let herfPrefix = 'http://www.mjget.top'
   let intervalX = 10000
   let barHeight = 80
-  let barGap = '40%'
+  let barGap = '30%'
+  let imgHeight = 40
+  let imgWidth = 40
   let queryString = new URLSearchParams(window.location.search)
   let code = queryString.get('code')
   let date = queryString.get('date')
@@ -76,7 +78,7 @@
           legend: {},
           grid: {
             containLabel: true,
-            left: '3%',
+            left: '5%',
             right: '4%',
             bottom: '3%',
           },
@@ -89,10 +91,11 @@
           yAxis: {
             type: 'category',
             data: result.data.player,
-            /*
+
             axisLabel: {
               formatter: (value) => {
-                let plSize =result.data.player.length
+                let plSize = result.data.player.length
+
 
                 if ( plSize - 1 >= 0 && value === result.data.player[plSize- 1]) {
                   return '{x|}' + ' ' + value
@@ -106,30 +109,30 @@
               },
               rich: {
                 x: {
-                  height: 30,
-                  width:20,
+                  height:imgHeight,
+                  width:imgWidth,
                   backgroundColor: {
-                    image: 'http://120.24.252.53/static/d7b749bda618f536_1.png',
+                    image: herfPrefix + '/static/1st.png',
                   }
                 },
                 b: {
-                  height: 30,
-                  width:20,
+                  height: imgHeight,
+                  width:imgWidth,
                   backgroundColor: {
-                    image: 'http://120.24.252.53/static/d7b749bda618f536_2.png',
+                    image: herfPrefix + '/static/2nd.png',
                   }
                 },
                 c: {
-                  height: 30,
-                  width:20,
+                  height: imgHeight,
+                  width:imgWidth,
                   backgroundColor: {
-                    image: 'http://120.24.252.53/static/d7b749bda618f536_3.png',
+                    image: herfPrefix + '/static/3rd.png',
                   }
                 },
               },
             }
 
-             */
+
           },
           series: [
             {
@@ -139,7 +142,7 @@
                 show: true,
                 position:'insideLeft',
                 formatter: function (params) {
-                  return '合计 ' + (params.value + result.data.lineNegaTotal[params.dataIndex]).toString()
+                  return (params.value + result.data.lineNegaTotal[params.dataIndex]).toString()
                 },
               },
               data: result.data.lineTotal,
@@ -155,11 +158,11 @@
           let oneColor = "#5470c6"
 
           if ( i === lengthSeries - 1 ){
-            oneColor = "#ff6e76"
-          } else if ( i === lengthSeries - 2) {
-            oneColor = "#ff8a45"
-          } else if ( i === lengthSeries - 3) {
             oneColor = "#fddd60"
+          } else if ( i === lengthSeries - 2) {
+            oneColor = "#F0F8FF"
+          } else if ( i === lengthSeries - 3) {
+            oneColor = "#fc8452"
           } else if (barOption.series[0].data[i] > 0) {
             oneColor = "#91cc75"
           } else {

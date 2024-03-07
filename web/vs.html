@@ -10,6 +10,9 @@
 <div id="main" style="top:100px;width: 1200px;height:2000px;position: relative;margin: auto;"></div>
 <script type="text/javascript">
     let chartBar = echarts.init(document.getElementById('main'), 'dark');
+    let herfPrefix = 'http://127.0.0.1'
+    // let herfPrefix = 'http://120.24.252.53'
+    // let herfPrefix = 'http://www.mjget.top'
 
     let params = new URLSearchParams(window.location.search)
     // let intervalX = 500
@@ -23,28 +26,9 @@
         textColor: '#4992ff',
     });
 
-    let colorLight =
-        ['#5470c6',
-            '#91cc75',
-            '#fac858',
-            '#ee6666',
-            '#73c0de',
-            '#3ba272',
-            '#fc8452',
-            '#9a60b4',
-            '#ea7ccc'];
-
-    let colorPalette = [
-        '#4992ff',
-        '#7cffb2',
-        '#fddd60',
-        '#ff6e76',
-        '#58d9f9',
-        '#05c091',
-        '#ff8a45',
-        '#8d48e3',
-        '#dd79ff'
-    ];
+    chartBar.on('click', function (params) {
+        window.open(herfPrefix + '/trend.html' + '?code=' + code + '&date=' + date + '&pl=' + encodeURIComponent(player) + '&op=' + encodeURIComponent(params.name));
+    })
 
     $.ajax({
         type:'POST',
@@ -96,7 +80,7 @@
                             emphasis: {
                                 focus: 'series'
                             },
-                            data: result.data.linePt
+                            data: result.data.lineBpt
                         },
                         {
                             name: 'bzy',
@@ -108,7 +92,7 @@
                             emphasis: {
                                 focus: 'series'
                             },
-                            data: result.data.lineZy
+                            data: result.data.lineBzy
                         },
                         {
                             name: 'cnt',
@@ -133,6 +117,18 @@
                                 focus: 'series'
                             },
                             data: result.data.linePer
+                        },
+                        {
+                            name: 'btotal',
+                            type: 'bar',
+                            stack: 'total',
+                            label: {
+                                show: true,
+                            },
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: result.data.lineBtotal
                         },
                     ]
                 }

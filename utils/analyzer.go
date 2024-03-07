@@ -242,7 +242,11 @@ func GetMajSoulBotByIdx(idx int) (string, string) {
 	return ConfigMajsoulBot.Acc[idxMod], ConfigMajsoulBot.Pwd[idxMod]
 }
 
-// 只适用于 02-01 这种格式，不然 addDate 可能跨2个月
+func GetCurMonthDate() string {
+	return time.Now().Format("2006-01") + "-01"
+}
+
+// GetNextMonthDate 只适用于 02-01 这种格式，不然 addDate 可能跨2个月
 func GetNextMonthDate(date string) (string, error) {
 	if len(date) != 10 {
 		return "", errors.New("err format")

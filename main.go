@@ -48,28 +48,24 @@ func main() {
 		log.Fatalln("http majsoul server config fail", client.MajsoulServerConfig, err)
 	}
 
-	// static
-	r.StaticFS("/static", http.Dir("./web/static"))
-
 	// get
 	r.GET("/", func(c *gin.Context) { c.HTML(200, "index.html", "home"); return })
 	r.GET("/index.html", func(c *gin.Context) { c.HTML(200, "index.html", "index"); return })
 	r.GET("/rank.html", func(c *gin.Context) { c.HTML(200, "rank.html", "rank"); return })
 	r.GET("/trend.html", func(c *gin.Context) { c.HTML(200, "trend.html", "trend"); return })
+	r.GET("/debug.html", func(c *gin.Context) { c.HTML(200, "debug.html", "debug"); return })
+	r.GET("/vs.html", func(c *gin.Context) { c.HTML(200, "vs.html", "vs"); return })
 
 	// post
 	r.POST("/api/v2", summary)
 	r.POST("/api/group_rank", groupRank)
 	r.POST("/api/group_player_trend", groupPlayerTrend)
-
-	// add new
-	r.GET("/debug.html", func(c *gin.Context) { c.HTML(200, "debug.html", "debug"); return })
+	r.POST("/api/competitor", competitor)
+	r.POST("/api/group_player_op_trend", groupPlayerOpponentTrend)
 	r.POST("/api/ts", testSummary)
 
-	r.GET("/vs.html", func(c *gin.Context) { c.HTML(200, "vs.html", "vs"); return })
-	r.POST("/api/competitor", competitor)
-
 	// html
+	r.StaticFS("/static", http.Dir("./web/static"))
 	r.LoadHTMLFiles("web/index.html", "web/rank.html", "web/trend.html", "web/debug.html", "web/vs.html")
 
 	// server
@@ -378,50 +374,136 @@ func summary(c *gin.Context) {
 }
 
 func testSummary(c *gin.Context) {
-	b, _ := c.GetRawData()
-	objJsMsg := okRet()
+	objJs := okRet()
 
+	b, _ := c.GetRawData()
 	req, err := simplejson.NewJson(b)
 	if err != nil {
 		log.Println(err)
-		c.JSON(500, "req invalid")
+		objJs.Set("msg", "请求格式有误")
+		c.JSON(500, objJs.MustMap())
 		return
 	}
 
-	var records []string
-	mapRecords, err := req.Get("comboRecords").Array()
-	if err != nil {
-		log.Println(err)
-		c.JSON(500, "record invalid")
+	code := req.Get("code").MustString()
+	pl := req.Get("player").MustString()
+
+	if len(code) == 0 || len(pl) == 0 {
+		objJs.Set("msg", "请求参数有误")
+		c.JSON(500, objJs.MustMap())
 		return
 	}
-	for _, v := range mapRecords {
-		tmpMap, _ := v.(map[string]interface{})
-		tmpRecord, _ := tmpMap["url"].(string)
-		if len(tmpRecord) > 0 {
-			records = append(records, tmpRecord)
+
+	groupId, err := strconv.Atoi(code)
+
+	ret, err := utils.QueryVipPlayer(groupId, []string{pl}, "")
+	log.Println(ret)
+
+	c.JSON(200, objJs.MustMap())
+	return
+}
+
+func groupPlayerOpponentTrend(c *gin.Context) {
+	objJs := okRet()
+
+	b, _ := c.GetRawData()
+	req, err := simplejson.NewJson(b)
+	if err != nil {
+		log.Println(err)
+		objJs.Set("msg", "请求格式有误")
+		c.JSON(500, objJs.MustMap())
+		return
+	}
+
+	code := req.Get("code").MustString()
+	date := req.Get("date").MustString()
+	pl := req.Get("player").MustString()
+	op := req.Get("opponent").MustString()
+
+	if len(code) == 0 || len(pl) == 0 || len(date) == 0 || len(op) == 0 {
+		objJs.Set("msg", "请求参数有误")
+		c.JSON(500, objJs.MustMap())
+		return
+	}
+
+	ret, retPls, err := api.GetGroupPlayerOpponentTrend(code, date, pl, op)
+	if err != nil {
+		log.Println(err)
+		objJs.Set("msg", "查询有误")
+		c.JSON(500, objJs)
+		return
+	}
+
+	var idxs []int
+	var pts []int
+	var zys []int
+	var totals []int
+	cntPlacing := [4]int{}
+	curPt := 0
+	curZy := 0
+	curTotal := 0
+	var paipuDetails []utils.StTrendPaipu
+
+	for k, onePaipu := range ret {
+		oneDetail := utils.StTrendPaipu{
+			Paipu_Url: onePaipu.Paipu_Url,
+			Pl_1:      onePaipu.Pl_1,
+			Pl_2:      onePaipu.Pl_2,
+			Pl_3:      onePaipu.Pl_3,
+			Pl_4:      onePaipu.Pl_4,
+			Pt_1:      onePaipu.Pt_1,
+			Pt_2:      onePaipu.Pt_2,
+			Pt_3:      onePaipu.Pt_3,
+			Pt_4:      onePaipu.Pt_4,
+			Zy_1:      onePaipu.Zy_1,
+			Zy_2:      onePaipu.Zy_2,
+			Zy_3:      onePaipu.Zy_3,
+			Zy_4:      onePaipu.Zy_4,
+		}
+		paipuDetails = append(paipuDetails, oneDetail)
+
+		ratePt, rateZy, err := utils.GetRateZhuyiByMode(onePaipu.Rate)
+		if err != nil {
+			ratePt = 0
+			rateZy = 0
+		}
+
+		arrPl := []string{onePaipu.Pl_1, onePaipu.Pl_2, onePaipu.Pl_3, onePaipu.Pl_4}
+		arrPt := []int{onePaipu.Pt_1, onePaipu.Pt_2, onePaipu.Pt_3, onePaipu.Pt_4}
+		arrZy := []int{onePaipu.Zy_1, onePaipu.Zy_2, onePaipu.Zy_3, onePaipu.Zy_4}
+
+		for i := 0; i < len(arrPl); i++ {
+			for j := 0; j < len(retPls); j++ {
+				if arrPl[i] == retPls[j] {
+					onePt := ratePt * arrPt[i] / 1000
+					oneZy := rateZy * arrZy[i] * ratePt
+					cntPlacing[i] += 1
+					curPt += onePt
+					curZy += oneZy
+					curTotal += onePt + oneZy
+
+					pts = append(pts, curPt)
+					zys = append(zys, curZy)
+					totals = append(totals, curTotal)
+					idxs = append(idxs, k)
+					break
+				}
+			}
 		}
 	}
 
-	mode, err := req.Get("mode").String()
-	if err != nil {
-		log.Println(err)
-		objJsMsg.Set("msg", "祝仪格式有误")
-		c.JSON(500, objJsMsg)
-		return
-	}
+	objJs.SetPath([]string{"data", "date"}, idxs)
+	objJs.SetPath([]string{"data", "linePt"}, pts)
+	objJs.SetPath([]string{"data", "lineZy"}, zys)
+	objJs.SetPath([]string{"data", "lineTotal"}, totals)
+	objJs.SetPath([]string{"data", "cntTotal"}, len(totals))
+	objJs.SetPath([]string{"data", "cnt1"}, cntPlacing[0])
+	objJs.SetPath([]string{"data", "cnt2"}, cntPlacing[1])
+	objJs.SetPath([]string{"data", "cnt3"}, cntPlacing[2])
+	objJs.SetPath([]string{"data", "cnt4"}, cntPlacing[3])
+	objJs.SetPath([]string{"data", "lineDetail"}, paipuDetails)
 
-	ratePt, rateZhuyi, err := utils.GetRateZhuyiByMode(mode)
-	if err != nil {
-		log.Println(err)
-		c.JSON(500, "rate invalid")
-		return
-	}
-
-	ret := api.CheckIfRecord(ratePt, rateZhuyi, records, "")
-	log.Println(records, ret)
-
-	c.JSON(200, objJsMsg.MustMap())
+	c.JSON(200, objJs.MustMap())
 	return
 }
 
@@ -447,8 +529,6 @@ func competitor(c *gin.Context) {
 		return
 	}
 
-	//log.Println(code, pl, date) // test
-
 	ret, err := api.GetCompetitors(code, pl, date)
 	if err != nil {
 		log.Println("GetCompetitors fail", err)
@@ -462,14 +542,20 @@ func competitor(c *gin.Context) {
 	var pers []int
 	var cnts []int
 	var totals []int
+	var bTotals []int
+	var bPts []int
+	var bZys []int
 
 	for _, oneCompetitor := range ret {
 		pls = append(pls, oneCompetitor.Pl)
 		pts = append(pts, oneCompetitor.Pt)
 		zys = append(zys, oneCompetitor.Zy)
 		totals = append(totals, oneCompetitor.Total)
-		pers = append(pers, oneCompetitor.Total/oneCompetitor.Cnt)
+		pers = append(pers, oneCompetitor.Btotal/oneCompetitor.Cnt)
 		cnts = append(cnts, oneCompetitor.Cnt)
+		bPts = append(bPts, oneCompetitor.Bpt)
+		bZys = append(bZys, oneCompetitor.Bzy)
+		bTotals = append(bTotals, oneCompetitor.Btotal)
 	}
 
 	objJs.SetPath([]string{"data", "pls"}, pls)
@@ -478,6 +564,9 @@ func competitor(c *gin.Context) {
 	objJs.SetPath([]string{"data", "linePer"}, pers)
 	objJs.SetPath([]string{"data", "lineCnt"}, cnts)
 	objJs.SetPath([]string{"data", "lineTotal"}, totals)
+	objJs.SetPath([]string{"data", "lineBtotal"}, bTotals)
+	objJs.SetPath([]string{"data", "lineBpt"}, bPts)
+	objJs.SetPath([]string{"data", "lineBzy"}, bZys)
 
 	c.JSON(200, objJs.MustMap())
 	return

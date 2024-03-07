@@ -47,7 +47,7 @@ func (players Players) Less(i, j int) bool {
 
 var mu sync.Mutex
 
-// ping login
+// PingMajsoulLogin ping login
 func PingMajsoulLogin(acc string, pwd string) error {
 	mSoul, err := client.New()
 	if err != nil {
@@ -153,7 +153,7 @@ func GetMajsoulRecordByUuid(chanRes chan r, uuid string, account string, p strin
 	return nil, nil, nil
 }
 
-// get majsoul record v2
+// GetSummaryByUuids get majsoul record v2
 func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*Player, []map[string]string, []map[string]string, error) {
 
 	// mutex
@@ -514,13 +514,23 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 	tmpLog, _ := json.Marshal(mapPlayerInfo)
 	log.Println("summary ok", uuids, ptRows, zhuyiRows, string(tmpLog))
 
-	// check db record paipu
 	var pls []string
-	for i := 0; i < len(rspRecords.RecordList[0].Accounts); i++ {
-		pls = append(pls, strings.TrimSpace(rspRecords.RecordList[0].Accounts[i].Nickname))
+	for _, v := range mapPlayerInfo {
+		pls = append(pls, v.Nickname)
 	}
 
-	if CheckIfRecord(ratePt, rateZhuyi, pls, contestUid) {
+	// groupId
+	rate := strconv.Itoa(ratePt) + strconv.Itoa(rateZhuyi)
+	groupId, err := strconv.Atoi(rate)
+	if err != nil {
+		groupId = 0
+	}
+
+	// save
+	if CheckIfRecord(groupId, pls, contestUid, utils.GetCurMonthDate()) {
+		var batchPls []utils.TablePlayer
+		var batchPaipus []utils.TablePaipu
+
 		for _, oneRecord := range rspRecords.RecordList {
 			var players []Player
 			for i := 0; i < 4; i++ {
@@ -555,14 +565,16 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 
 			// sort
 			sort.Sort(Players(players))
-			rate := strconv.Itoa(ratePt) + strconv.Itoa(rateZhuyi)
-			groupId, err := strconv.Atoi(rate)
-			if err != nil {
-				groupId = 0
+
+			// build batch
+			for i := 0; i < len(players) && len(batchPls) < 4; i++ {
+				batchPls = append(batchPls, utils.TablePlayer{
+					Name:     players[i].Nickname,
+					Group_Id: groupId,
+				})
 			}
 
-			// save paipu
-			onePaipu := utils.TablePaipu{
+			batchPaipus = append(batchPaipus, utils.TablePaipu{
 				Paipu_Url:    oneRecord.Uuid,
 				Player_Count: len(oneRecord.Accounts),
 				Time_Start:   time.Unix(int64(oneRecord.StartTime), 0),
@@ -580,46 +592,35 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 				Zy_2:         players[1].Zhuyi,
 				Zy_3:         players[2].Zhuyi,
 				Zy_4:         players[3].Zhuyi,
-			}
-
-			retCnt, err := utils.InsertPaipu(onePaipu)
-			if err != nil {
-				log.Println("InsertPaipu fail", err)
-			} else {
-				log.Println("InsertPaipu ok", retCnt, onePaipu)
-			}
-
-			// save player
-			for i := 0; i < 4; i++ {
-				onePlayer := utils.TablePlayer{
-					Name:     players[i].Nickname,
-					Group_Id: groupId,
-				}
-
-				_, err := utils.InsertPlayer(onePlayer)
-				if err != nil {
-					log.Println("InsertPlayer fail", err)
-				} else {
-					log.Println("InsertPlayer ok", onePlayer)
-				}
-			}
+			})
 		}
+
+		// save batch
+		log.Println("BatchInsertPlayer", batchPls, batchPaipus)
+		go utils.BatchInsertPlayer(batchPls)
+		go utils.BatchInsertPaipu(batchPaipus)
 	}
 
 	return mapPlayerInfo, ptRows, zhuyiRows, nil
 }
 
-func CheckIfRecord(ratePt int, rateZy int, pls []string, contestUid string) bool {
+func CheckIfRecord(groupId int, pls []string, contestUid string, date string) bool {
 
-	bolRecordContestUid := false
+	// match contestId
 	for i := 0; i < len(utils.ConfigMode.RecordContestIds); i++ {
 		if contestUid == utils.ConfigMode.RecordContestIds[i] {
-			bolRecordContestUid = true
-			break
+			return true
 		}
 	}
 
-	if ratePt == 50 && rateZy == 3 && bolRecordContestUid {
+	// match vip
+	retVip, err := utils.QueryVipPlayer(groupId, pls, date)
+	if err != nil {
+		log.Println("QueryVipPlayer fail", err)
+		return false
+	}
+
+	if len(retVip) > 0 {
 		return true
 	}
 

@@ -110,6 +110,74 @@ func InsertPlayer(onePlayer TablePlayer) (int, error) {
 	return int(ct.RowsAffected()), nil
 }
 
+func BatchInsertPlayer(pls []TablePlayer) (int, error) {
+	conn, err := pgx.Connect(context.Background(), ConfigDb.Dsn)
+	if err != nil {
+		log.Println("db connect fail", err)
+		return 0, err
+	}
+	defer conn.Close(context.Background())
+
+	batch := &pgx.Batch{}
+	sqlInsert := `insert into public.player(name, group_id) values($1, $2) on conflict (name) do nothing`
+	for i := 0; i < len(pls); i++ {
+		batch.Queue(sqlInsert, pls[i].Name, pls[i].Group_Id)
+	}
+
+	err = conn.SendBatch(context.Background(), batch).Close()
+	if err != nil {
+		log.Println("batch fail", err)
+		return 0, err
+	}
+
+	return 0, nil
+}
+
+func BatchInsertPaipu(paipus []TablePaipu) (int, error) {
+	conn, err := pgx.Connect(context.Background(), ConfigDb.Dsn)
+	if err != nil {
+		log.Println("db connect fail", err)
+		return 0, err
+	}
+	defer conn.Close(context.Background())
+
+	batch := &pgx.Batch{}
+	sqlInsert := `insert into public.paipu(
+                     paipu_url,time_start,player_count,
+					pl_1,pl_2,pl_3,pl_4,pt_1,pt_2,pt_3,pt_4,zy_1,zy_2,zy_3,zy_4,
+					rate,group_id
+                     ) values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) on conflict (paipu_url) do nothing `
+
+	for i := 0; i < len(paipus); i++ {
+		batch.Queue(sqlInsert,
+			paipus[i].Paipu_Url,
+			paipus[i].Time_Start,
+			paipus[i].Player_Count,
+			paipus[i].Pl_1,
+			paipus[i].Pl_2,
+			paipus[i].Pl_3,
+			paipus[i].Pl_4,
+			paipus[i].Pt_1,
+			paipus[i].Pt_2,
+			paipus[i].Pt_3,
+			paipus[i].Pt_4,
+			paipus[i].Zy_1,
+			paipus[i].Zy_2,
+			paipus[i].Zy_3,
+			paipus[i].Zy_4,
+			paipus[i].Rate,
+			paipus[i].Group_Id)
+	}
+
+	err = conn.SendBatch(context.Background(), batch).Close()
+	if err != nil {
+		log.Println("batch fail", err)
+		return 0, err
+	}
+
+	return 0, nil
+}
+
 func InsertPaipu(onePaipu TablePaipu) (int, error) {
 	conn, err := pgx.Connect(context.Background(), ConfigDb.Dsn)
 	if err != nil {
@@ -153,8 +221,57 @@ func InsertPaipu(onePaipu TablePaipu) (int, error) {
 	return int(ct.RowsAffected()), nil
 }
 
+// todo dev
 func InsertUpdateGroupRankPlayer(onePaipu TablePaipu) (int, error) {
+	conn, err := pgx.Connect(context.Background(), ConfigDb.Dsn)
+	if err != nil {
+		log.Println("db connect fail", err)
+		return 0, err
+	}
+	defer conn.Close(context.Background())
+
+	tx, err := conn.Begin(context.Background())
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback(context.Background())
+
+	sqlInsert := ""
+	_, err = tx.Exec(context.Background(), sqlInsert)
+	if err != nil {
+		return 0, err
+	}
+
+	err = tx.Commit(context.Background())
+	if err != nil {
+		return 0, err
+	}
+
 	return 0, nil
+}
+
+func QueryVipPlayer(groupId int, pls []string, dateEnd string) ([]TablePlayer, error) {
+	conn, err := pgx.Connect(context.Background(), ConfigDb.Dsn)
+	if err != nil {
+		log.Println("db connect fail", err)
+		return nil, err
+	}
+	defer conn.Close(context.Background())
+
+	sqlQuery := `select group_id,name from public.player_vip where name = any($1) and group_id = $2 and time_end > $3`
+	rows, err := conn.Query(context.Background(), sqlQuery, pls, groupId, dateEnd)
+	if err != nil {
+		log.Println("db query fail", err)
+		return nil, err
+	}
+
+	rets, err := pgx.CollectRows(rows, pgx.RowToStructByName[TablePlayer])
+	if err != nil {
+		log.Println("db query fail", err)
+		return nil, err
+	}
+
+	return rets, nil
 }
 
 func QueryGroupRank(groupId int, dateStart string) ([]StQueryGroupRank, error) {
@@ -174,6 +291,32 @@ func QueryGroupRank(groupId int, dateStart string) ([]StQueryGroupRank, error) {
 	}
 
 	rets, err := pgx.CollectRows(rows, pgx.RowToStructByName[StQueryGroupRank])
+	if err != nil {
+		log.Println("db query fail", err)
+		return nil, err
+	}
+
+	return rets, nil
+}
+
+func QueryGroupPlayerOpponentPaipu(groupId int, pl string, op string, dateStart string, dateEnd string) ([]TablePaipu, error) {
+	conn, err := pgx.Connect(context.Background(), ConfigDb.Dsn)
+	if err != nil {
+		log.Println("db connect fail", err)
+		return nil, err
+	}
+	defer conn.Close(context.Background())
+
+	sqlQuery := `select * from public.paipu where group_id = $1 
+				and $2 = any(array[pl_1,pl_2,pl_3,pl_4]) and $3 = any(array[pl_1,pl_2,pl_3,pl_4])
+				and time_start >= $4 and time_start <= $5 order by time_start asc`
+	rows, err := conn.Query(context.Background(), sqlQuery, groupId, pl, op, dateStart, dateEnd)
+	if err != nil {
+		log.Println("db query fail", err)
+		return nil, err
+	}
+
+	rets, err := pgx.CollectRows(rows, pgx.RowToStructByName[TablePaipu])
 	if err != nil {
 		log.Println("db query fail", err)
 		return nil, err

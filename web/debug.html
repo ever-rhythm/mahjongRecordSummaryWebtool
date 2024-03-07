@@ -2,166 +2,39 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>榜单</title>
+    <title>debug</title>
     <!--  <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>-->
     <!--  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>-->
     <script src="https://cdn.staticfile.net/echarts/5.4.3/echarts.min.js"></script>
     <script src="https://cdn.staticfile.net/jquery/3.7.1/jquery.min.js"></script>
 </head>
 <body style="background-color: #100C2A;">
-<div id="main" style="top:100px;width:100%;height:1000px;position: relative;margin: auto;"></div>
+<div id="main" style="top:100px;width:960px;height:1200px;position: relative;margin: auto;"></div>
 <script type="text/javascript">
     let chartBar = echarts.init(document.getElementById('main'), 'dark');
     let herfPrefix = 'http://127.0.0.1'
     // let herfPrefix = 'http://120.24.252.53'
     // let herfPrefix = 'http://www.mjget.top'
     let intervalX = 10000
+    let barHeight = 80
+    let barGap = '30%'
     let queryString = new URLSearchParams(window.location.search)
     let code = queryString.get('code')
     let date = queryString.get('date')
-
-    if (date == null || date.length === 0) {
-        let d = new Date()
-        let month = (d.getMonth()+1 < 10 ? '0'+(d.getMonth()+1):d.getMonth()+1) ;
-        date = d.getFullYear().toString() + '-' + month + '-01'
-        alert(date)
-    }
-
-    chartBar.on('click', function(params) {
-        window.open(herfPrefix + '/trend.html' + '?code=' + code + '&date=' + date + '&pl=' + encodeURIComponent(params.name));
-    });
-    chartBar.showLoading('default', {
-        maskColor: '#100C2A',
-        color: '#4992ff',
-        textColor: '#4992ff',
-    });
+    let pl = queryString.get('pl')
 
     if (code == null) {
         alert('参数缺失')
     } else {
         $.ajax({
             type:'POST',
-            url: '/api/group_rank',
+            url: '/api/ts',
             contentType: "application/json",
             data: JSON.stringify({
                 code:code,
-                date:date,
+                player:pl,
             }),
             success: function(result) {
-                chartBar.hideLoading();
-
-                let barOption = {
-                    title: {
-                        text:  '榜单',
-                        padding: [5, 100],
-                    },
-                    tooltip: {
-                        trigger: 'axis',
-                        axisPointer: {
-                            type: 'shadow'
-                        },
-                        formatter: function (params) {
-                            let strTips = '昵称：' + params[0].name + '</br></br>'
-
-                            if (params[0] != null && params[0].value != null ){
-                                strTips += '合计：' + (params[0].value - result.data.absMinTotal).toString() + '</br>'
-                            }
-
-                            return strTips
-                        }
-                    },
-                    legend: {},
-                    grid: {
-                        containLabel: true,
-                        left: '3%',
-                        right: '4%',
-                        bottom: '3%',
-                    },
-                    xAxis: {
-                        show: false,
-                        type: 'value',
-                        boundaryGap: [0, 0.05],
-                        interval:intervalX,
-                    },
-                    yAxis: {
-                        type: 'category',
-                        data: result.data.player
-                    },
-                    series: [
-                        {
-                            name: '合计',
-                            type: 'bar',
-                            label: {
-                                show: true,
-                                position:'insideLeft',
-                                formatter: function (params) {
-                                    return '合计 ' + (params.value - result.data.absMinTotal).toString()
-                                }
-                            },
-                            itemStyle: {
-                                color: function (data) {  //设置正负颜色值
-                                    return data.value - result.data.absMinTotal >=0?"#91cc75":"#5470c6";
-                                }
-                            },
-                            data: result.data.lineTotal,
-                            // barWidth: '20%',
-                            barMinHeight: 80,   // px
-                        },
-                    ]
-                }
-
-                let colorLight =
-                    ['#5470c6',
-                        '#91cc75',
-                        '#fac858',
-                        '#ee6666',
-                        '#73c0de',
-                        '#3ba272',
-                        '#fc8452',
-                        '#9a60b4',
-                        '#ea7ccc'];
-
-                let colorPalette = [
-                    '#4992ff',
-                    '#7cffb2',
-                    '#fddd60',
-                    '#ff6e76',
-                    '#58d9f9',
-                    '#05c091',
-                    '#ff8a45',
-                    '#8d48e3',
-                    '#dd79ff'
-                ];
-
-
-                // 前三颜色
-                let lengthSeries = barOption.series[0].data.length
-                for ( let i = 0;i < lengthSeries ;i++){
-                    if ( i === lengthSeries - 1 ){
-                        barOption.series[0].data[i] = {
-                            value: barOption.series[0].data[i],
-                            itemStyle: {
-                                color: "#ff6e76",
-                            }
-                        }
-                    } else if ( i === lengthSeries - 2) {
-                        barOption.series[0].data[i] = {
-                            value: barOption.series[0].data[i],
-                            itemStyle: {
-                                color: "#ff8a45",
-                            }
-                        }
-                    } else if ( i === lengthSeries - 3) {
-                        barOption.series[0].data[i] = {
-                            value: barOption.series[0].data[i],
-                            itemStyle: {
-                                color: "#fddd60",
-                            }
-                        }
-                    }
-                }
-
-                chartBar.setOption(barOption);
             },
             error: function(xhr, status, error) {
                 alert(error)

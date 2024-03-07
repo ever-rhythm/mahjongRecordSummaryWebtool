@@ -44,6 +44,12 @@
     let code = params.get('code')
     let date = params.get('date')
     let player = params.get('pl')
+    let opponent = params.get('op')
+    let urlTrend = '/api/group_player_trend'
+
+    if (opponent != null) {
+        urlTrend = '/api/group_player_op_trend'
+    }
 
     myChart.showLoading('default', {
         fontSize: 30,
@@ -57,17 +63,22 @@
     } else {
         $.ajax({
             type:'POST',
-            url: '/api/group_player_trend',
+            url: urlTrend,
             contentType: "application/json",
             data: JSON.stringify({
                 code:code,
                 date:date,
                 player:player,
+                opponent:opponent,
             }),
             success: function(result) {
                 myChart.hideLoading();
+                let txtName = '昵称：' + player
+                if (opponent != null) {
+                    txtName += ' vs ' + opponent
+                }
 
-                document.getElementById('s0').innerHTML = '昵称：' + player
+                document.getElementById('s0').innerHTML = txtName
                 document.getElementById('s1').innerHTML = '总数：' + result.data.cntTotal
                 document.getElementById('s2').innerHTML = '积分：' + result.data.lineTotal[result.data.cntTotal - 1]
                 document.getElementById('s3').innerHTML = '点数：' + result.data.linePt[result.data.cntTotal - 1]
