@@ -95,7 +95,7 @@ func InsertPlayer(onePlayer TablePlayer) (int, error) {
 	defer conn.Close(context.Background())
 
 	batch := &pgx.Batch{}
-	batch.Queue(`insert into public.player(name, group_id) values($1, $2) on conflict (name) do nothing `,
+	batch.Queue(`insert into public.player(name, group_id) values($1, $2) on conflict (group_id, name) do nothing `,
 		onePlayer.Name,
 		onePlayer.Group_Id,
 	)
@@ -119,7 +119,7 @@ func BatchInsertPlayer(pls []TablePlayer) (int, error) {
 	defer conn.Close(context.Background())
 
 	batch := &pgx.Batch{}
-	sqlInsert := `insert into public.player(name, group_id) values($1, $2) on conflict (name) do nothing`
+	sqlInsert := `insert into public.player(name, group_id) values($1, $2) on conflict (group_id, name) do nothing`
 	for i := 0; i < len(pls); i++ {
 		batch.Queue(sqlInsert, pls[i].Name, pls[i].Group_Id)
 	}
