@@ -9,7 +9,6 @@
     <script src="https://cdn.staticfile.net/jquery/3.7.1/jquery.min.js"></script>
 </head>
 <body style="background-color: #100C2A;">
-<!-- 为 ECharts 准备一个定义了宽高的 DOM -->
 <div id="main2" style="top:100px;width: 960px;height:300px;position: relative;margin: auto;display: flex">
     <div id="maininfo" style="width: 400px;height:100%;position:relative;margin: auto;">
         <span style="padding-left:100px;font-weight:bold;font-size:18px;color: #EEF1FA">对局信息</span><br/><br/><br/>
@@ -45,6 +44,7 @@
     let date = params.get('date')
     let player = params.get('pl')
     let opponent = params.get('op')
+    let half = params.get('half')
     let urlTrend = '/api/group_player_trend'
 
     if (opponent != null) {
@@ -70,6 +70,7 @@
                 date:date,
                 player:player,
                 opponent:opponent,
+                half:half,
             }),
             success: function(result) {
                 myChart.hideLoading();

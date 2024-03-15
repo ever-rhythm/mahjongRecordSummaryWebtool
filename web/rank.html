@@ -9,7 +9,7 @@
   <script src="https://cdn.staticfile.net/jquery/3.7.1/jquery.min.js"></script>
 </head>
 <body style="background-color: #100C2A;">
-<div id="main" style="top:100px;width:960px;height:1200px;position: relative;margin: auto;"></div>
+<div id="main" style="top:100px;width:900px;height:1200px;position: relative;margin: auto;"></div>
 <script type="text/javascript">
   let chartBar = echarts.init(document.getElementById('main'), 'dark');
   let herfPrefix = 'http://127.0.0.1'
@@ -23,6 +23,7 @@
   let queryString = new URLSearchParams(window.location.search)
   let code = queryString.get('code')
   let date = queryString.get('date')
+  let half = queryString.get('half')
 
   if (date == null || date.length === 0) {
     let d = new Date()
@@ -32,8 +33,13 @@
   }
 
   chartBar.on('click', function(params) {
-    window.open(herfPrefix + '/trend.html' + '?code=' + code + '&date=' + date + '&pl=' + encodeURIComponent(params.name));
+    let urlTrend = herfPrefix + '/trend.html' + '?code=' + code + '&date=' + date + '&pl=' + encodeURIComponent(params.name)
+    if ( half != null ) {
+      urlTrend += '&half=' + half
+    }
+    window.open(urlTrend);
   });
+
   chartBar.showLoading('default', {
     fontSize: 30,
     maskColor: '#100C2A',
@@ -51,6 +57,7 @@
       data: JSON.stringify({
         code:code,
         date:date,
+        half:half,
       }),
       success: function(result) {
         chartBar.hideLoading();
@@ -180,7 +187,7 @@
 
         // resize
         chartBar.resize({
-          width: 960,
+          width: 900,
           height: barHeight * result.data.lineTotal.length > 1800 ? 1800 : barHeight * result.data.lineTotal.length
         });
 

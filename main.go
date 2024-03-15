@@ -90,6 +90,7 @@ func groupPlayerTrend(c *gin.Context) {
 	code := req.Get("code").MustString()
 	date := req.Get("date").MustString()
 	pl := req.Get("player").MustString()
+	half := req.Get("half").MustString()
 
 	if len(code) == 0 || len(pl) == 0 || len(date) == 0 {
 		objJs.Set("msg", "请求参数有误")
@@ -97,7 +98,7 @@ func groupPlayerTrend(c *gin.Context) {
 		return
 	}
 
-	ret, retPls, err := api.GetGroupPlayerTrend(code, pl, date)
+	ret, retPls, err := api.GetGroupPlayerTrend(code, pl, date, half)
 	if err != nil {
 		log.Println(err)
 		objJs.Set("msg", "查询有误")
@@ -192,6 +193,7 @@ func groupRank(c *gin.Context) {
 
 	code := req.Get("code").MustString()
 	date := req.Get("date").MustString()
+	half := req.Get("half").MustString()
 
 	if len(code) == 0 || len(date) == 0 {
 		objJs.Set("msg", "请求参数有误")
@@ -199,7 +201,7 @@ func groupRank(c *gin.Context) {
 		return
 	}
 
-	ret, err := api.GetGroupRank(code, date)
+	ret, err := api.GetGroupRank(code, date, half)
 	if err != nil {
 		log.Println(err)
 		objJs.Set("msg", "查询有误")
@@ -210,17 +212,6 @@ func groupRank(c *gin.Context) {
 	var players []string
 	var totals []int
 	var negaTotals []int
-	/*
-		minTotal := math.MaxInt
-
-		for _, oneRank := range ret {
-			if oneRank.Total < minTotal {
-				minTotal = oneRank.Total
-			}
-		}
-		absMinTotal := int(math.Abs(float64(minTotal)))
-
-	*/
 
 	for _, oneRank := range ret {
 		players = append(players, oneRank.Pl)
@@ -231,13 +222,11 @@ func groupRank(c *gin.Context) {
 			totals = append(totals, 0)
 			negaTotals = append(negaTotals, oneRank.Total)
 		}
-		//totals = append(totals, oneRank.Total+absMinTotal)
 	}
 
 	objJs.SetPath([]string{"data", "player"}, players)
 	objJs.SetPath([]string{"data", "lineTotal"}, totals)
 	objJs.SetPath([]string{"data", "lineNegaTotal"}, negaTotals)
-	//objJs.SetPath([]string{"data", "absMinTotal"}, absMinTotal)
 
 	c.JSON(200, objJs.MustMap())
 	return
@@ -346,7 +335,7 @@ func summary(c *gin.Context) {
 	for _, oneInfo := range mapPlayerInfo {
 		oneIdx := "p" + strconv.Itoa(int(oneInfo.Seat))
 		rowPtSum[oneIdx] = fmt.Sprintf("%.1f", float32(oneInfo.TotalPoint)/1000)
-		rowZhuyiSum[oneIdx] = strconv.Itoa(int(oneInfo.Zhuyi))
+		rowZhuyiSum[oneIdx] = strconv.Itoa(oneInfo.Zhuyi)
 		rowMoneySum[oneIdx] = oneInfo.Sum
 	}
 

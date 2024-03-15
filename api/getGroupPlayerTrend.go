@@ -34,7 +34,7 @@ func GetGroupPlayerOpponentTrend(code string, date string, pl string, op string)
 	return retPaipu, []string{pl}, nil
 }
 
-func GetGroupPlayerTrend(code string, pl string, date string) ([]utils.TablePaipu, []string, error) {
+func GetGroupPlayerTrend(code string, pl string, date string, half string) ([]utils.TablePaipu, []string, error) {
 
 	// query code
 	retGroup, err := utils.QueryGroup(code)
@@ -58,6 +58,12 @@ func GetGroupPlayerTrend(code string, pl string, date string) ([]utils.TablePaip
 	if err != nil {
 		log.Println("next month date invalid")
 		return nil, nil, err
+	}
+
+	if half == "fh" {
+		dateEnd, err = utils.GetMidMonthDate(date)
+	} else if half == "sh" {
+		date, err = utils.GetMidMonthDate(date)
 	}
 
 	var pls []string

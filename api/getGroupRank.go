@@ -35,7 +35,7 @@ func (players Ranks) Less(i, j int) bool {
 	return players[j].Total > players[i].Total
 }
 
-func GetGroupRank(code string, date string) ([]Rank, error) {
+func GetGroupRank(code string, date string, half string) ([]Rank, error) {
 
 	// query group code
 	retGroup, err := utils.QueryGroup(code)
@@ -71,6 +71,12 @@ func GetGroupRank(code string, date string) ([]Rank, error) {
 	if err != nil {
 		log.Println("get dateEnd fail", date)
 		return nil, err
+	}
+
+	if half == "fh" {
+		dateEnd, err = utils.GetMidMonthDate(date)
+	} else if half == "sh" {
+		date, err = utils.GetMidMonthDate(date)
 	}
 
 	retPaipu, err := utils.QueryPaipu(retGroup[0].Group_Id, date, dateEnd)
