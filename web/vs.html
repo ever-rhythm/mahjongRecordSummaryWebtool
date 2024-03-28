@@ -1,29 +1,48 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
+    <title>祝仪工具箱交手情况</title>
     <meta charset="utf-8" />
-    <title>对手</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
     <script src="https://cdn.staticfile.net/echarts/5.4.3/echarts.min.js"></script>
     <script src="https://cdn.staticfile.net/jquery/3.7.1/jquery.min.js"></script>
-</head>
-<body style="background-color: #100C2A;">
-<div id="main" style="top:100px;width: 1200px;height:2000px;position: relative;margin: auto;"></div>
-<script type="text/javascript">
-    let chartBar = echarts.init(document.getElementById('main'), 'dark');
-    let herfPrefix = 'http://127.0.0.1'
-    // let herfPrefix = 'http://120.24.252.53'
-    // let herfPrefix = 'http://www.mjget.top'
+    <script>let herfPrefix = 'http://127.0.0.1'</script>
 
+    <style>
+        body {
+            background-color:#100C2A;
+        }
+        #main {
+            top:100px;
+            width: 1200px;
+            height: 2000px;
+            position: relative;
+            margin: auto;
+        }
+    </style>
+
+    <script>
+        let maskColor = '#100C2A'
+        let loadingColor = '#4992ff'
+        let loadingTextColor = '#4992ff'
+        let titleText = '交手情况'
+    </script>
+</head>
+<body>
+<div id="main"></div>
+<script>
     let params = new URLSearchParams(window.location.search)
-    // let intervalX = 500
     let code = params.get('code')
     let date = params.get('date')
     let player = params.get('pl')
 
+    let chartBar = echarts.init(document.getElementById('main'), 'dark');
+
     chartBar.showLoading('default', {
-        maskColor: '#100C2A',
-        color: '#4992ff',
-        textColor: '#4992ff',
+        maskColor: maskColor,
+        color: loadingColor,
+        textColor: loadingTextColor,
     });
 
     chartBar.on('click', function (params) {
@@ -41,11 +60,10 @@
         }),
         success: function(result) {
             chartBar.hideLoading();
-
             chartBar.setOption(
                 {
                     title: {
-                        text:  '对手'
+                        text:  titleText
                     },
                     tooltip: {
                         trigger: 'axis',
@@ -60,7 +78,6 @@
                     },
                     xAxis: {
                         type: 'value',
-                        // interval:intervalX,
                     },
                     yAxis: {
                         type: 'category',
@@ -138,7 +155,6 @@
             alert(status)
         }
     })
-
 </script>
 </body>
 </html>

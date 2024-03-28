@@ -62,9 +62,9 @@ func main() {
 	r.POST("/api/group_player_trend", groupPlayerTrend)
 	r.POST("/api/competitor", competitor)
 	r.POST("/api/group_player_op_trend", groupPlayerOpponentTrend)
-	r.POST("/api/ts", testSummary)
+	//r.POST("/api/ts", testSummary)
 
-	// html
+	// static
 	r.StaticFS("/static", http.Dir("./web/static"))
 	r.LoadHTMLFiles("web/index.html", "web/rank.html", "web/trend.html", "web/debug.html", "web/vs.html")
 

@@ -1,46 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
     <meta charset="utf-8" />
     <title>debug</title>
-    <!--  <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>-->
-    <!--  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>-->
-    <script src="https://cdn.staticfile.net/echarts/5.4.3/echarts.min.js"></script>
-    <script src="https://cdn.staticfile.net/jquery/3.7.1/jquery.min.js"></script>
 </head>
 <body style="background-color: #100C2A;">
-<div id="main" style="top:100px;width:960px;height:1200px;position: relative;margin: auto;"></div>
-<script type="text/javascript">
-    let chartBar = echarts.init(document.getElementById('main'), 'dark');
-    let herfPrefix = 'http://127.0.0.1'
-    // let herfPrefix = 'http://120.24.252.53'
-    // let herfPrefix = 'http://www.mjget.top'
-    let intervalX = 10000
-    let barHeight = 80
-    let barGap = '30%'
-    let queryString = new URLSearchParams(window.location.search)
-    let code = queryString.get('code')
-    let date = queryString.get('date')
-    let pl = queryString.get('pl')
 
-    if (code == null) {
-        alert('参数缺失')
-    } else {
-        $.ajax({
-            type:'POST',
-            url: '/api/ts',
-            contentType: "application/json",
-            data: JSON.stringify({
-                code:code,
-                player:pl,
-            }),
-            success: function(result) {
-            },
-            error: function(xhr, status, error) {
-                alert(error)
-            }
-        })
-    }
+<script type="text/javascript">
 </script>
 </body>
 </html>

@@ -1,25 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
+  <title>祝仪工具箱排行榜</title>
   <meta charset="utf-8" />
-  <title>排行榜</title>
-<!--  <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>-->
-<!--  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>-->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
   <script src="https://cdn.staticfile.net/echarts/5.4.3/echarts.min.js"></script>
   <script src="https://cdn.staticfile.net/jquery/3.7.1/jquery.min.js"></script>
+  <script>let herfPrefix = 'http://127.0.0.1'</script>
+
+  <style>
+    body {
+      background-color:#100C2A;
+    }
+    #main {
+      top:100px;
+      width: 900px;
+      height: 1200px;
+      position: relative;
+      margin: auto;
+    }
+  </style>
+
+  <script>
+    let intervalX = 10000
+    let barHeight = 80
+    let barGap = '30%'
+    let imgHeight = 30
+    let imgWidth = 30
+    let loadingFontSize = 30
+    let loadingMaskColor = '#100C2A'
+    let loadingColor = '#4992ff'
+    let loadingTextColor = '#4992ff'
+    let titlePadding = [5, 5]
+    let boundaryGap = [0, 0.05]
+    let gridLeft = ''
+    let gridRight = ''
+    let gridBottom = ''
+
+    let color1st = "#fddd60"
+    let color2nd = "#F0F8FF"
+    let color3rd = "#fc8452"
+    let colorPlus = "#91cc75"
+    let colorMinus = "#5470c6"
+
+    let chartBarWidth = 900
+    let chartBarHeight = 1800
+  </script>
+
 </head>
-<body style="background-color: #100C2A;">
-<div id="main" style="top:100px;width:900px;height:1200px;position: relative;margin: auto;"></div>
+<body>
+<div id="main"></div>
 <script type="text/javascript">
-  let chartBar = echarts.init(document.getElementById('main'), 'dark');
-  let herfPrefix = 'http://127.0.0.1'
-  // let herfPrefix = 'http://120.24.252.53'
-  // let herfPrefix = 'http://www.mjget.top'
-  let intervalX = 10000
-  let barHeight = 80
-  let barGap = '30%'
-  let imgHeight = 30
-  let imgWidth = 30
   let queryString = new URLSearchParams(window.location.search)
   let code = queryString.get('code')
   let date = queryString.get('date')
@@ -29,8 +61,10 @@
     let d = new Date()
     let month = (d.getMonth()+1 < 10 ? '0'+(d.getMonth()+1):d.getMonth()+1) ;
     date = d.getFullYear().toString() + '-' + month + '-01'
-    alert(date)
+    alert('日期不正确' + date)
   }
+
+  let chartBar = echarts.init(document.getElementById('main'), 'dark');
 
   chartBar.on('click', function(params) {
     let urlTrend = herfPrefix + '/trend.html' + '?code=' + code + '&date=' + date + '&pl=' + encodeURIComponent(params.name)
@@ -41,10 +75,10 @@
   });
 
   chartBar.showLoading('default', {
-    fontSize: 30,
-    maskColor: '#100C2A',
-    color: '#4992ff',
-    textColor: '#4992ff',
+    fontSize: loadingFontSize,
+    maskColor: loadingMaskColor,
+    color: loadingColor,
+    textColor: loadingTextColor,
   });
 
   if (code == null) {
@@ -64,8 +98,8 @@
 
         let barOption = {
           title: {
-            text:  '排行榜',
-            padding: [5, 50],
+            text:  `排行榜（点击数字查看详情）总计${result.data.player.length}人`,
+            padding: titlePadding,
           },
           tooltip: {
             trigger: 'axis',
@@ -76,23 +110,25 @@
               let strTips = params[0].name + '</br></br>'
 
               if (params[0] != null && params[0].value != null ){
-                strTips += '合计：' + (params[0].value + result.data.lineNegaTotal[params[0].dataIndex]).toString() + '</br>'
+                strTips += `排名：${result.data.player.length - params[0].dataIndex} </br> 合计：${(params[0].value + result.data.lineNegaTotal[params[0].dataIndex])}`
               }
 
               return strTips
             }
           },
-          legend: {},
+          legend: {
+            show: false,
+          },
           grid: {
             containLabel: true,
-            left: '5%',
-            right: '4%',
-            bottom: '3%',
+            left: gridLeft,
+            right: gridRight,
+            bottom: gridBottom,
           },
           xAxis: {
             show: false,
             type: 'value',
-            boundaryGap: [0, 0.05],
+            boundaryGap: boundaryGap,
             interval:intervalX,
           },
           yAxis: {
@@ -102,7 +138,6 @@
             axisLabel: {
               formatter: (value) => {
                 let plSize = result.data.player.length
-
 
                 if ( plSize - 1 >= 0 && value === result.data.player[plSize- 1]) {
                   return '{x|}' + ' ' + value
@@ -162,18 +197,18 @@
         // 前三颜色，正负颜色
         let lengthSeries = barOption.series[0].data.length
         for (let i = 0;i < lengthSeries ;i++){
-          let oneColor = "#5470c6"
+          let oneColor = colorMinus
 
           if ( i === lengthSeries - 1 ){
-            oneColor = "#fddd60"
+            oneColor = color1st
           } else if ( i === lengthSeries - 2) {
-            oneColor = "#F0F8FF"
+            oneColor = color2nd
           } else if ( i === lengthSeries - 3) {
-            oneColor = "#fc8452"
+            oneColor = color3rd
           } else if (barOption.series[0].data[i] > 0) {
-            oneColor = "#91cc75"
+            oneColor = colorPlus
           } else {
-            oneColor = "#5470c6"
+            oneColor = colorMinus
           }
 
           barOption.series[0].data[i] = {
@@ -187,8 +222,8 @@
 
         // resize
         chartBar.resize({
-          width: 900,
-          height: barHeight * result.data.lineTotal.length > 1800 ? 1800 : barHeight * result.data.lineTotal.length
+          width: chartBarWidth,
+          height: barHeight * result.data.lineTotal.length > chartBarHeight ? chartBarHeight : barHeight * result.data.lineTotal.length
         });
 
         chartBar.setOption(barOption);

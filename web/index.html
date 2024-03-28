@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
+    <title>祝仪工具箱</title>
     <meta charset="UTF-8" />
-    <title>祝仪工具By夜光天楼</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1, maximum-scale=1"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+
+    <script src="https://cdn.staticfile.net/amis/2.8.0/sdk.js"></script>
     <link rel="stylesheet" href="https://cdn.staticfile.net/amis/2.8.0/sdk.css" />
     <link rel="stylesheet" href="https://cdn.staticfile.net/amis/2.8.0/helper.css" />
     <link rel="stylesheet" href="https://cdn.staticfile.net/amis/2.8.0/iconfont.css" />
+    <script>let herfPrefix = 'http://127.0.0.1'</script>
+
     <style>
         html,
         body,
@@ -23,15 +24,13 @@
             padding: 0;
         }
     </style>
+
 </head>
 <body>
 <div id="root" class="app-wrapper"></div>
-<script src="https://cdn.staticfile.net/amis/2.8.0/sdk.js"></script>
-<!--<script src="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/sdk.js"></script> -->
 <script type="text/javascript">
     (function () {
         let amis = amisRequire('amis/embed');
-        // 通过替换下面这个配置来生成不同页面
         let amisJSON =
             {
                 "type":"page",
@@ -114,31 +113,31 @@
                                                     ],
                                                     "options": [
                                                         {
-                                                            "image":"http://120.24.252.53/static/20240220_sxme_release.png",
+                                                            "image":herfPrefix + "/static/20240220_sxme_release.png",
                                                         },
                                                         {
-                                                            "image":"http://120.24.252.53/static/hzsx_20240127234214_release.png",
+                                                            "image":herfPrefix + "/static/hzsx_20240127234214_release.png",
                                                         },
                                                         {
-                                                            "image":"http://120.24.252.53/static/shxy_release_20231129122024.jpg",
+                                                            "image":herfPrefix + "/static/shxy_release_20231129122024.jpg",
                                                         },
                                                         {
-                                                            "image":"http://120.24.252.53/static/szyf_release_20231222002356.png",
+                                                            "image":herfPrefix + "/static/szyf_release_20231222002356.png",
                                                         },
                                                         {
-                                                            "image": "http://120.24.252.53/static/20231112chengdu_duola.png",
+                                                            "image":herfPrefix + "/static/20231112chengdu_duola.png",
                                                         },
                                                         {
-                                                            "image":"http://120.24.252.53/static/20231016xian_gsws_release.jpg",
+                                                            "image":herfPrefix + "/static/20231016xian_gsws_release.jpg",
                                                         },
                                                         {
-                                                            "image": "http://120.24.252.53/static/20230928changsha.png",
+                                                            "image":herfPrefix + "/static/20230928changsha.png",
                                                         },
                                                         {
-                                                            "image": "http://120.24.252.53/static/20230928xian.png",
+                                                            "image":herfPrefix + "/static/20230928xian.png",
                                                         },
                                                         {
-                                                            "image": "http://120.24.252.53/static/20230928nanchang.png",
+                                                            "image":herfPrefix + "/static/20230928nanchang.png",
                                                         },
                                                     ]
                                                 }

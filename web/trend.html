@@ -1,61 +1,134 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
+    <title>祝仪工具箱对局信息</title>
     <meta charset="utf-8" />
-    <title>战绩</title>
-<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>-->
-<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
     <script src="https://cdn.staticfile.net/echarts/5.4.3/echarts.min.js"></script>
     <script src="https://cdn.staticfile.net/jquery/3.7.1/jquery.min.js"></script>
-</head>
-<body style="background-color: #100C2A;">
-<div id="main2" style="top:100px;width: 960px;height:300px;position: relative;margin: auto;display: flex">
-    <div id="maininfo" style="width: 400px;height:100%;position:relative;margin: auto;">
-        <span style="padding-left:100px;font-weight:bold;font-size:18px;color: #EEF1FA">对局信息</span><br/><br/><br/>
-        <span id='s0' style="padding-left:100px;font-weight:bold;font-size:18px;color: #4992ff"></span><br/>
-        <span id='s1' style="padding-left:100px;font-weight:bold;font-size:18px;color: #4992ff"></span><br/>
-        <span id='s2' style="padding-left:100px;font-weight:bold;font-size:18px;color: #4992ff"></span><br/>
-        <span id='s3' style="padding-left:100px;font-weight:bold;font-size:18px;color: #4992ff"></span><br/>
-        <span id='s4' style="padding-left:100px;font-weight:bold;font-size:18px;color: #4992ff"></span><br/>
-        <span id='s5' style="padding-left:100px;font-weight:bold;font-size:18px;color: #4992ff"></span>
-    </div>
-    <div id="main1" style="height:100%;margin: auto;flex: 1"></div>
-</div>
-<div id="main" style="top:100px;width: 960px;height:800px;position: relative;margin: auto;"></div>
-<script type="text/javascript">
-    const getLength = (str) => {
-        let charCount = 0;
-        for (const char of str) {
-            if (char.codePointAt(0) > 127) {
-                charCount += 2;
-            } else {
-                charCount += 1;
-            }
+
+    <style>
+        body {
+            background-color:#100C2A;
         }
 
-        return charCount;
-    }
+        #main {
+            top:100px;
+            width: 960px;
+            height: 800px;
+            position: relative;
+            margin: auto;
+        }
 
-    let myChart = echarts.init(document.getElementById('main'), 'dark');
-    let chartBar = echarts.init(document.getElementById('main1'), 'dark');
+        #main1 {
+            height:100%;
+            margin: auto;
+            flex: 1;
+        }
+
+        #main2 {
+            top:100px;
+            width: 960px;
+            height:300px;
+            position: relative;
+            margin: auto;
+            display: flex
+        }
+
+        #maininfo {
+            width: 400px;
+            height:100%;
+            position:relative;
+            margin: auto;
+        }
+
+        .spaninfo {
+            padding-left:100px;
+            font-weight:bold;
+            font-size:18px;
+            color: #EEF1FA
+        }
+
+        .onespan {
+            padding-left:100px;
+            font-weight:bold;
+            font-size:18px;
+            color: #4992ff
+        }
+
+    </style>
+
+    <script>
+        const getLength = (str) => {
+            let charCount = 0;
+            for (const char of str) {
+                if (char.codePointAt(0) > 127) {
+                    charCount += 2;
+                } else {
+                    charCount += 1;
+                }
+            }
+
+            return charCount;
+        }
+
+        let loadingFontSize = 30
+        let loadingMaskColor = '#100C2A'
+        let loadingColor = '#4992ff'
+        let loadingTextColor = '#4992ff'
+        let intervalY = 5000
+
+        let titlePadding = [5, 100]
+        let radius = ['50%', '70%']
+        let tooltipsPosition = ['40%', '5%']
+        let sizeSp = 15
+
+        let colorPt = '#4992ff'
+        let colorZy = '#fddd60'
+        let colorTotal = '#7cffb2'
+        let colorTime = '#999'
+        let color1st = '#4992ff'
+        let color2nd = '#7cffb2'
+        let color3rd = '#fddd60'
+        let color4th = '#ff6e76'
+
+    </script>
+</head>
+<body>
+<div id="main2">
+    <div id="maininfo">
+        <span class="spaninfo">对局信息</span><br/><br/><br/>
+        <span id='s0' class="onespan"></span><br/>
+        <span id='s1' class="onespan"></span><br/>
+        <span id='s2' class="onespan"></span><br/>
+        <span id='s3' class="onespan"></span><br/>
+        <span id='s4' class="onespan"></span><br/>
+        <span id='s5' class="onespan"></span>
+    </div>
+    <div id="main1"></div>
+</div>
+<div id="main"></div>
+<script type="text/javascript">
     let params = new URLSearchParams(window.location.search)
-    let intervalY = 5000
     let code = params.get('code')
     let date = params.get('date')
     let player = params.get('pl')
     let opponent = params.get('op')
     let half = params.get('half')
     let urlTrend = '/api/group_player_trend'
-
     if (opponent != null) {
         urlTrend = '/api/group_player_op_trend'
     }
 
+    let myChart = echarts.init(document.getElementById('main'), 'dark');
+    let chartBar = echarts.init(document.getElementById('main1'), 'dark');
+
     myChart.showLoading('default', {
-        fontSize: 30,
-        maskColor: '#100C2A',
-        color: '#4992ff',
-        textColor: '#4992ff',
+        fontSize: loadingFontSize,
+        maskColor: loadingMaskColor,
+        color: loadingColor,
+        textColor: loadingTextColor,
     });
 
     if (code == null || date == null || player == null) {
@@ -93,18 +166,17 @@
                 myChart.setOption({
                     title: {
                         text:  '积分趋势（点击跳转牌谱）',
-                        padding: [5, 100],
+                        padding: titlePadding,
                     },
                     tooltip: {
                         trigger: 'axis',
                         axisPointer: {
                             type: 'cross',
                         },
-                        position:['40%', '5%'],
+                        position:tooltipsPosition,
                         formatter: function (params) {
                             let strTips = ''
                             let oneDetail = result.data.lineDetail[params[0].dataIndex]
-                            let sizeSp = 15
 
                             strTips += '积分：' + result.data.lineTotal[params[0].dataIndex] + '</br>'
                             strTips += '点数：' + result.data.linePt[params[0].dataIndex] + '</br>'
@@ -138,7 +210,7 @@
                             smooth: false,
                             data: result.data.linePt,
                             itemStyle: {
-                                color:'#4992ff',
+                                color: colorPt,
                             },
                         },
                         {
@@ -147,7 +219,7 @@
                             smooth: false,
                             data: result.data.lineZy,
                             itemStyle: {
-                                color:'#fddd60',
+                                color: colorZy,
                             },
                         },
                         {
@@ -156,7 +228,7 @@
                             smooth: false,
                             data: result.data.lineTotal,
                             itemStyle: {
-                                color:'#7cffb2',
+                                color: colorTotal,
                             },
                         },
                     ]
@@ -171,17 +243,15 @@
                     series: [
                         {
                             type: 'pie',
-                            radius: ['50%', '70%'],
-                            // bottom: 20,
+                            radius: radius,
                             label: {
-                                // alignTo: 'edge',
                                 formatter: '{name|{b} {c}战}\n{per|{d}%}',
                                 minMargin: 5,
                                 edgeDistance: 10,
                                 lineHeight: 15,
                                 rich: {
                                     time: {
-                                        color: '#999'
+                                        color: colorTime
                                     }
                                 }
                             },
@@ -190,28 +260,28 @@
                                     name: '2位',
                                     value: result.data.cnt2,
                                     itemStyle: {
-                                        color:'#7cffb2',
+                                        color:color2nd,
                                     }
                                 },
                                 {
                                     name: '3位',
                                     value: result.data.cnt3,
                                     itemStyle: {
-                                        color:'#fddd60',
+                                        color:color3rd,
                                     }
                                 },
                                 {
                                     name: '4位',
                                     value: result.data.cnt4,
                                     itemStyle: {
-                                        color:'#ff6e76',
+                                        color:color4th,
                                     }
                                 },
                                 {
                                     name: '1位',
                                     value: result.data.cnt1,
                                     itemStyle: {
-                                        color:'#4992ff',
+                                        color: color1st,
                                     }
                                 },
                             ],
