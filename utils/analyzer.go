@@ -274,3 +274,31 @@ func GetMidMonthDate(date string) (string, error) {
 
 	return newDate.AddDate(0, 0, 13).Add(23 * time.Hour).Format("2006-01-02T15:04:05"), nil
 }
+
+func GetPreMonthDate(date string) (string, error) {
+	if len(date) != 10 {
+		return "", errors.New("err format")
+	}
+
+	tmpDate := date[:len(date)-3] + "-01"
+	newDate, err := time.Parse("2006-01-02", tmpDate)
+	if err != nil {
+		return "", err
+	}
+
+	return newDate.AddDate(0, 0, -1).Add(23 * time.Hour).Format("2006-01-02T15:04:05"), nil
+}
+
+func GetEndMonthDate(date string) (string, error) {
+	if len(date) != 10 {
+		return "", errors.New("err format")
+	}
+
+	tmpDate := date[:len(date)-3] + "-01"
+	newDate, err := time.Parse("2006-01-02", tmpDate)
+	if err != nil {
+		return "", err
+	}
+
+	return newDate.AddDate(0, 1, -1).Add(23 * time.Hour).Format("2006-01-02T15:04:05"), nil
+}

@@ -67,6 +67,7 @@ func GetGroupRank(code string, date string, half string) ([]Rank, error) {
 	}
 
 	// query paipu
+	dateBegin := date
 	dateEnd, err := utils.GetNextMonthDate(date)
 	if err != nil {
 		log.Println("get dateEnd fail", date)
@@ -74,12 +75,14 @@ func GetGroupRank(code string, date string, half string) ([]Rank, error) {
 	}
 
 	if half == "fh" {
+		dateBegin, err = utils.GetPreMonthDate(date)
 		dateEnd, err = utils.GetMidMonthDate(date)
 	} else if half == "sh" {
-		date, err = utils.GetMidMonthDate(date)
+		dateBegin, err = utils.GetMidMonthDate(date)
+		dateEnd, err = utils.GetEndMonthDate(date)
 	}
 
-	retPaipu, err := utils.QueryPaipu(retGroup[0].Group_Id, date, dateEnd)
+	retPaipu, err := utils.QueryPaipu(retGroup[0].Group_Id, dateBegin, dateEnd)
 	if err != nil {
 		log.Println("query paipu fail")
 		return nil, err

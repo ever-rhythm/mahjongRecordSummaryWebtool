@@ -54,6 +54,7 @@ func GetGroupPlayerTrend(code string, pl string, date string, half string) ([]ut
 		return nil, nil, err
 	}
 
+	dateBegin := date
 	dateEnd, err := utils.GetNextMonthDate(date)
 	if err != nil {
 		log.Println("next month date invalid")
@@ -61,9 +62,11 @@ func GetGroupPlayerTrend(code string, pl string, date string, half string) ([]ut
 	}
 
 	if half == "fh" {
+		dateBegin, err = utils.GetPreMonthDate(date)
 		dateEnd, err = utils.GetMidMonthDate(date)
 	} else if half == "sh" {
-		date, err = utils.GetMidMonthDate(date)
+		dateBegin, err = utils.GetMidMonthDate(date)
+		dateEnd, err = utils.GetEndMonthDate(date)
 	}
 
 	var pls []string
@@ -72,7 +75,7 @@ func GetGroupPlayerTrend(code string, pl string, date string, half string) ([]ut
 	}
 
 	// query paipu
-	retPaipu, err := utils.QueryGroupPlayerPaipu(retGroup[0].Group_Id, pls, date, dateEnd)
+	retPaipu, err := utils.QueryGroupPlayerPaipu(retGroup[0].Group_Id, pls, dateBegin, dateEnd)
 	if err != nil {
 		log.Println("QueryGroupPlayerPaipu fail")
 		return nil, nil, err
