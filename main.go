@@ -48,6 +48,9 @@ func main() {
 		log.Fatalln("http majsoul server config fail", client.MajsoulServerConfig, err)
 	}
 
+	// static
+	r.StaticFS("/static", http.Dir("./web/static"))
+
 	// get
 	r.GET("/", func(c *gin.Context) { c.HTML(200, "index.html", "home"); return })
 	r.GET("/index.html", func(c *gin.Context) { c.HTML(200, "index.html", "index"); return })
@@ -55,6 +58,9 @@ func main() {
 	r.GET("/trend.html", func(c *gin.Context) { c.HTML(200, "trend.html", "trend"); return })
 	r.GET("/debug.html", func(c *gin.Context) { c.HTML(200, "debug.html", "debug"); return })
 	r.GET("/vs.html", func(c *gin.Context) { c.HTML(200, "vs.html", "vs"); return })
+	r.GET("/about.html", func(c *gin.Context) { c.HTML(200, "about.html", "about"); return })
+	r.GET("/nav.html", func(c *gin.Context) { c.HTML(200, "nav.html", "nav"); return })
+	r.LoadHTMLFiles("web/index.html", "web/rank.html", "web/trend.html", "web/debug.html", "web/vs.html", "web/about.html", "web/nav.html")
 
 	// post
 	r.POST("/api/v2", summary)
@@ -62,11 +68,7 @@ func main() {
 	r.POST("/api/group_player_trend", groupPlayerTrend)
 	r.POST("/api/competitor", competitor)
 	r.POST("/api/group_player_op_trend", groupPlayerOpponentTrend)
-	//r.POST("/api/ts", testSummary)
-
-	// static
-	r.StaticFS("/static", http.Dir("./web/static"))
-	r.LoadHTMLFiles("web/index.html", "web/rank.html", "web/trend.html", "web/debug.html", "web/vs.html")
+	r.POST("/api/nav", getNavJson)
 
 	// server
 	err = r.Run(ConfigGin.Domain + ":" + ConfigGin.Port)
@@ -362,6 +364,7 @@ func summary(c *gin.Context) {
 	return
 }
 
+/*
 func testSummary(c *gin.Context) {
 	objJs := okRet()
 
@@ -391,6 +394,8 @@ func testSummary(c *gin.Context) {
 	c.JSON(200, objJs.MustMap())
 	return
 }
+
+*/
 
 func groupPlayerOpponentTrend(c *gin.Context) {
 	objJs := okRet()
@@ -561,6 +566,58 @@ func competitor(c *gin.Context) {
 	return
 }
 
+func getNavJson(c *gin.Context) {
+	objJs := okRet()
+	arrTmp := make([]map[string]string, 0)
+
+	b, _ := c.GetRawData()
+	req, err := simplejson.NewJson(b)
+	if err != nil {
+		log.Println(err)
+		objJs.Set("msg", "请求格式有误")
+		c.JSON(500, objJs)
+		return
+	}
+
+	code := req.Get("code").MustString()
+
+	oneTmp := make(map[string]string)
+	oneTmp["label"] = "首页（点击文字跳转榜单）"
+	oneTmp["to"] = "/index.html"
+	arrTmp = append(arrTmp, oneTmp)
+
+	curMonth, err := strconv.Atoi(time.Now().Format("01"))
+	curDay, err := strconv.Atoi(time.Now().Format("02"))
+	oneMonthFeb := make(map[string]string)
+	oneMonthFeb["label"] = "2月下半"
+	oneMonthFeb["to"] = "/rank.html?date=2024-02-01&half=sh&code=" + code
+	arrTmp = append(arrTmp, oneMonthFeb)
+
+	for i := 3; i <= curMonth; i++ {
+		oneMonth := make(map[string]string)
+		oneMonth["label"] = fmt.Sprintf("%d月上半", i)
+		strMonth := strconv.Itoa(i)
+		if len(strMonth) < 2 {
+			strMonth = "0" + strMonth
+		}
+		oneHalf := "fh"
+		oneMonth["to"] = fmt.Sprintf("/rank.html?date=2024-%s-01&half=%s&code=%s", strMonth, oneHalf, code)
+		arrTmp = append(arrTmp, oneMonth)
+
+		if i < curMonth || (i == curMonth && curDay >= 15) {
+			oneMonthSh := make(map[string]string)
+			oneMonthSh["label"] = fmt.Sprintf("%d月下半", i)
+			oneHalfSh := "sh"
+			oneMonthSh["to"] = fmt.Sprintf("/rank.html?date=2024-%s-01&half=%s&code=%s", strMonth, oneHalfSh, code)
+			arrTmp = append(arrTmp, oneMonthSh)
+		}
+	}
+
+	objJs.Set("data", arrTmp)
+	c.JSON(200, objJs.MustMap())
+	return
+}
+
 // load config json file
 func loadConfigFile() error {
 
@@ -587,6 +644,7 @@ func loadConfigFile() error {
 	utils.ConfigMode.Rate = objJsConfig.Get("modeMap").Get("rate").MustStringArray()
 	utils.ConfigMode.Zy = objJsConfig.Get("modeMap").Get("zy").MustStringArray()
 	utils.ConfigMode.RecordContestIds = objJsConfig.Get("recordContestUid").MustStringArray()
+	utils.ConfigMode.RecordMode = objJsConfig.Get("recordMode").MustInt()
 
 	// validate config
 	if len(utils.ConfigMajsoulBot.Acc) != len(utils.ConfigMajsoulBot.Pwd) ||

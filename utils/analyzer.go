@@ -20,6 +20,7 @@ type configMode struct {
 	Rate             []string
 	Zy               []string
 	RecordContestIds []string
+	RecordMode       int
 }
 
 var ConfigMajsoulBot = configMajsoulBot{}

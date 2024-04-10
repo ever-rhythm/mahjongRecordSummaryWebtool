@@ -365,7 +365,11 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 							if vHule.Yiman {
 								// calc yiman zhuyi basic and baopai seat
 								if vHule.Baopai > 0 {
-									cntZ += 15
+									if vHule.Zimo {
+										cntZ += 15
+									} else {
+										cntZ += 10
+									}
 
 									// 大三元id=37
 									for _, oneFan := range vHule.Fans {
@@ -519,11 +523,18 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 		pls = append(pls, v.Nickname)
 	}
 
-	// groupId
+	// groupId rate
 	rate := strconv.Itoa(ratePt) + strconv.Itoa(rateZhuyi)
 	groupId, err := strconv.Atoi(rate)
 	if err != nil {
 		groupId = 0
+	}
+	for i := 0; i < len(utils.ConfigMode.RecordContestIds); i++ {
+		if contestUid == utils.ConfigMode.RecordContestIds[i] {
+			groupId = utils.ConfigMode.RecordMode
+			rate = strconv.Itoa(groupId)
+			break
+		}
 	}
 
 	// save
