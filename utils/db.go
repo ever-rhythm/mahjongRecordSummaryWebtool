@@ -8,7 +8,9 @@ import (
 )
 
 type configDb struct {
-	Dsn string
+	Dsn               string
+	DsnServerLess     string
+	TimeoutServerLess time.Duration `default:"10"`
 }
 
 var ConfigDb = configDb{}
@@ -20,6 +22,13 @@ type TableGroup struct {
 type TablePlayer struct {
 	Name     string
 	Group_Id int
+}
+
+type stQueryVipCode struct {
+	Name     string
+	Js_Mode  string
+	Js_Pl    string
+	Time_End time.Time
 }
 
 type StQueryPlayer struct {
@@ -34,6 +43,20 @@ type StQueryPlayersByName struct {
 	Group_Id         int
 	Player_Id        int
 	Parent_Player_Id int
+}
+
+type StPtSummary struct {
+	Total_Deal  int
+	Total_Score int
+	Pt          int
+	Zy          int
+	Zy_Yifa     int
+	Zy_Li       int
+	Zy_Aka      int
+	Rank_1      int
+	Rank_2      int
+	Rank_3      int
+	Rank_4      int
 }
 
 type StQueryGroupRank struct {
@@ -84,6 +107,79 @@ type StTrendPaipu struct {
 	Zy_2 int
 	Zy_3 int
 	Zy_4 int
+}
+
+// todo
+func SelectUpdatePtSummary() error {
+	ctx, cancel := context.WithTimeout(context.Background(), ConfigDb.TimeoutServerLess*time.Second)
+	defer cancel()
+	conn, err := pgx.Connect(ctx, ConfigDb.DsnServerLess)
+	if err != nil {
+		return err
+	}
+	defer conn.Close(ctx)
+
+	tx, err := conn.Begin(ctx)
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback(ctx)
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// todo test
+func QueryTotalSummary(pl string) ([]StPtSummary, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), ConfigDb.TimeoutServerLess*time.Second)
+	defer cancel()
+	conn, err := pgx.Connect(ctx, ConfigDb.DsnServerLess)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close(ctx)
+
+	sqlQuery := `select * from player_pt_summary where pl = $1 and time_span = 0 limit 1`
+	rows, err := conn.Query(ctx, sqlQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	rets, err := pgx.CollectRows(rows, pgx.RowToStructByName[StPtSummary])
+	if err != nil {
+		return nil, err
+	}
+
+	return rets, nil
+}
+
+// todo test
+func QueryPtSummary(groupId int, pl string, dateStart string, dateEnd string) ([]StPtSummary, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), ConfigDb.TimeoutServerLess*time.Second)
+	defer cancel()
+	conn, err := pgx.Connect(ctx, ConfigDb.DsnServerLess)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close(ctx)
+
+	sqlQuery := `select * from pt_summary where group_id = $1 and pl = $2 and time_start >= $3 and time_start < $4`
+	rows, err := conn.Query(ctx, sqlQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	rets, err := pgx.CollectRows(rows, pgx.RowToStructByName[StPtSummary])
+	if err != nil {
+		return nil, err
+	}
+
+	return rets, nil
 }
 
 func InsertPlayer(onePlayer TablePlayer) (int, error) {
@@ -221,33 +317,29 @@ func InsertPaipu(onePaipu TablePaipu) (int, error) {
 	return int(ct.RowsAffected()), nil
 }
 
-// todo dev
-func InsertUpdateGroupRankPlayer(onePaipu TablePaipu) (int, error) {
+// todo test
+func QueryVipCode(code string, pl string) ([]stQueryVipCode, error) {
 	conn, err := pgx.Connect(context.Background(), ConfigDb.Dsn)
 	if err != nil {
 		log.Println("db connect fail", err)
-		return 0, err
+		return nil, err
 	}
 	defer conn.Close(context.Background())
 
-	tx, err := conn.Begin(context.Background())
+	sqlQuery := `select name,js_mode,js_pl,time_end from public.player_vip where code = $1 and name = $2 limit 1`
+	rows, err := conn.Query(context.Background(), sqlQuery, code, pl)
 	if err != nil {
-		return 0, err
-	}
-	defer tx.Rollback(context.Background())
-
-	sqlInsert := ""
-	_, err = tx.Exec(context.Background(), sqlInsert)
-	if err != nil {
-		return 0, err
+		log.Println("db query fail", err)
+		return nil, err
 	}
 
-	err = tx.Commit(context.Background())
+	rets, err := pgx.CollectRows(rows, pgx.RowToStructByName[stQueryVipCode])
 	if err != nil {
-		return 0, err
+		log.Println("db query fail", err)
+		return nil, err
 	}
 
-	return 0, nil
+	return rets, nil
 }
 
 func QueryVipPlayer(groupId int, pls []string, dateEnd string) ([]TablePlayer, error) {
@@ -258,7 +350,7 @@ func QueryVipPlayer(groupId int, pls []string, dateEnd string) ([]TablePlayer, e
 	}
 	defer conn.Close(context.Background())
 
-	sqlQuery := `select group_id,name from public.player_vip where name = any($1) and group_id = $2 and time_end > $3`
+	sqlQuery := `select group_id,name from public.player_vip where name = any($1) and group_id = $2 and time_end > $3 limit 1`
 	rows, err := conn.Query(context.Background(), sqlQuery, pls, groupId, dateEnd)
 	if err != nil {
 		log.Println("db query fail", err)

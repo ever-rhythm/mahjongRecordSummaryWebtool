@@ -70,6 +70,9 @@ func main() {
 	r.POST("/api/group_player_op_trend", groupPlayerOpponentTrend)
 	r.POST("/api/nav", getNavJson)
 
+	r.POST("/api/plcr", playerCareer)
+	r.POST("/api/ads_summary", adsSummary)
+
 	// server
 	err = r.Run(ConfigGin.Domain + ":" + ConfigGin.Port)
 	if err != nil {
@@ -234,6 +237,84 @@ func groupRank(c *gin.Context) {
 	return
 }
 
+// todo ads
+func adsSummary(c *gin.Context) {
+	objJs := okRet()
+
+	c.JSON(200, objJs)
+	return
+}
+
+// todo new
+func playerCareer(c *gin.Context) {
+	objJs := okRet()
+
+	b, _ := c.GetRawData()
+	req, err := simplejson.NewJson(b)
+	if err != nil {
+		log.Println(err)
+		objJs.Set("msg", "请求格式有误")
+		c.JSON(500, objJs.MustMap())
+		return
+	}
+
+	code := req.Get("code").MustString()
+	pl := req.Get("player").MustString()
+
+	retCareer, err := api.GetCareer(code, pl)
+	if err != nil {
+		log.Println(err)
+		objJs.Set("msg", "请求有误")
+		c.JSON(500, objJs.MustMap())
+		return
+	}
+
+	objJs.SetPath([]string{"data", "pl"}, pl)
+	objJs.SetPath([]string{"data", "totalScore"}, retCareer.TotalScore)
+	objJs.SetPath([]string{"data", "TotalDeal"}, retCareer.TotalDeal)
+	objJs.SetPath([]string{"data", "totalPt"}, retCareer.TotalPt)
+	objJs.SetPath([]string{"data", "totalZy"}, retCareer.TotalZy)
+	c.JSON(200, objJs)
+	return
+}
+
+// todo new v3
+func advancedSummary(c *gin.Context) {
+	objJs := okRet()
+
+	raw, _ := c.GetRawData()
+	req, err := simplejson.NewJson(raw)
+
+	if err != nil {
+		log.Println(err)
+		objJs.Set("msg", "参数有误")
+		c.JSON(500, objJs)
+		return
+	}
+
+	mode, err := req.Get("mode").String()
+	if err != nil {
+		log.Println(err)
+		objJs.Set("msg", "祝仪格式有误")
+		c.JSON(500, objJs)
+		return
+	}
+
+	var records []string
+	mapRecords, err := req.Get("comboRecords").Array()
+	for _, v := range mapRecords {
+		tmpMap, _ := v.(map[string]interface{})
+		tmpRecord, _ := tmpMap["url"].(string)
+		if len(tmpRecord) > 0 {
+			records = append(records, tmpRecord)
+		}
+	}
+
+	log.Println(mode)
+
+	return
+}
+
 func summary(c *gin.Context) {
 	// get input json
 	b, _ := c.GetRawData()
@@ -363,39 +444,6 @@ func summary(c *gin.Context) {
 	c.JSON(200, tmpMap)
 	return
 }
-
-/*
-func testSummary(c *gin.Context) {
-	objJs := okRet()
-
-	b, _ := c.GetRawData()
-	req, err := simplejson.NewJson(b)
-	if err != nil {
-		log.Println(err)
-		objJs.Set("msg", "请求格式有误")
-		c.JSON(500, objJs.MustMap())
-		return
-	}
-
-	code := req.Get("code").MustString()
-	pl := req.Get("player").MustString()
-
-	if len(code) == 0 || len(pl) == 0 {
-		objJs.Set("msg", "请求参数有误")
-		c.JSON(500, objJs.MustMap())
-		return
-	}
-
-	groupId, err := strconv.Atoi(code)
-
-	ret, err := utils.QueryVipPlayer(groupId, []string{pl}, "")
-	log.Println(ret)
-
-	c.JSON(200, objJs.MustMap())
-	return
-}
-
-*/
 
 func groupPlayerOpponentTrend(c *gin.Context) {
 	objJs := okRet()
@@ -645,6 +693,11 @@ func loadConfigFile() error {
 	utils.ConfigMode.Zy = objJsConfig.Get("modeMap").Get("zy").MustStringArray()
 	utils.ConfigMode.RecordContestIds = objJsConfig.Get("recordContestUid").MustStringArray()
 	utils.ConfigMode.RecordMode = objJsConfig.Get("recordMode").MustInt()
+	utils.ConfigMode.RecordModeList = objJsConfig.Get("recordModeList").MustStringArray()
+	cfgInterval := objJsConfig.Get("MajsoulServerConfig").Get("interval").MustInt()
+	if cfgInterval > client.MajsoulServerConfig.Interval {
+		client.MajsoulServerConfig.Interval = cfgInterval
+	}
 
 	// validate config
 	if len(utils.ConfigMajsoulBot.Acc) != len(utils.ConfigMajsoulBot.Pwd) ||

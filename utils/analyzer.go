@@ -21,6 +21,7 @@ type configMode struct {
 	Zy               []string
 	RecordContestIds []string
 	RecordMode       int
+	RecordModeList   []string
 }
 
 var ConfigMajsoulBot = configMajsoulBot{}

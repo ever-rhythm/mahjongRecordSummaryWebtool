@@ -617,6 +617,8 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 
 func CheckIfRecord(groupId int, pls []string, contestUid string, date string) bool {
 
+	//log.Println("matchId", contestUid) // test
+
 	// match contestId
 	for i := 0; i < len(utils.ConfigMode.RecordContestIds); i++ {
 		if contestUid == utils.ConfigMode.RecordContestIds[i] {

@@ -1,12 +1,458 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang='zh'>
 <head>
-    <meta charset="utf-8" />
-    <title>debug</title>
+    <meta charset='UTF-8'>
+    <title>祝仪工具箱</title>
+    <script src='https://cdn.staticfile.net/amis/6.0.0/sdk.min.js'></script>
+    <link rel='stylesheet' href='https://cdn.staticfile.net/amis/6.0.0/sdk.min.css' />
+    <link rel='stylesheet' href='https://cdn.staticfile.net/amis/6.0.0/helper.min.css' />
+    <link rel='stylesheet' href='https://cdn.staticfile.net/amis/6.0.0/iconfont.min.css' />
+    <script>let herfPrefix = 'http://127.0.0.1'</script>
+    <script>
+        let pics = [
+            {
+                "image":herfPrefix + "/static/20240220_sxme_release.png",
+            },
+            {
+                "image":herfPrefix + "/static/hzsx_20240127234214_release.png",
+            },
+            {
+                "image":herfPrefix + "/static/shxy_release_20231129122024.jpg",
+            },
+            {
+                "image":herfPrefix + "/static/szyf_release_20231222002356.png",
+            },
+            {
+                "image":herfPrefix + "/static/20231112chengdu_duola.png",
+            },
+            {
+                "image":herfPrefix + "/static/20231016xian_gsws_release.jpg",
+            },
+            {
+                "image":herfPrefix + "/static/20230928changsha.png",
+            },
+            {
+                "image":herfPrefix + "/static/20230928xian.png",
+            },
+            {
+                "image":herfPrefix + "/static/20230928nanchang.png",
+            },
+        ]
+        let modes = [
+            {
+                "label": "103",
+                "value": "103",
+            },
+            {
+                "label": "203",
+                "value": "203"
+            },
+            {
+                "label": "303",
+                "value": "303"
+            },
+            {
+                "label": "503",
+                "value": "503"
+            },
+            {
+                "label": "23",
+                "value": "23"
+            },
+            {
+                "label": "53",
+                "value": "53"
+            },
+            {
+                "label": "10",
+                "value": "10"
+            },
+            {
+                "label": "20",
+                "value": "20"
+            },
+            {
+                "label": "50",
+                "value": "50"
+            },
+            {
+                "label": "100",
+                "value": "100"
+            },
+            {
+                "label": "5",
+                "value": "5"
+            },
+            {
+                "label": "8",
+                "value": "8"
+            },
+        ]
+    </script>
+    <style>
+        html,
+        body,
+        .app-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .style-pic {
+            width: 900px;
+            height: 200px;
+        }
+        .style-row-timeline {
+            width: 900px;
+            height: 100px;
+        }
+        .style-timeline {
+            width: 600px;
+            height: 100px;
+        }
+        .style-combo {
+            width: 450px;
+            height: 80px;
+        }
+        .style-radios {
+            width: 450px;
+            height: 80px;
+        }
+        .style-submit {
+            width: 0;
+            height: 0;
+        }
+        .style-summary {
+            width: 900px;
+            height: 200px;
+        }
+    </style>
 </head>
-<body style="background-color: #100C2A;">
+<body>
+<div id='root' class='app-wrapper'></div>
+<script type='text/javascript'>
+    (function () {
+        let amis = amisRequire('amis/embed');
+        let amisJSON = {
+            type: 'page',
+            title: '',
+            cssVars: {},
+            body: {
+                type: 'flex',
+                direction: 'column',
+                items: [
+                    {
+                        type: 'wrapper',
+                        className: 'style-pic',
+                        body: {
+                            "type": "carousel",
+                            "auto": true,
+                            "interval": 4000,
+                            "thumbMode": "cover",
+                            "mobile": {
+                                "thumbMode": "contain",
+                            },
+                            "animation": "slide",
+                            "controls":[
+                                "arrows",
+                            ],
+                            "options": pics,
+                        },
+                    },
+                    {
+                        type: 'wrapper',
+                        className: 'style-row-timeline',
+                        body: {
+                            type: 'flex',
+                            direction: 'row',
+                            justify: 'flex-start',
+                            items: [
+                                {
+                                    type: 'wrapper',
+                                    className: 'style-timeline',
+                                    body: {
+                                        type: 'timeline',
+                                        direction: 'horizontal',
+                                        items: [
+                                            {
+                                                'title': '粘贴牌谱链接',
+                                                'color': '#ffb200'
+                                            },
+                                            {
+                                                'title': '选择祝仪模式',
+                                                'color': 'success'
+                                            },
+                                            {
+                                                'title': '点击生成表格',
+                                                'color': 'info'
+                                            },
+                                        ],
+                                    },
+                                },
+                                {
+                                    type: 'wrapper',
+                                    className: 'style-remark',
+                                    body: {
+                                        "type": "tooltip-wrapper",
+                                        "content": "一发、里宝、门清赤5、役满有祝仪",
+                                        "placement":"top",
+                                        "body": "祝仪模式",
+                                        "className": "mb-1"
+                                    }
+                                },
+                                {
+                                    type: 'wrapper',
+                                    className: 'style-remark',
+                                    body: {
+                                        "type": "remark",
+                                        "content": "103表示k10z3，即1个祝等于3pt，10表示k10不带祝。3麻可选择无祝模式。",
+                                        "shape": "circle"
+                                    }
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        type: 'flex',
+                        direction: 'row',
+                        justify: 'flex-start',
+                        items: [
+                            {
+                                type: 'wrapper',
+                                className: 'style-combo',
+                                body: {
+                                    type: 'combo',
+                                    "name": "comboRecords",
+                                    "label": "",
+                                    "multiple": true,
+                                    "addBtn": {
+                                        "type": "button",
+                                        "id":"b_add",
+                                        "label": "新增一行",
+                                        "level": "primary",
+                                        "size": "md",
+                                        "disabledOn":"typeof data.rows !== 'undefined'",
+                                    },
+                                    "value": [
+                                        {}, {},
+                                    ],
+                                    "items": [
+                                        {
+                                            "name": "url",
+                                            "type": "input-text",
+                                            "placeholder": "牌谱粘贴这里",
+                                            "value": "",
+                                            "unique": true,
+                                            "required": false,
+                                        },
+                                    ]
+                                },
+                            },
+                            {
+                                type: 'flex',
+                                direction: 'column',
+                                justify: 'flex-start',
+                                items : [
+                                    {
+                                        type: 'wrapper',
+                                        className: 'style-radios',
+                                        body: {
+                                            "name": "mode",
+                                            "type": "radios",
+                                            "label": "",
+                                            "mode":"normal",
+                                            "selectFirst": true,
+                                            "options": modes,
+                                        },
+                                    },
+                                    {
+                                        type: 'wrapper',
+                                        className: 'style-submit',
+                                        body: {
+                                            type: 'button',
+                                            actionType: 'ajax',
+                                            api: '/api/v2',
+                                            "id":"b_smit",
+                                            "label":"生成表格",
+                                            "level":"primary",
+                                            "size":"md",
+                                            "disabledTip":"再次生成请刷新页面",
+                                            "tooltipPlacement":"right",
+                                            "disabledOn":"typeof data.rows !== 'undefined'",
+                                        },
+                                    },
+                                ]
+                            },
 
-<script type="text/javascript">
+                        ],
+                    },
+                    {
+                        type: 'wrapper',
+                        className: 'style-summary',
+                        body: {
+                            type: 'collapse-group',
+                            "visibleOn": "typeof data.rows !== 'undefined'",
+                            body: [
+                                {
+                                    type: 'collapse',
+                                    header: '总分表',
+                                    body: [
+                                        {
+                                            "name":"report_summary",
+                                            "id":"report_summary",
+                                            "title": "",
+                                            "type":"table",
+                                            "source": "$rows",
+                                            "rowClassNameExpr": "<%= data.desc == '最终积分' ? 'bg-primary font-bold' : '' %>",
+                                            "visibleOn": "typeof data.rows !== 'undefined'",
+                                            "columns": [
+                                                {
+                                                    "name": "desc",
+                                                    "label": "",
+                                                    "width":100,
+                                                    "classNameExpr": "<%= \" text-lg text-center font-bold\" %>"
+                                                },
+                                                {
+                                                    "name": "p0",
+                                                    "label": "$names.0",
+                                                    "width":120,
+                                                    "labelClassName": "font-bold text-center",
+                                                    "classNameExpr": "<%= \"text-lg text-center \" %>"
+                                                },
+                                                {
+                                                    "name": "p1",
+                                                    "label": "$names.1",
+                                                    "width":120,
+                                                    "labelClassName": "font-bold text-center",
+                                                    "classNameExpr": "<%= \"text-lg text-center\" %>"
+                                                },
+                                                {
+                                                    "name": "p2",
+                                                    "label": "$names.2",
+                                                    "width":120,
+                                                    "labelClassName": "font-bold text-center",
+                                                    "classNameExpr": "<%= \"text-lg text-center\" %>"
+                                                },
+                                                {
+                                                    "name": "p3",
+                                                    "label": "$names.3",
+                                                    "width":120,
+                                                    "labelClassName": "font-bold text-center",
+                                                    "classNameExpr": "<%= \"text-lg text-center\" %>"
+                                                },
+                                            ]
+                                        },
+
+
+                                    ],
+                                },
+                                {
+                                    type: 'collapse',
+                                    header: '点数表',
+                                    body: [
+                                        {
+                                            "name":"report_pt",
+                                            "title": "",
+                                            "type":"table",
+                                            "source": "$ptRows",
+                                            "visibleOn": "typeof data.ptRows !== 'undefined'",
+                                            "columns": [
+                                                {
+                                                    "name": "desc",
+                                                    "label": "",
+                                                    "width":100,
+                                                    "classNameExpr": "<%= \"text-lg text-center \" %>",
+                                                },
+                                                {
+                                                    "name": "p0",
+                                                    "label": "$names.0",
+                                                    "width":120,
+                                                    "labelClassName": "font-bold text-center",
+                                                    "classNameExpr": "<%= \"text-lg text-center \" %>",
+                                                },
+                                                {
+                                                    "name": "p1",
+                                                    "label": "$names.1",
+                                                    "width":120,
+                                                    "labelClassName": "font-bold text-center",
+                                                    "classNameExpr": "<%= \"text-lg text-center \" %>",
+                                                },
+                                                {
+                                                    "name": "p2",
+                                                    "label": "$names.2",
+                                                    "width":120,
+                                                    "labelClassName": "font-bold text-center",
+                                                    "classNameExpr": "<%= \"text-lg text-center \" %>",
+                                                },
+                                                {
+                                                    "name": "p3",
+                                                    "label": "$names.3",
+                                                    "width":120,
+                                                    "labelClassName": "font-bold text-center",
+                                                    "classNameExpr": "<%= \"text-lg text-center \" %>",
+                                                },
+                                            ]
+                                        },
+                                    ],
+                                },
+                                {
+                                    type: 'collapse',
+                                    header: '祝仪表',
+                                    body: [
+                                        {
+                                            "name":"report_zy",
+                                            "title": "",
+                                            "type":"table",
+                                            "source": "$zhuyiRows",
+                                            "visibleOn": "typeof data.zhuyiRows !== 'undefined'",
+                                            "columns": [
+                                                {
+                                                    "name": "desc",
+                                                    "label": "",
+                                                    "width":100,
+                                                    "classNameExpr": "<%= \"text-lg text-center \" %>",
+                                                },
+                                                {
+                                                    "name": "p0",
+                                                    "width":120,
+                                                    "label": "$names.0",
+                                                    "labelClassName": "font-bold text-center",
+                                                    "classNameExpr": "<%= \"text-lg text-center \" %>",
+                                                },
+                                                {
+                                                    "name": "p1",
+                                                    "width":120,
+                                                    "label": "$names.1",
+                                                    "labelClassName": "font-bold text-center",
+                                                    "classNameExpr": "<%= \"text-lg text-center \" %>",
+                                                },
+                                                {
+                                                    "name": "p2",
+                                                    "width":120,
+                                                    "label": "$names.2",
+                                                    "labelClassName": "font-bold text-center",
+                                                    "classNameExpr": "<%= \"text-lg text-center \" %>",
+                                                },
+                                                {
+                                                    "name": "p3",
+                                                    "width":120,
+                                                    "label": "$names.3",
+                                                    "labelClassName": "font-bold text-center",
+                                                    "classNameExpr": "<%= \"text-lg text-center \" %>",
+                                                },
+                                            ]
+                                        },
+                                    ],
+                                }
+                            ],
+                        }
+                    },
+                ],
+            },
+        };
+        let amisScoped = amis.embed('#root', amisJSON);
+    })();
 </script>
 </body>
 </html>

@@ -15,6 +15,7 @@ type majsoulServerConfig struct {
 	Code          string
 	Region_urls   [10]string
 	Ws_server     string
+	Interval      int `default:"3"`
 }
 
 // net 404 , use com

@@ -5,16 +5,24 @@
   },
   "MajsoulServerConfig": {
     "host": "https://game.maj-soul.com",
-    "ws_server": "wss://gateway-hw.maj-soul.com:443/gateway"
+    "ws_server": "wss://common-v2.maj-soul.com:443/gateway",
+    "interval": 4
   },
   "postgre": {
-    "dsn": "postgres://postgres:ygtianlou@localhost:5432/pgtest"
+    "dsn": "postgres://postgres:ygtianlou@localhost:5432/pgtest",
+    "dsn_serverless": "postgres://postgres:ygtianlou@localhost:5432/pgtest",
+    "timeout": 3
   },
   "recordContestUid": [
     "15698",
-    "16147"
+    "16147",
+    "16657"
   ],
   "recordMode": 503,
+  "recordModeList": [
+    "103",
+    "203"
+  ],
   "MajsoulBot": {
     "acc": [
       "15910243642@189.cn"
@@ -29,6 +37,7 @@
       "5",
       "10",
       "20",
+      "30",
       "50",
       "100",
       "23",
@@ -44,6 +53,7 @@
       "5",
       "10",
       "20",
+      "30",
       "50",
       "100",
       "2",
@@ -55,6 +65,7 @@
       "8"
     ],
     "zy": [
+      "0",
       "0",
       "0",
       "0",
