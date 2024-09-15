@@ -529,10 +529,17 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 	if err != nil {
 		groupId = 0
 	}
+
 	for i := 0; i < len(utils.ConfigMode.RecordContestIds); i++ {
 		if contestUid == utils.ConfigMode.RecordContestIds[i] {
 			groupId = utils.ConfigMode.RecordMode
 			rate = strconv.Itoa(groupId)
+
+			// build batch
+			if contestUid == "79037917" {
+				groupId, _ = strconv.Atoi(contestUid) // patch for new contestUid
+				rate = "203"
+			}
 			break
 		}
 	}
@@ -577,7 +584,6 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 			// sort
 			sort.Sort(Players(players))
 
-			// build batch
 			for i := 0; i < len(players) && len(batchPls) < 4; i++ {
 				batchPls = append(batchPls, utils.TablePlayer{
 					Name:     players[i].Nickname,

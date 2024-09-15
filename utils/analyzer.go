@@ -304,3 +304,16 @@ func GetEndMonthDate(date string) (string, error) {
 
 	return newDate.AddDate(0, 1, -1).Add(23 * time.Hour).Format("2006-01-02T15:04:05"), nil
 }
+
+func GetNextWeekDate(date string) (string, error) {
+	if len(date) != 10 {
+		return "", errors.New("err format")
+	}
+
+	newDate, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		return "", err
+	}
+
+	return newDate.AddDate(0, 0, 7).Format("2006-01-02"), nil
+}

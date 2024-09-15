@@ -8,9 +8,9 @@ import (
 )
 
 type configDb struct {
-	Dsn               string
-	DsnServerLess     string
-	TimeoutServerLess time.Duration `default:"10"`
+	Dsn            string
+	DsnServerLess  string
+	TimeoutConnect time.Duration `default:"5"`
 }
 
 var ConfigDb = configDb{}
@@ -109,9 +109,9 @@ type StTrendPaipu struct {
 	Zy_4 int
 }
 
-// todo
+// todo dev
 func SelectUpdatePtSummary() error {
-	ctx, cancel := context.WithTimeout(context.Background(), ConfigDb.TimeoutServerLess*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), ConfigDb.TimeoutConnect*time.Second)
 	defer cancel()
 	conn, err := pgx.Connect(ctx, ConfigDb.DsnServerLess)
 	if err != nil {
@@ -136,7 +136,7 @@ func SelectUpdatePtSummary() error {
 
 // todo test
 func QueryTotalSummary(pl string) ([]StPtSummary, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), ConfigDb.TimeoutServerLess*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), ConfigDb.TimeoutConnect*time.Second)
 	defer cancel()
 	conn, err := pgx.Connect(ctx, ConfigDb.DsnServerLess)
 	if err != nil {
@@ -160,7 +160,7 @@ func QueryTotalSummary(pl string) ([]StPtSummary, error) {
 
 // todo test
 func QueryPtSummary(groupId int, pl string, dateStart string, dateEnd string) ([]StPtSummary, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), ConfigDb.TimeoutServerLess*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), ConfigDb.TimeoutConnect*time.Second)
 	defer cancel()
 	conn, err := pgx.Connect(ctx, ConfigDb.DsnServerLess)
 	if err != nil {

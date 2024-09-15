@@ -35,24 +35,24 @@ func (players Ranks) Less(i, j int) bool {
 	return players[j].Total > players[i].Total
 }
 
-func GetGroupRank(code string, date string, half string) ([]Rank, error) {
+func GetGroupRank(code string, date string, half string) ([]Rank, string, string, error) {
 
 	// query group code
 	retGroup, err := utils.QueryGroup(code)
 	if err != nil {
 		log.Println("query group fail")
-		return nil, err
+		return nil, "", "", err
 	}
 
 	if len(retGroup) == 0 {
-		return nil, errors.New("invalid code")
+		return nil, "", "", errors.New("invalid code")
 	}
 
 	// query player
 	retPlayer, err := utils.QueryPlayer(retGroup[0].Group_Id)
 	if err != nil {
 		log.Println("query player fail")
-		return nil, err
+		return nil, "", "", err
 	}
 
 	//log.Println("len player", len(retPlayer))
@@ -71,21 +71,26 @@ func GetGroupRank(code string, date string, half string) ([]Rank, error) {
 	dateEnd, err := utils.GetNextMonthDate(date)
 	if err != nil {
 		log.Println("get dateEnd fail", date)
-		return nil, err
+		return nil, "", "", err
 	}
 
+	// get date begin/end by half flag
 	if half == "fh" {
 		dateBegin, err = utils.GetPreMonthDate(date)
 		dateEnd, err = utils.GetMidMonthDate(date)
 	} else if half == "sh" {
 		dateBegin, err = utils.GetMidMonthDate(date)
 		dateEnd, err = utils.GetEndMonthDate(date)
+	} else if half == "w" {
+		dateBegin = date
+		dateEnd, err = utils.GetNextWeekDate(date)
 	}
 
+	//log.Println(retGroup[0].Group_Id, dateBegin, dateEnd)
 	retPaipu, err := utils.QueryPaipu(retGroup[0].Group_Id, dateBegin, dateEnd)
 	if err != nil {
 		log.Println("query paipu fail")
-		return nil, err
+		return nil, "", "", err
 	}
 
 	for _, onePaipu := range retPaipu {
@@ -134,5 +139,5 @@ func GetGroupRank(code string, date string, half string) ([]Rank, error) {
 	}
 	sort.Sort(Ranks(arrRank))
 
-	return arrRank, nil
+	return arrRank, dateBegin, dateEnd, nil
 }

@@ -5,9 +5,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 
+  <link rel="icon" href="https://static.mjget.fun/static/favicon.ico">
   <script src="https://cdn.staticfile.net/echarts/5.4.3/echarts.min.js"></script>
   <script src="https://cdn.staticfile.net/jquery/3.7.1/jquery.min.js"></script>
-  <script>let herfPrefix = 'http://127.0.0.1'</script>
+  <script>let herfPrefix = 'https://www.mjget.top'</script>
 
   <style>
     body {
@@ -98,7 +99,7 @@
 
         let barOption = {
           title: {
-            text:  `排行榜（点击数字查看详情）总计${result.data.player.length}人`,
+            text:  `排行榜（点击数字查看详情）${result.data.dateBegin} 赛季，总计${result.data.player.length}人`,
             padding: titlePadding,
           },
           tooltip: {
@@ -111,6 +112,7 @@
 
               if (params[0] != null && params[0].value != null ){
                 strTips += `排名：${result.data.player.length - params[0].dataIndex} </br> 合计：${(params[0].value + result.data.lineNegaTotal[params[0].dataIndex])}`
+
               }
 
               return strTips
@@ -138,6 +140,7 @@
             axisLabel: {
               formatter: (value) => {
                 let plSize = result.data.player.length
+                return value
 
                 if ( plSize - 1 >= 0 && value === result.data.player[plSize- 1]) {
                   return '{x|}' + ' ' + value

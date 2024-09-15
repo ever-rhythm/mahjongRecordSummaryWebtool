@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-    <title>祝仪工具箱对局信息</title>
+    <title>祝仪工具箱战绩</title>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 
     <script src="https://cdn.staticfile.net/echarts/5.4.3/echarts.min.js"></script>
     <script src="https://cdn.staticfile.net/jquery/3.7.1/jquery.min.js"></script>
+    <link rel="icon" href="https://static.mjget.fun/static/favicon.ico">
 
     <style>
         body {
@@ -76,7 +78,7 @@
         let loadingMaskColor = '#100C2A'
         let loadingColor = '#4992ff'
         let loadingTextColor = '#4992ff'
-        let intervalY = 5000
+        let intervalY = 1000
 
         let titlePadding = [5, 100]
         let radius = ['50%', '70%']
@@ -97,7 +99,8 @@
 <body>
 <div id="main2">
     <div id="maininfo">
-        <span class="spaninfo">对局信息</span><br/><br/><br/>
+        <span id='main-span' class="spaninfo">对局信息</span><br/><br/><br/>
+        <span id='s6' class="onespan"></span><br/>
         <span id='s0' class="onespan"></span><br/>
         <span id='s1' class="onespan"></span><br/>
         <span id='s2' class="onespan"></span><br/>
@@ -118,6 +121,13 @@
     let urlTrend = '/api/group_player_trend'
     if (opponent != null) {
         urlTrend = '/api/group_player_op_trend'
+    }
+    if (code === '503zbl') {
+        intervalY = 5000
+    } else if ( code === '203zbl' ) {
+        intervalY = 2500
+    } else {
+        intervalY = 1000
     }
 
     let myChart = echarts.init(document.getElementById('main'), 'dark');
@@ -151,6 +161,7 @@
                     txtName += ' vs ' + opponent
                 }
 
+                document.getElementById('s6').innerHTML = '日期：' + result.data.dateBegin + '至' + result.data.dateEnd
                 document.getElementById('s0').innerHTML = txtName
                 document.getElementById('s1').innerHTML = '总数：' + result.data.cntTotal
                 document.getElementById('s2').innerHTML = '积分：' + result.data.lineTotal[result.data.cntTotal - 1]

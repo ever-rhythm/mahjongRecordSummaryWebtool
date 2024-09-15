@@ -103,7 +103,7 @@ func groupPlayerTrend(c *gin.Context) {
 		return
 	}
 
-	ret, retPls, err := api.GetGroupPlayerTrend(code, pl, date, half)
+	ret, retPls, dateBegin, dateEnd, err := api.GetGroupPlayerTrend(code, pl, date, half)
 	if err != nil {
 		log.Println(err)
 		objJs.Set("msg", "查询有误")
@@ -179,6 +179,8 @@ func groupPlayerTrend(c *gin.Context) {
 	objJs.SetPath([]string{"data", "cnt3"}, cntPlacing[2])
 	objJs.SetPath([]string{"data", "cnt4"}, cntPlacing[3])
 	objJs.SetPath([]string{"data", "lineDetail"}, paipuDetails)
+	objJs.SetPath([]string{"data", "dateBegin"}, dateBegin)
+	objJs.SetPath([]string{"data", "dateEnd"}, dateEnd)
 
 	c.JSON(200, objJs.MustMap())
 	return
@@ -206,7 +208,7 @@ func groupRank(c *gin.Context) {
 		return
 	}
 
-	ret, err := api.GetGroupRank(code, date, half)
+	ret, dateBegin, dateEnd, err := api.GetGroupRank(code, date, half)
 	if err != nil {
 		log.Println(err)
 		objJs.Set("msg", "查询有误")
@@ -232,20 +234,175 @@ func groupRank(c *gin.Context) {
 	objJs.SetPath([]string{"data", "player"}, players)
 	objJs.SetPath([]string{"data", "lineTotal"}, totals)
 	objJs.SetPath([]string{"data", "lineNegaTotal"}, negaTotals)
+	objJs.SetPath([]string{"data", "dateBegin"}, dateBegin)
+	objJs.SetPath([]string{"data", "dateEnd"}, dateEnd)
 
 	c.JSON(200, objJs.MustMap())
 	return
 }
 
-// todo ads
+// v3 summary
 func adsSummary(c *gin.Context) {
 	objJs := okRet()
+	b, _ := c.GetRawData()
+	req, err := simplejson.NewJson(b)
+	if err != nil {
+		log.Println(err)
+		objJs.Set("msg", "请求格式有误")
+		c.JSON(500, objJs.MustMap())
+		return
+	}
 
-	c.JSON(200, objJs)
+	mode, err := req.Get("mode").String()
+	var records []string
+	mapRecords, err := req.Get("comboRecords").Array()
+	for _, v := range mapRecords {
+		tmpMap, _ := v.(map[string]interface{})
+		tmpRecord, _ := tmpMap["url"].(string)
+		if len(tmpRecord) > 0 {
+			records = append(records, tmpRecord)
+		}
+	}
+
+	uuids, err := utils.GetUuidByRecordUrl(records)
+	if err != nil {
+		log.Println(err)
+		objJs.Set("msg", "paipu url 请求格式有误")
+		c.JSON(500, objJs.MustMap())
+		return
+	}
+
+	// ping login and renew version code
+	acc, pwd := utils.GetMajSoulBotByIdx(len(utils.ConfigMajsoulBot.Acc) - 1)
+	err = api.PingMajsoulLogin(acc, pwd)
+	if err != nil {
+		log.Println("ping fail, renew version code", err)
+		objJs.Set("msg", "连接服务器错误")
+		c.JSON(500, objJs)
+
+		err = initMajsoulConfig()
+		if err != nil {
+			log.Fatalln("http majsoul server config fail", client.MajsoulServerConfig, err)
+		}
+		return
+	}
+
+	// api get summary
+	retAds, err := api.GetAdsSummary(uuids, mode)
+	if err != nil {
+		log.Println(err)
+		objJs.Set("msg", err)
+		c.JSON(500, objJs.MustMap())
+		return
+	}
+
+	// build total rows
+	retTotal := api.StCalc{
+		PlayerCnt: retAds[0].PlayerCnt,
+		Pls:       retAds[0].Pls,
+	}
+
+	for i := 0; i < len(retAds); i++ {
+		for j := 0; j < retAds[i].PlayerCnt; j++ {
+			for k := 0; k < retTotal.PlayerCnt; k++ {
+				if retAds[i].Pls[j] == retTotal.Pls[k] {
+					retTotal.Pts[k] += retAds[i].Pts[j]
+					retTotal.Zys[k] += retAds[i].Zys[j]
+					retTotal.Totals[k] += retAds[i].Totals[j]
+					break
+				}
+			}
+		}
+	}
+
+	var rows []map[string]string
+	var rowPtSum = make(map[string]string)
+	var rowZhuyiSum = make(map[string]string)
+	var rowMoneySum = make(map[string]string)
+
+	rowPtSum["desc"] = "总计点数"
+	rowZhuyiSum["desc"] = "总计祝仪"
+	rowMoneySum["desc"] = "最终积分"
+
+	for i := 0; i < retTotal.PlayerCnt; i++ {
+		oneIdx := "p" + strconv.Itoa(i)
+		rowPtSum[oneIdx] = fmt.Sprintf("%.1f", float32(retTotal.Pts[i])/1000)
+		rowZhuyiSum[oneIdx] = strconv.Itoa(retTotal.Zys[i])
+		rowMoneySum[oneIdx] = fmt.Sprintf("%.2f", retTotal.Totals[i])
+		if retTotal.Totals[i] > 0 {
+			rowMoneySum[oneIdx] = "+" + rowMoneySum[oneIdx]
+		}
+	}
+
+	rows = append(rows, rowPtSum, rowZhuyiSum, rowMoneySum)
+
+	// build pt rows
+	var ptRows []map[string]string
+	for i := 0; i < len(retAds); i++ {
+		var onePtRow = make(map[string]string)
+		onePtRow["desc"] = fmt.Sprintf("第%d局", i+1)
+
+		for j := 0; j < retTotal.PlayerCnt; j++ {
+			for k := 0; k < retAds[i].PlayerCnt; k++ {
+				if retTotal.Pls[j] == retAds[i].Pls[k] {
+					oneIdx := "p" + strconv.Itoa(j)
+					onePtRow[oneIdx] = fmt.Sprintf("%.1f", float32(retAds[i].Pts[k])/1000)
+					break
+				}
+			}
+		}
+
+		ptRows = append(ptRows, onePtRow)
+	}
+
+	// build zy rows
+	var zyRows []map[string]string
+	idxZyDesc := 0
+	for i := 0; i < len(retAds); i++ {
+		for l := 0; l < len(retAds[i].ZyDetailCnt); l++ {
+			var oneZyRow = make(map[string]string)
+
+			if i == idxZyDesc {
+				oneZyRow["desc"] += fmt.Sprintf("第%d局", i+1)
+				idxZyDesc += 1
+			}
+			oneZyRow["desc"] += retAds[i].ZyDescs[l]
+
+			for j := 0; j < retTotal.PlayerCnt; j++ {
+				for k := 0; k < retAds[i].PlayerCnt; k++ {
+					if retTotal.Pls[j] == retAds[i].Pls[k] {
+						oneIdx := "p" + strconv.Itoa(j)
+
+						if retAds[i].ZyDetailCnt[l][k] != 0 {
+							oneZyRow[oneIdx] = strconv.Itoa(retAds[i].ZyDetailCnt[l][k])
+							if retAds[i].ZyDetailCnt[l][k] > 0 {
+								oneZyRow[oneIdx] = "+" + oneZyRow[oneIdx]
+							}
+						} else {
+							oneZyRow[oneIdx] = " "
+						}
+						break
+					}
+				}
+			}
+
+			zyRows = append(zyRows, oneZyRow)
+		}
+	}
+
+	objJs.SetPath([]string{"data", "names"}, retTotal.Pls)
+	objJs.SetPath([]string{"data", "rows"}, rows)
+	objJs.SetPath([]string{"data", "ptRows"}, ptRows)
+	objJs.SetPath([]string{"data", "zhuyiRows"}, zyRows)
+
+	tmpLog, err := objJs.Encode()
+	log.Println("api adsSummary ok ", uuids, mode, string(tmpLog))
+
+	c.JSON(200, objJs.MustMap())
 	return
 }
 
-// todo new
+// todo dev
 func playerCareer(c *gin.Context) {
 	objJs := okRet()
 
@@ -275,43 +432,6 @@ func playerCareer(c *gin.Context) {
 	objJs.SetPath([]string{"data", "totalPt"}, retCareer.TotalPt)
 	objJs.SetPath([]string{"data", "totalZy"}, retCareer.TotalZy)
 	c.JSON(200, objJs)
-	return
-}
-
-// todo new v3
-func advancedSummary(c *gin.Context) {
-	objJs := okRet()
-
-	raw, _ := c.GetRawData()
-	req, err := simplejson.NewJson(raw)
-
-	if err != nil {
-		log.Println(err)
-		objJs.Set("msg", "参数有误")
-		c.JSON(500, objJs)
-		return
-	}
-
-	mode, err := req.Get("mode").String()
-	if err != nil {
-		log.Println(err)
-		objJs.Set("msg", "祝仪格式有误")
-		c.JSON(500, objJs)
-		return
-	}
-
-	var records []string
-	mapRecords, err := req.Get("comboRecords").Array()
-	for _, v := range mapRecords {
-		tmpMap, _ := v.(map[string]interface{})
-		tmpRecord, _ := tmpMap["url"].(string)
-		if len(tmpRecord) > 0 {
-			records = append(records, tmpRecord)
-		}
-	}
-
-	log.Println(mode)
-
 	return
 }
 
@@ -616,8 +736,6 @@ func competitor(c *gin.Context) {
 
 func getNavJson(c *gin.Context) {
 	objJs := okRet()
-	arrTmp := make([]map[string]string, 0)
-
 	b, _ := c.GetRawData()
 	req, err := simplejson.NewJson(b)
 	if err != nil {
@@ -628,37 +746,68 @@ func getNavJson(c *gin.Context) {
 	}
 
 	code := req.Get("code").MustString()
-
+	arrTmp := make([]map[string]string, 0)
 	oneTmp := make(map[string]string)
-	oneTmp["label"] = "首页（点击文字跳转榜单）"
+	oneTmp["label"] = "排行榜列表（点击下面文字跳转）"
 	oneTmp["to"] = "/index.html"
 	arrTmp = append(arrTmp, oneTmp)
 
-	curMonth, err := strconv.Atoi(time.Now().Format("01"))
-	curDay, err := strconv.Atoi(time.Now().Format("02"))
-	oneMonthFeb := make(map[string]string)
-	oneMonthFeb["label"] = "2月下半"
-	oneMonthFeb["to"] = "/rank.html?date=2024-02-01&half=sh&code=" + code
-	arrTmp = append(arrTmp, oneMonthFeb)
+	if code == "503zbl" {
+		curMonth, _ := strconv.Atoi(time.Now().Format("01"))
+		curDay, _ := strconv.Atoi(time.Now().Format("02"))
 
-	for i := 3; i <= curMonth; i++ {
-		oneMonth := make(map[string]string)
-		oneMonth["label"] = fmt.Sprintf("%d月上半", i)
-		strMonth := strconv.Itoa(i)
-		if len(strMonth) < 2 {
-			strMonth = "0" + strMonth
-		}
-		oneHalf := "fh"
-		oneMonth["to"] = fmt.Sprintf("/rank.html?date=2024-%s-01&half=%s&code=%s", strMonth, oneHalf, code)
-		arrTmp = append(arrTmp, oneMonth)
+		for i := curMonth; i >= 2; i-- {
+			oneMonth := make(map[string]string)
+			oneMonth["label"] = fmt.Sprintf("%d月上半赛季", i)
+			strMonth := strconv.Itoa(i)
+			if len(strMonth) < 2 {
+				strMonth = "0" + strMonth
+			}
 
-		if i < curMonth || (i == curMonth && curDay >= 15) {
-			oneMonthSh := make(map[string]string)
-			oneMonthSh["label"] = fmt.Sprintf("%d月下半", i)
-			oneHalfSh := "sh"
-			oneMonthSh["to"] = fmt.Sprintf("/rank.html?date=2024-%s-01&half=%s&code=%s", strMonth, oneHalfSh, code)
-			arrTmp = append(arrTmp, oneMonthSh)
+			// second half
+			if i < curMonth || (i == curMonth && curDay >= 15) {
+				oneMonthSh := make(map[string]string)
+				oneMonthSh["label"] = fmt.Sprintf("%d月下半赛季", i)
+				oneHalfSh := "sh"
+				oneMonthSh["to"] = fmt.Sprintf("/rank.html?date=2024-%s-01&half=%s&code=%s", strMonth, oneHalfSh, code)
+				arrTmp = append(arrTmp, oneMonthSh)
+			}
+
+			// first half
+			oneHalf := "fh"
+			oneMonth["to"] = fmt.Sprintf("/rank.html?date=2024-%s-01&half=%s&code=%s", strMonth, oneHalf, code)
+			arrTmp = append(arrTmp, oneMonth)
 		}
+	} else if code == "203zbl" {
+		curTime := time.Now()
+		curMonth, _ := strconv.Atoi(curTime.Format("01"))
+		curDay := curTime.Day()
+
+		for i := curMonth; i >= 9; i-- {
+			for j := 31; j >= 1; j-- {
+				oneDay := time.Date(curTime.Year(), time.Month(i), j, 0, 0, 0, 0, time.Local)
+				if (j <= curDay && curMonth == i && int(oneDay.Weekday()) == 1) || (i < curMonth && int(oneDay.Weekday()) == 1) {
+
+					oneMonth := make(map[string]string)
+					oneMonth["label"] = fmt.Sprintf("%d月%d日赛季", i, j)
+					strMonth := strconv.Itoa(i)
+					if len(strMonth) < 2 {
+						strMonth = "0" + strMonth
+					}
+					strDay := strconv.Itoa(j)
+					if len(strDay) < 2 {
+						strDay = "0" + strDay
+					}
+
+					oneMonth["to"] = fmt.Sprintf("/rank.html?date=2024-%s-%s&half=%s&code=%s", strMonth, strDay, "w", code)
+					arrTmp = append(arrTmp, oneMonth)
+				}
+			}
+		}
+	}
+
+	if len(arrTmp) > 2 {
+		arrTmp[1]["label"] += "（当前赛季）"
 	}
 
 	objJs.Set("data", arrTmp)
