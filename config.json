@@ -1,12 +1,16 @@
 {
   "server": {
     "domain": "",
-    "port": "80"
+    "port": "8097"
   },
   "MajsoulServerConfig": {
     "host": "https://game.maj-soul.com",
     "ws_server": "wss://common-v2.maj-soul.com:443/gateway",
-    "interval": 4
+    "interval": 4,
+    "ws_servers": [
+      "wss://common-v2.maj-soul.com:443/gateway",
+      "wss://gateway-hw.maj-soul.com:443/gateway"
+    ]
   },
   "postgre": {
     "dsn": "postgres://postgres:ygtianlou@localhost:5432/pgtest",
@@ -16,11 +20,12 @@
   "recordContestUid": [
     "15698",
     "16147",
-    "16657"
+    "16657",
+    "39018088",
+    "79037917"
   ],
   "recordMode": 503,
   "recordModeList": [
-    "103",
     "203"
   ],
   "MajsoulBot": {

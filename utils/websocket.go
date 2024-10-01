@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"sync"
+	"time"
 )
 
 type WSClient struct {
@@ -23,7 +24,9 @@ func NewWSClient(addr string) *WSClient {
 }
 
 func (client *WSClient) Connect() error {
-	conn, response, err := websocket.DefaultDialer.Dial(client.connAddr, client.header)
+	dialer := websocket.DefaultDialer
+	dialer.HandshakeTimeout = 5 * time.Second // decrease dial timeout
+	conn, response, err := dialer.Dial(client.connAddr, client.header)
 	if err != nil {
 		return err
 	}

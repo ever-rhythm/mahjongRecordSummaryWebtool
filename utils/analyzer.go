@@ -317,3 +317,11 @@ func GetNextWeekDate(date string) (string, error) {
 
 	return newDate.AddDate(0, 0, 7).Format("2006-01-02"), nil
 }
+
+func GetShortDisplayDate(date string) string {
+	if strings.Index(date, "T") != -1 && len(date) > 10 {
+		return date[:len(date)-9]
+	} else {
+		return date
+	}
+}

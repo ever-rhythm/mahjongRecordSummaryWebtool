@@ -179,8 +179,8 @@ func groupPlayerTrend(c *gin.Context) {
 	objJs.SetPath([]string{"data", "cnt3"}, cntPlacing[2])
 	objJs.SetPath([]string{"data", "cnt4"}, cntPlacing[3])
 	objJs.SetPath([]string{"data", "lineDetail"}, paipuDetails)
-	objJs.SetPath([]string{"data", "dateBegin"}, dateBegin)
-	objJs.SetPath([]string{"data", "dateEnd"}, dateEnd)
+	objJs.SetPath([]string{"data", "dateBegin"}, utils.GetShortDisplayDate(dateBegin))
+	objJs.SetPath([]string{"data", "dateEnd"}, utils.GetShortDisplayDate(dateEnd))
 
 	c.JSON(200, objJs.MustMap())
 	return
@@ -234,8 +234,8 @@ func groupRank(c *gin.Context) {
 	objJs.SetPath([]string{"data", "player"}, players)
 	objJs.SetPath([]string{"data", "lineTotal"}, totals)
 	objJs.SetPath([]string{"data", "lineNegaTotal"}, negaTotals)
-	objJs.SetPath([]string{"data", "dateBegin"}, dateBegin)
-	objJs.SetPath([]string{"data", "dateEnd"}, dateEnd)
+	objJs.SetPath([]string{"data", "dateBegin"}, utils.GetShortDisplayDate(dateBegin))
+	objJs.SetPath([]string{"data", "dateEnd"}, utils.GetShortDisplayDate(dateEnd))
 
 	c.JSON(200, objJs.MustMap())
 	return
@@ -748,7 +748,7 @@ func getNavJson(c *gin.Context) {
 	code := req.Get("code").MustString()
 	arrTmp := make([]map[string]string, 0)
 	oneTmp := make(map[string]string)
-	oneTmp["label"] = "排行榜列表（点击下面文字跳转）"
+	oneTmp["label"] = "排行榜列表（点击下面跳转）"
 	oneTmp["to"] = "/index.html"
 	arrTmp = append(arrTmp, oneTmp)
 
@@ -834,6 +834,7 @@ func loadConfigFile() error {
 	ConfigGin.Port = objJsConfig.Get("server").Get("port").MustString()
 	client.MajsoulServerConfig.Host = objJsConfig.Get("MajsoulServerConfig").Get("host").MustString()
 	client.MajsoulServerConfig.Ws_server = objJsConfig.Get("MajsoulServerConfig").Get("ws_server").MustString()
+	client.MajsoulServerConfig.Ws_servers = objJsConfig.Get("MajsoulServerConfig").Get("ws_servers").MustStringArray()
 	utils.ConfigDb.Dsn = objJsConfig.Get("postgre").Get("dsn").MustString()
 	utils.ConfigMajsoulBot.Acc = objJsConfig.Get("MajsoulBot").Get("acc").MustStringArray()
 	utils.ConfigMajsoulBot.Pwd = objJsConfig.Get("MajsoulBot").Get("pwd").MustStringArray()
@@ -889,6 +890,15 @@ func initMajsoulConfig() error {
 	client.MajsoulServerConfig.Version, err = objJsVersion.Get("version").String()
 	client.MajsoulServerConfig.Force_version, err = objJsVersion.Get("force_version").String()
 	client.MajsoulServerConfig.Code, err = objJsVersion.Get("code").String()
+
+	// rand switch gateway
+	for i := 0; i < 10; i++ {
+		randIdxWs := rand.Intn(len(client.MajsoulServerConfig.Ws_servers))
+		if client.MajsoulServerConfig.Ws_server != client.MajsoulServerConfig.Ws_servers[randIdxWs] {
+			client.MajsoulServerConfig.Ws_server = client.MajsoulServerConfig.Ws_servers[randIdxWs]
+			break
+		}
+	}
 
 	log.Println("init majsoul server config ok", client.MajsoulServerConfig)
 

@@ -49,6 +49,7 @@ var mu sync.Mutex
 
 // PingMajsoulLogin ping login
 func PingMajsoulLogin(acc string, pwd string) error {
+	time.Sleep(time.Millisecond * 500)
 	mSoul, err := client.New()
 	if err != nil {
 		return err
@@ -161,6 +162,7 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 		return nil, nil, nil, errors.New("请求排队中，请稍后提交")
 	}
 	defer mu.Unlock()
+	time.Sleep(time.Millisecond * 500)
 
 	var err error
 	bolPaipuFail := false

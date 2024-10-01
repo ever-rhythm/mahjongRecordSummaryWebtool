@@ -7,13 +7,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
 
-    <script src="https://cdn.staticfile.net/amis/2.8.0/sdk.js"></script>
-    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/sdk.css" />
-    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/helper.css" />
-    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/amis/2.8.0/iconfont.css" />
-    <script>let herfPrefix = 'http://127.0.0.1'</script>
-    <script>let pageTitle = '2个地址 mjget.fun mjget.top'</script>
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/amis/2.8.0/sdk.min.js"></script>-->
 
+    <script src="https://static.mjget.fun/sdk.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/amis/2.8.0/sdk.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/amis/2.8.0/helper.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/amis/2.8.0/iconfont.css" />
+
+    <link rel="icon" href="https://static.mjget.fun/static/favicon.ico">
+    <script>let herfPrefix = 'https://static.mjget.fun'</script>
+    <script>let pageTitle = '网站 mjget.fun mjget.top 由<a href=\'https://www.upyun.com/?utm_source=lianmeng&utm_medium=referral\'><img src=\'https://static.mjget.fun/static/upyun_logo2.webp\'/></a>提供CDN加速/云存储服务'</script>
+    <script>
+        let arrPic = [
+            herfPrefix + "/static/ynf_20240902163314.webp",
+            herfPrefix + "/static/szth_20240901120806.webp",
+            herfPrefix + "/static/20240220_sxme_release.webp",
+            herfPrefix + "/static/hzsx_release_20240915231339.webp",
+            herfPrefix + "/static/shxy_release_20231129122024.webp",
+            herfPrefix + "/static/szyf_release_20231222002356.webp",
+            herfPrefix + "/static/20231016xian_gsws_release.webp",
+        ]
+
+        let randPic = arrPic[Math.floor(Math.random() * arrPic.length)];
+    </script>
     <style>
         html,
         body,
@@ -117,28 +133,7 @@
                                                     ],
                                                     "options": [
                                                         {
-                                                            "image":herfPrefix + "/static/20240220_sxme_release.png",
-                                                        },
-                                                        {
-                                                            "image":herfPrefix + "/static/hzsx_20240127234214_release.png",
-                                                        },
-                                                        {
-                                                            "image":herfPrefix + "/static/shxy_release_20231129122024.jpg",
-                                                        },
-                                                        {
-                                                            "image":herfPrefix + "/static/szyf_release_20231222002356.png",
-                                                        },
-                                                        {
-                                                            "image":herfPrefix + "/static/20231016xian_gsws_release.jpg",
-                                                        },
-                                                        {
-                                                            "image":herfPrefix + "/static/20230928changsha.png",
-                                                        },
-                                                        {
-                                                            "image":herfPrefix + "/static/20230928xian.png",
-                                                        },
-                                                        {
-                                                            "image":herfPrefix + "/static/20230928nanchang.png",
+                                                            "image":randPic,
                                                         },
                                                     ]
                                                 }
@@ -621,12 +616,8 @@
 
                                         ],
                                     },
-
                                 ],
                             },
-
-
-
 
                         ],
                     },
