@@ -22,6 +22,7 @@ type configMode struct {
 	RecordContestIds []string
 	RecordMode       int
 	RecordModeList   []string
+	RecordSwitch     int
 }
 
 var ConfigMajsoulBot = configMajsoulBot{}

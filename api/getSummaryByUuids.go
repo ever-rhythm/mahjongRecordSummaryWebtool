@@ -159,10 +159,10 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 
 	// mutex
 	if !mu.TryLock() {
-		return nil, nil, nil, errors.New("请求排队中，请稍后提交")
+		return nil, nil, nil, errors.New("排队中，请稍后提交")
 	}
 	defer mu.Unlock()
-	time.Sleep(time.Millisecond * 500)
+	time.Sleep(time.Millisecond * 200)
 
 	var err error
 	bolPaipuFail := false
@@ -625,25 +625,38 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 
 func CheckIfRecord(groupId int, pls []string, contestUid string, date string) bool {
 
-	//log.Println("matchId", contestUid) // test
+	// global switch
+	if utils.ConfigMode.RecordSwitch == 0 {
+		return false
+	}
 
 	// match contestId
+	//log.Println("matchId", contestUid)
 	for i := 0; i < len(utils.ConfigMode.RecordContestIds); i++ {
 		if contestUid == utils.ConfigMode.RecordContestIds[i] {
 			return true
 		}
 	}
 
-	// match vip
-	retVip, err := utils.QueryVipPlayer(groupId, pls, date)
-	if err != nil {
-		log.Println("QueryVipPlayer fail", err)
-		return false
+	// match vip player name
+	for i := 0; i < len(pls); i++ {
+		if pls[i] == "夜光天楼" {
+			return true
+		}
 	}
 
-	if len(retVip) > 0 {
-		return true
-	}
+	/*
+		retVip, err := utils.QueryVipPlayer(groupId, pls, date)
+		if err != nil {
+			log.Println("QueryVipPlayer fail", err)
+			return false
+		}
 
+		if len(retVip) > 0 {
+			return true
+		}
+
+
+	*/
 	return false
 }

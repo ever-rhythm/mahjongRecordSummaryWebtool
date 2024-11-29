@@ -62,7 +62,6 @@ type Majsoul struct {
 	GameInfo *message.ResAuthGame // 该字段应在进入游戏桌面后访问
 }
 
-// rm heatbeat
 func New() (*Majsoul, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	serverAddress, request, cConn, err := lookup(ctx)
@@ -79,8 +78,8 @@ func New() (*Majsoul, error) {
 		LobbyConn:     cConn,
 	}
 	majsoul.init()
-	//go majsoul.heatbeat()	//test
-	//go majsoul.receiveConn()	//test
+	//go majsoul.heatbeat()	// remove heartbeat
+	//go majsoul.receiveConn()
 	return majsoul, nil
 }
 

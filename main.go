@@ -39,13 +39,13 @@ func main() {
 	// load json config
 	err = loadConfigFile()
 	if err != nil {
-		log.Fatalln("load config.json fail", err)
+		log.Fatalln("load config.json fail , exit", err)
 	}
 
 	// init majsoul server config
 	err = initMajsoulConfig()
 	if err != nil {
-		log.Fatalln("http majsoul server config fail", client.MajsoulServerConfig, err)
+		log.Fatalln("initMajsoulConfig fail , exit", client.MajsoulServerConfig, err)
 	}
 
 	// static
@@ -73,10 +73,30 @@ func main() {
 	r.POST("/api/plcr", playerCareer)
 	r.POST("/api/ads_summary", adsSummary)
 
+	// goroutine background update majsoul config
+
+	go func() {
+		for {
+			// http renew majsoul version code
+			curTime := time.Now().Unix()
+			if curTime-client.MajsoulServerConfig.CodeUpdateTimestamp > client.MajsoulServerConfig.CodeUpdateInterval {
+				log.Println("update majsoul version code", curTime, client.MajsoulServerConfig.CodeUpdateInterval)
+
+				err = initMajsoulConfig()
+				if err != nil {
+					log.Println("initMajsoulConfig fail", client.MajsoulServerConfig, err)
+				}
+			} else {
+				log.Println("sleep majsoul version code", curTime, client.MajsoulServerConfig)
+				time.Sleep(time.Second * time.Duration(client.MajsoulServerConfig.CodeUpdateInterval))
+			}
+		}
+	}()
+
 	// server
 	err = r.Run(ConfigGin.Domain + ":" + ConfigGin.Port)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("gin run server fail, exit", err)
 	}
 }
 
@@ -490,26 +510,29 @@ func summary(c *gin.Context) {
 		return
 	}
 
-	// ping login , if fail then renew version code
-	acc, pwd := utils.GetMajSoulBotByIdx(len(utils.ConfigMajsoulBot.Acc) - 1)
-	err = api.PingMajsoulLogin(acc, pwd)
-	if err != nil {
-		log.Println("ping fail, renew version code", err)
-
-		err = initMajsoulConfig()
+	/*
+		// ping login , if fail then renew version code
+		acc, pwd := utils.GetMajSoulBotByIdx(len(utils.ConfigMajsoulBot.Acc) - 1)
+		err = api.PingMajsoulLogin(acc, pwd)
 		if err != nil {
-			log.Fatalln("http majsoul server config fail", client.MajsoulServerConfig, err)
+			log.Println("ping fail, renew version code", err)
+
+			err = initMajsoulConfig()
+			if err != nil {
+				log.Fatalln("http majsoul server config fail", client.MajsoulServerConfig, err)
+			}
+
+			objJsMsg.Set("msg", "内部错误")
+			c.JSON(500, objJsMsg)
+			return
 		}
 
-		objJsMsg.Set("msg", "内部错误")
-		c.JSON(500, objJsMsg)
-		return
-	}
+	*/
 
 	// calc
 	mapPlayerInfo, ptRows, zhuyiRows, err := api.GetSummaryByUuids(uuids, ratePt, rateZhuyi)
 	if err != nil {
-		log.Println("GetSummaryByUuids fail", err)
+		log.Println("GetSummaryByUuids err", err)
 		objJsMsg.Set("msg", err.Error())
 		c.JSON(500, objJsMsg)
 		return
@@ -832,22 +855,24 @@ func loadConfigFile() error {
 	// set config
 	ConfigGin.Domain = objJsConfig.Get("server").Get("domain").MustString()
 	ConfigGin.Port = objJsConfig.Get("server").Get("port").MustString()
+
 	client.MajsoulServerConfig.Host = objJsConfig.Get("MajsoulServerConfig").Get("host").MustString()
 	client.MajsoulServerConfig.Ws_server = objJsConfig.Get("MajsoulServerConfig").Get("ws_server").MustString()
-	client.MajsoulServerConfig.Ws_servers = objJsConfig.Get("MajsoulServerConfig").Get("ws_servers").MustStringArray()
+	client.MajsoulServerConfig.CodeUpdateInterval = objJsConfig.Get("MajsoulServerConfig").Get("CodeUpdateInterval").MustInt64()
+
 	utils.ConfigDb.Dsn = objJsConfig.Get("postgre").Get("dsn").MustString()
+	utils.ConfigDb.TimeoutConnect = time.Duration(objJsConfig.Get("postgre").Get("timeout").MustInt64())
+
 	utils.ConfigMajsoulBot.Acc = objJsConfig.Get("MajsoulBot").Get("acc").MustStringArray()
 	utils.ConfigMajsoulBot.Pwd = objJsConfig.Get("MajsoulBot").Get("pwd").MustStringArray()
+
 	utils.ConfigMode.Mode = objJsConfig.Get("modeMap").Get("mode").MustStringArray()
 	utils.ConfigMode.Rate = objJsConfig.Get("modeMap").Get("rate").MustStringArray()
 	utils.ConfigMode.Zy = objJsConfig.Get("modeMap").Get("zy").MustStringArray()
 	utils.ConfigMode.RecordContestIds = objJsConfig.Get("recordContestUid").MustStringArray()
 	utils.ConfigMode.RecordMode = objJsConfig.Get("recordMode").MustInt()
 	utils.ConfigMode.RecordModeList = objJsConfig.Get("recordModeList").MustStringArray()
-	cfgInterval := objJsConfig.Get("MajsoulServerConfig").Get("interval").MustInt()
-	if cfgInterval > client.MajsoulServerConfig.Interval {
-		client.MajsoulServerConfig.Interval = cfgInterval
-	}
+	utils.ConfigMode.RecordSwitch = objJsConfig.Get("RecordSwitch").MustInt()
 
 	// validate config
 	if len(utils.ConfigMajsoulBot.Acc) != len(utils.ConfigMajsoulBot.Pwd) ||
@@ -877,30 +902,23 @@ func initMajsoulConfig() error {
 	// get version
 	rspVersion, err := request.Get(fmt.Sprintf("1/version.json?randv=%d", randv))
 	if err != nil {
-		log.Println("get version host fail", client.MajsoulServerConfig, err)
+		log.Println("initMajsoulConfig get version host fail", client.MajsoulServerConfig, err)
 		return err
 	}
 
 	objJsVersion, err := simplejson.NewJson(rspVersion)
 	if err != nil {
-		log.Println("unpack version fail", err)
+		log.Println("initMajsoulConfig unpack version fail", err)
 		return err
 	}
 
+	// update cache timestamp
+	client.MajsoulServerConfig.CodeUpdateTimestamp = time.Now().Unix()
 	client.MajsoulServerConfig.Version, err = objJsVersion.Get("version").String()
 	client.MajsoulServerConfig.Force_version, err = objJsVersion.Get("force_version").String()
 	client.MajsoulServerConfig.Code, err = objJsVersion.Get("code").String()
 
-	// rand switch gateway
-	for i := 0; i < 10; i++ {
-		randIdxWs := rand.Intn(len(client.MajsoulServerConfig.Ws_servers))
-		if client.MajsoulServerConfig.Ws_server != client.MajsoulServerConfig.Ws_servers[randIdxWs] {
-			client.MajsoulServerConfig.Ws_server = client.MajsoulServerConfig.Ws_servers[randIdxWs]
-			break
-		}
-	}
-
-	log.Println("init majsoul server config ok", client.MajsoulServerConfig)
+	log.Println("initMajsoulConfig ok", client.MajsoulServerConfig)
 
 	return nil
 }

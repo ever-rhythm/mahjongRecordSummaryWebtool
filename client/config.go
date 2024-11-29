@@ -9,17 +9,17 @@ type ServerAddress struct {
 
 // majsoul server http and ws config
 type majsoulServerConfig struct {
-	Host          string
-	Version       string
-	Force_version string
-	Code          string
-	Region_urls   [10]string
-	Ws_server     string
-	Ws_servers    []string
-	Interval      int `default:"3"`
+	Host                string
+	Version             string
+	Force_version       string
+	Code                string
+	Ws_server           string
+	CodeUpdateTimestamp int64 // http renew majsoul version code after interval
+	CodeUpdateInterval  int64
 }
 
-// net 404 , use com
 var MajsoulServerConfig = majsoulServerConfig{
-	Host: "https://game.maj-soul.com",
+	Host:               "https://game.maj-soul.com",
+	Ws_server:          "wss://gateway-hw.maj-soul.com:443/gateway",
+	CodeUpdateInterval: 30,
 }

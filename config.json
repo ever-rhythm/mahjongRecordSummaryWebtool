@@ -5,7 +5,9 @@
   },
   "MajsoulServerConfig": {
     "host": "https://game.maj-soul.com",
-    "ws_server": "wss://common-v2.maj-soul.com:443/gateway",
+    "ws_server": "wss://gateway-hw.maj-soul.com:443/gateway",
+    "CodeUpdateInterval": 35,
+    "CodeUpdateTimestamp": 0,
     "interval": 4,
     "ws_servers": [
       "wss://common-v2.maj-soul.com:443/gateway",
@@ -14,9 +16,9 @@
   },
   "postgre": {
     "dsn": "postgres://postgres:ygtianlou@localhost:5432/pgtest",
-    "dsn_serverless": "postgres://postgres:ygtianlou@localhost:5432/pgtest",
     "timeout": 3
   },
+  "RecordSwitch": 1,
   "recordContestUid": [
     "15698",
     "16147",
