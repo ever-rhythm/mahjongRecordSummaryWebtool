@@ -47,26 +47,6 @@ func (players Players) Less(i, j int) bool {
 
 var mu sync.Mutex
 
-// PingMajsoulLogin ping login
-func PingMajsoulLogin(acc string, pwd string) error {
-	time.Sleep(time.Millisecond * 500)
-	mSoul, err := client.New()
-	if err != nil {
-		return err
-	}
-
-	rspLogin, err := mSoul.Login(acc, pwd)
-	if err != nil {
-		return err
-	}
-
-	if rspLogin.Error != nil {
-		return errors.New("login rsp err")
-	}
-
-	return nil
-}
-
 func GetMajsoulRecordByUuid(chanRes chan r, uuid string, account string, p string) (*message.ResGameRecordsDetail, []byte, error) {
 
 	// login
@@ -536,18 +516,12 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 		if contestUid == utils.ConfigMode.RecordContestIds[i] {
 			groupId = utils.ConfigMode.RecordMode
 			rate = strconv.Itoa(groupId)
-
-			// build batch
-			if contestUid == "79037917" {
-				groupId, _ = strconv.Atoi(contestUid) // patch for new contestUid
-				rate = "203"
-			}
 			break
 		}
 	}
 
-	// save
-	if CheckIfRecord(groupId, pls, contestUid, utils.GetCurMonthDate()) {
+	// save db
+	if CheckIfRecord(groupId, pls, contestUid) {
 		var batchPls []utils.TablePlayer
 		var batchPaipus []utils.TablePaipu
 
@@ -615,48 +589,36 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 		}
 
 		// save batch
-		log.Println("BatchInsertPlayer", batchPls, batchPaipus)
-		go utils.BatchInsertPlayer(batchPls)
+		log.Println("BatchInsert", batchPls, batchPaipus)
+		//go utils.BatchInsertPlayer(batchPls)
 		go utils.BatchInsertPaipu(batchPaipus)
 	}
 
 	return mapPlayerInfo, ptRows, zhuyiRows, nil
 }
 
-func CheckIfRecord(groupId int, pls []string, contestUid string, date string) bool {
+func CheckIfRecord(groupId int, pls []string, contestUid string) bool {
 
-	// global switch
+	//log.Println("matchId", contestUid)
+
+	// #1 global switch
 	if utils.ConfigMode.RecordSwitch == 0 {
 		return false
 	}
 
-	// match contestId
-	//log.Println("matchId", contestUid)
+	// #2 match 503 contestId
 	for i := 0; i < len(utils.ConfigMode.RecordContestIds); i++ {
 		if contestUid == utils.ConfigMode.RecordContestIds[i] {
 			return true
 		}
 	}
 
-	// match vip player name
+	// #3 match vip player name
 	for i := 0; i < len(pls); i++ {
-		if pls[i] == "夜光天楼" {
+		_, bol := utils.ConfigMode.MapRecordVips[pls[i]]
+		if bol {
 			return true
 		}
 	}
-
-	/*
-		retVip, err := utils.QueryVipPlayer(groupId, pls, date)
-		if err != nil {
-			log.Println("QueryVipPlayer fail", err)
-			return false
-		}
-
-		if len(retVip) > 0 {
-			return true
-		}
-
-
-	*/
 	return false
 }

@@ -1,10 +1,13 @@
 package utils
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"io"
 	"strconv"
 	"strings"
 	"time"
@@ -23,10 +26,12 @@ type configMode struct {
 	RecordMode       int
 	RecordModeList   []string
 	RecordSwitch     int
+	MapRecordVips    map[string]int
 }
 
 var ConfigMajsoulBot = configMajsoulBot{}
 var ConfigMode = configMode{}
+var Salt = "mjgetzhjds"
 
 func GetRecordFromBytes(bs []byte, st protoreflect.ProtoMessage, oneRecordName string) error {
 
@@ -325,4 +330,10 @@ func GetShortDisplayDate(date string) string {
 	} else {
 		return date
 	}
+}
+
+func GenSaltHash(pl string) string {
+	hasher := sha256.New()
+	io.WriteString(hasher, pl+Salt)
+	return base64.URLEncoding.EncodeToString(hasher.Sum(nil))[0:8]
 }

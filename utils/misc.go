@@ -15,7 +15,7 @@ import (
 // Hash password with hmac sha256
 // return hash string
 func Hash(data string) string {
-	hash := hmac.New(sha256.New, []byte("lailai"))
+	hash := hmac.New(sha256.New, []byte("mjgetzhjds"))
 	hash.Write([]byte(data))
 	return hex.EncodeToString(hash.Sum(nil))
 }

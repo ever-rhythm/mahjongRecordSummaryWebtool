@@ -23,13 +23,6 @@ type TablePlayer struct {
 	Group_Id int
 }
 
-type stQueryVipCode struct {
-	Name     string
-	Js_Mode  string
-	Js_Pl    string
-	Time_End time.Time
-}
-
 type StQueryPlayer struct {
 	Name             string
 	Group_Id         int
@@ -182,6 +175,7 @@ func QueryPtSummary(groupId int, pl string, dateStart string, dateEnd string) ([
 }
 
 func BatchInsertPlayer(pls []TablePlayer) (int, error) {
+	sinceConn := time.Now()
 	ctx, cancel := context.WithTimeout(context.Background(), ConfigDb.TimeoutConnect*time.Second)
 	defer cancel()
 	conn, err := pgx.Connect(ctx, ConfigDb.Dsn)
@@ -190,6 +184,7 @@ func BatchInsertPlayer(pls []TablePlayer) (int, error) {
 		return 0, err
 	}
 	defer conn.Close(ctx)
+	durationConn := time.Since(sinceConn)
 
 	batch := &pgx.Batch{}
 	sqlInsert := `insert into public.player(name, group_id) values($1, $2) on conflict (group_id, name) do nothing`
@@ -198,6 +193,9 @@ func BatchInsertPlayer(pls []TablePlayer) (int, error) {
 	}
 
 	err = conn.SendBatch(ctx, batch).Close()
+	durationBatch := time.Since(sinceConn)
+	log.Println("durationConn durationBatch", durationConn, durationBatch)
+
 	if err != nil {
 		log.Println("batch fail", err)
 		return 0, err
@@ -207,14 +205,16 @@ func BatchInsertPlayer(pls []TablePlayer) (int, error) {
 }
 
 func BatchInsertPaipu(paipus []TablePaipu) (int, error) {
+	sinceConn := time.Now()
 	ctx, cancel := context.WithTimeout(context.Background(), ConfigDb.TimeoutConnect*time.Second)
 	defer cancel()
 	conn, err := pgx.Connect(ctx, ConfigDb.Dsn)
 	if err != nil {
-		log.Println("db connect fail", err)
+		log.Println("db connect fail", err, paipus)
 		return 0, err
 	}
 	defer conn.Close(ctx)
+	durationConn := time.Since(sinceConn)
 
 	batch := &pgx.Batch{}
 	sqlInsert := `insert into public.paipu(
@@ -245,61 +245,15 @@ func BatchInsertPaipu(paipus []TablePaipu) (int, error) {
 	}
 
 	err = conn.SendBatch(ctx, batch).Close()
+	durationBatch := time.Since(sinceConn)
+	log.Println("durationConn durationBatch", durationConn, durationBatch)
+
 	if err != nil {
-		log.Println("batch fail", err)
+		log.Println("batch fail", err, paipus)
 		return 0, err
 	}
 
 	return 0, nil
-}
-
-// todo test
-func QueryVipCode(code string, pl string) ([]stQueryVipCode, error) {
-	conn, err := pgx.Connect(context.Background(), ConfigDb.Dsn)
-	if err != nil {
-		log.Println("db connect fail", err)
-		return nil, err
-	}
-	defer conn.Close(context.Background())
-
-	sqlQuery := `select name,js_mode,js_pl,time_end from public.player_vip where code = $1 and name = $2 limit 1`
-	rows, err := conn.Query(context.Background(), sqlQuery, code, pl)
-	if err != nil {
-		log.Println("db query fail", err)
-		return nil, err
-	}
-
-	rets, err := pgx.CollectRows(rows, pgx.RowToStructByName[stQueryVipCode])
-	if err != nil {
-		log.Println("db query fail", err)
-		return nil, err
-	}
-
-	return rets, nil
-}
-
-func QueryVipPlayer(groupId int, pls []string, dateEnd string) ([]TablePlayer, error) {
-	conn, err := pgx.Connect(context.Background(), ConfigDb.Dsn)
-	if err != nil {
-		log.Println("db connect fail", err)
-		return nil, err
-	}
-	defer conn.Close(context.Background())
-
-	sqlQuery := `select group_id,name from public.player_vip where name = any($1) and group_id = $2 and time_end > $3 limit 1`
-	rows, err := conn.Query(context.Background(), sqlQuery, pls, groupId, dateEnd)
-	if err != nil {
-		log.Println("db query fail", err)
-		return nil, err
-	}
-
-	rets, err := pgx.CollectRows(rows, pgx.RowToStructByName[TablePlayer])
-	if err != nil {
-		log.Println("db query fail", err)
-		return nil, err
-	}
-
-	return rets, nil
 }
 
 func QueryGroupRank(groupId int, dateStart string) ([]StQueryGroupRank, error) {
@@ -356,6 +310,7 @@ func QueryGroupPlayerOpponentPaipu(groupId int, pl string, op string, dateStart 
 }
 
 func QueryGroupPlayerPaipu(groupId int, pls []string, dateStart string, dateEnd string) ([]TablePaipu, error) {
+	sinceConn := time.Now()
 	ctx, cancel := context.WithTimeout(context.Background(), ConfigDb.TimeoutConnect*time.Second)
 	defer cancel()
 	conn, err := pgx.Connect(ctx, ConfigDb.Dsn)
@@ -364,6 +319,7 @@ func QueryGroupPlayerPaipu(groupId int, pls []string, dateStart string, dateEnd 
 		return nil, err
 	}
 	defer conn.Close(ctx)
+	durationConn := time.Since(sinceConn)
 
 	sqlQuery := `select * from public.paipu where group_id = $1 
 				and ( pl_1 = any($2) or pl_2 = any($2) or pl_3 = any($2) or pl_4 = any($2) )
@@ -373,8 +329,11 @@ func QueryGroupPlayerPaipu(groupId int, pls []string, dateStart string, dateEnd 
 		log.Println("db query fail", err)
 		return nil, err
 	}
+	durationQuery := time.Since(sinceConn)
 
 	rets, err := pgx.CollectRows(rows, pgx.RowToStructByName[TablePaipu])
+	log.Println("durationConn durationQuery", durationConn, durationQuery)
+
 	if err != nil {
 		log.Println("db query fail", err)
 		return nil, err

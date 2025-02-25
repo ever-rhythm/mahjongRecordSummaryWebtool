@@ -1,17 +1,15 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-    <title>祝仪工具箱帮助</title>
+    <title>祝仪工具箱留言板</title>
     <meta charset="UTF-8" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
 
-    <script src="https://cdn.staticfile.net/amis/2.8.0/sdk.js"></script>
-    <link rel="stylesheet" href="https://cdn.staticfile.net/amis/2.8.0/sdk.css" />
-    <link rel="stylesheet" href="https://cdn.staticfile.net/amis/2.8.0/helper.css" />
-    <link rel="stylesheet" href="https://cdn.staticfile.net/amis/2.8.0/iconfont.css" />
-    <script>let herfPrefix = 'http://127.0.0.1'</script>
+    <link rel="icon" href="https://static.mjget.fun/static/favicon.ico">
+    <script src="https://s4.zstatic.net/ajax/libs/twikoo/1.6.41/twikoo.min.js"></script>
+    <script>let envId = 'https://mjget.top/fb'</script>
 
     <style>
         html,
@@ -21,16 +19,19 @@
             width: 100%;
             height: 100%;
             margin: 0;
-            padding: 0;
+            padding: 40px;
         }
     </style>
 
 </head>
 <body>
-<div id="root" class="app-wrapper"></div>
-<script type="text/javascript">
-
-
+<div id="title">网站相关问题可留言，看到会回复</div>
+<div id="tcomment" class="app-wrapper"></div>
+<script>
+    twikoo.init({
+        envId: envId,
+        el: '#tcomment', 
+    })
 </script>
 </body>
 </html>

@@ -33,16 +33,16 @@ func main() {
 	log.SetOutput(logFile)
 	gin.DisableConsoleColor()
 	gin.DefaultWriter = io.MultiWriter(logFile)
-	gin.SetMode(gin.DebugMode)
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
-	// load json config
+	// load config from file
 	err = loadConfigFile()
 	if err != nil {
 		log.Fatalln("load config.json fail , exit", err)
 	}
 
-	// init majsoul server config
+	// init majsoul config from http
 	err = initMajsoulConfig()
 	if err != nil {
 		log.Fatalln("initMajsoulConfig fail , exit", client.MajsoulServerConfig, err)
@@ -69,35 +69,87 @@ func main() {
 	r.POST("/api/competitor", competitor)
 	r.POST("/api/group_player_op_trend", groupPlayerOpponentTrend)
 	r.POST("/api/nav", getNavJson)
-
 	r.POST("/api/plcr", playerCareer)
 	r.POST("/api/ads_summary", adsSummary)
+	r.POST("/api/add_ads_vip", addPlayerVip)
 
-	// goroutine background update majsoul config
-
-	go func() {
-		for {
-			// http renew majsoul version code
-			curTime := time.Now().Unix()
-			if curTime-client.MajsoulServerConfig.CodeUpdateTimestamp > client.MajsoulServerConfig.CodeUpdateInterval {
-				log.Println("update majsoul version code", curTime, client.MajsoulServerConfig.CodeUpdateInterval)
-
-				err = initMajsoulConfig()
-				if err != nil {
-					log.Println("initMajsoulConfig fail", client.MajsoulServerConfig, err)
-				}
-			} else {
-				log.Println("sleep majsoul version code", curTime, client.MajsoulServerConfig)
-				time.Sleep(time.Second * time.Duration(client.MajsoulServerConfig.CodeUpdateInterval))
-			}
-		}
-	}()
+	// background cron
+	go cronUpdateMajsoulConfig()
 
 	// server
-	err = r.Run(ConfigGin.Domain + ":" + ConfigGin.Port)
+	err = r.Run(":" + ConfigGin.Port)
 	if err != nil {
 		log.Fatalln("gin run server fail, exit", err)
 	}
+}
+
+// cron update from http to config , http renew majsoul version code
+func cronUpdateMajsoulConfig() {
+	for {
+		curTime := time.Now().Unix()
+		if curTime-client.MajsoulServerConfig.CodeUpdateTimestamp > client.MajsoulServerConfig.CodeUpdateInterval {
+			//log.Println("update majsoul version code", curTime, client.MajsoulServerConfig.CodeUpdateInterval)
+
+			err := initMajsoulConfig()
+			if err != nil {
+				log.Println("initMajsoulConfig fail", client.MajsoulServerConfig, err)
+			}
+		} else {
+			//log.Println("sleep majsoul version code", curTime, client.MajsoulServerConfig)
+			time.Sleep(time.Second * time.Duration(client.MajsoulServerConfig.CodeUpdateInterval))
+		}
+	}
+}
+
+// todo test
+func addPlayerVip(c *gin.Context) {
+	objJs := okRet()
+
+	b, _ := c.GetRawData()
+	req, err := simplejson.NewJson(b)
+	if err != nil {
+		log.Println(err)
+		objJs.Set("msg", "请求格式有误")
+		c.JSON(500, objJs)
+		return
+	}
+
+	pl := req.Get("pl").MustString()
+	if len(pl) == 0 {
+		objJs.Set("msg", "请求参数有误")
+		c.JSON(500, objJs)
+		return
+	}
+
+	retCode, err := api.AddVip(pl)
+	if err != nil {
+		log.Println(err)
+		objJs.Set("msg", "添加失败")
+		c.JSON(500, objJs)
+		return
+	}
+
+	// update config cache
+	updateVipConfig()
+
+	objJs.SetPath([]string{"data", "code"}, retCode)
+	c.JSON(200, objJs.MustMap())
+	return
+}
+
+// update config cache
+func updateVipConfig() {
+	retVip, err := utils.QueryVips()
+	if err != nil {
+		log.Println("updateVipConfig fail", err)
+		return
+	}
+
+	for _, v := range retVip {
+		utils.ConfigMode.MapRecordVips[v.Name] = 1
+	}
+
+	log.Println("updateVipConfig ok", utils.ConfigMode.MapRecordVips)
 }
 
 func groupPlayerTrend(c *gin.Context) {
@@ -289,21 +341,6 @@ func adsSummary(c *gin.Context) {
 		log.Println(err)
 		objJs.Set("msg", "paipu url 请求格式有误")
 		c.JSON(500, objJs.MustMap())
-		return
-	}
-
-	// ping login and renew version code
-	acc, pwd := utils.GetMajSoulBotByIdx(len(utils.ConfigMajsoulBot.Acc) - 1)
-	err = api.PingMajsoulLogin(acc, pwd)
-	if err != nil {
-		log.Println("ping fail, renew version code", err)
-		objJs.Set("msg", "连接服务器错误")
-		c.JSON(500, objJs)
-
-		err = initMajsoulConfig()
-		if err != nil {
-			log.Fatalln("http majsoul server config fail", client.MajsoulServerConfig, err)
-		}
 		return
 	}
 
@@ -509,25 +546,6 @@ func summary(c *gin.Context) {
 		c.JSON(500, "rate invalid")
 		return
 	}
-
-	/*
-		// ping login , if fail then renew version code
-		acc, pwd := utils.GetMajSoulBotByIdx(len(utils.ConfigMajsoulBot.Acc) - 1)
-		err = api.PingMajsoulLogin(acc, pwd)
-		if err != nil {
-			log.Println("ping fail, renew version code", err)
-
-			err = initMajsoulConfig()
-			if err != nil {
-				log.Fatalln("http majsoul server config fail", client.MajsoulServerConfig, err)
-			}
-
-			objJsMsg.Set("msg", "内部错误")
-			c.JSON(500, objJsMsg)
-			return
-		}
-
-	*/
 
 	// calc
 	mapPlayerInfo, ptRows, zhuyiRows, err := api.GetSummaryByUuids(uuids, ratePt, rateZhuyi)
@@ -792,13 +810,13 @@ func getNavJson(c *gin.Context) {
 				oneMonthSh := make(map[string]string)
 				oneMonthSh["label"] = fmt.Sprintf("%d月下半赛季", i)
 				oneHalfSh := "sh"
-				oneMonthSh["to"] = fmt.Sprintf("/rank.html?date=2024-%s-01&half=%s&code=%s", strMonth, oneHalfSh, code)
+				oneMonthSh["to"] = fmt.Sprintf("/rank.html?date=2025-%s-01&half=%s&code=%s", strMonth, oneHalfSh, code)
 				arrTmp = append(arrTmp, oneMonthSh)
 			}
 
 			// first half
 			oneHalf := "fh"
-			oneMonth["to"] = fmt.Sprintf("/rank.html?date=2024-%s-01&half=%s&code=%s", strMonth, oneHalf, code)
+			oneMonth["to"] = fmt.Sprintf("/rank.html?date=2025-%s-01&half=%s&code=%s", strMonth, oneHalf, code)
 			arrTmp = append(arrTmp, oneMonth)
 		}
 	} else if code == "203zbl" {
@@ -822,7 +840,7 @@ func getNavJson(c *gin.Context) {
 						strDay = "0" + strDay
 					}
 
-					oneMonth["to"] = fmt.Sprintf("/rank.html?date=2024-%s-%s&half=%s&code=%s", strMonth, strDay, "w", code)
+					oneMonth["to"] = fmt.Sprintf("/rank.html?date=2025-%s-%s&half=%s&code=%s", strMonth, strDay, "w", code)
 					arrTmp = append(arrTmp, oneMonth)
 				}
 			}
@@ -873,6 +891,10 @@ func loadConfigFile() error {
 	utils.ConfigMode.RecordMode = objJsConfig.Get("recordMode").MustInt()
 	utils.ConfigMode.RecordModeList = objJsConfig.Get("recordModeList").MustStringArray()
 	utils.ConfigMode.RecordSwitch = objJsConfig.Get("RecordSwitch").MustInt()
+	utils.ConfigMode.MapRecordVips = make(map[string]int)
+
+	// update from db
+	updateVipConfig()
 
 	// validate config
 	if len(utils.ConfigMajsoulBot.Acc) != len(utils.ConfigMajsoulBot.Pwd) ||
@@ -888,7 +910,7 @@ func loadConfigFile() error {
 		return errors.New("mode err")
 	}
 
-	log.Println("load config.json ok", ConfigGin)
+	log.Println("load config.json ok")
 
 	return nil
 }
