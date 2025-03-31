@@ -5,8 +5,8 @@ import (
 	"log"
 )
 
-// todo test
-func GetPlayerActionSummary(code string, pl string, dateStart string, dateEnd string) ([]utils.StPtSummary, error) {
+// undo dev
+func GetPlayerActionSummary(code string, pl string, dateStart string, dateEnd string) ([]StPtSummary, error) {
 
 	retGroup, err := utils.QueryGroup(code)
 	if err != nil || len(retGroup) == 0 {
@@ -14,11 +14,5 @@ func GetPlayerActionSummary(code string, pl string, dateStart string, dateEnd st
 		return nil, err
 	}
 
-	rets, err := utils.QueryPtSummary(retGroup[0].Group_Id, pl, dateStart, dateEnd)
-	if err != nil {
-		log.Println(err)
-		return nil, err
-	}
-
-	return rets, nil
+	return nil, err
 }

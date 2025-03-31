@@ -242,7 +242,7 @@ func GetRateZhuyiByMode(mode string) (int, int, error) {
 			return rate, zy, nil
 		}
 	}
-	return 0, 0, errors.New("mode not support")
+	return 0, 0, errors.New("mode not support" + mode)
 }
 
 func GetMajSoulBotByIdx(idx int) (string, string) {

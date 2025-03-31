@@ -122,15 +122,7 @@
     if (opponent != null) {
         urlTrend = '/api/group_player_op_trend'
     }
-    if (code === '503zbl') {
-        intervalY = 5000
-    } else if ( code === '203zbl' ) {
-        intervalY = 2000
-    } else if ( code === '203gl' ) {
-        intervalY = 2000
-    }else {
-        intervalY = 1000
-    }
+    intervalY = 1000
 
     let myChart = echarts.init(document.getElementById('main'), 'dark');
     let chartBar = echarts.init(document.getElementById('main1'), 'dark');
@@ -163,10 +155,30 @@
                     txtName += ' vs ' + opponent
                 }
 
+                let maxScoreTotal = 0
+
+                for ( let i=0;i<result.data.lineTotal.length;i++ ){
+                    if (Math.abs(result.data.lineTotal[i]) > maxScoreTotal) {
+                        maxScoreTotal = Math.abs(result.data.lineTotal[i])
+                    }
+                }
+
+                if ( maxScoreTotal > 50000 ) {
+                    intervalY = 10000
+                } else if ( maxScoreTotal > 20000 ) {
+                    intervalY = 4000
+                } else if ( maxScoreTotal > 10000 ) {
+                    intervalY = 2000
+                } else if ( maxScoreTotal > 5000 ) {
+                    intervalY = 1000
+                } else {
+                    intervalY = 500
+                }
+
                 document.getElementById('s6').innerHTML = '日期：' + result.data.dateBegin + '至' + result.data.dateEnd
                 document.getElementById('s0').innerHTML = txtName
                 document.getElementById('s1').innerHTML = '总数：' + result.data.cntTotal
-                document.getElementById('s2').innerHTML = '积分：' + result.data.lineTotal[result.data.cntTotal - 1]
+                document.getElementById('s2').innerHTML = '总分：' + result.data.lineTotal[result.data.cntTotal - 1]
                 document.getElementById('s3').innerHTML = '点数：' + result.data.linePt[result.data.cntTotal - 1]
                 document.getElementById('s4').innerHTML = '祝仪：' + result.data.lineZy[result.data.cntTotal - 1]
                 document.getElementById('s5').innerHTML = '平顺：' + (( result.data.cnt1 + result.data.cnt2 * 2 + result.data.cnt3 * 3 + result.data.cnt4 * 4 ) / result.data.cntTotal ).toFixed(2)
@@ -177,7 +189,7 @@
 
                 myChart.setOption({
                     title: {
-                        text:  '积分趋势（点击跳转牌谱）',
+                        text:  '总分趋势（点击跳转牌谱）',
                         padding: titlePadding,
                     },
                     tooltip: {
@@ -190,7 +202,7 @@
                             let strTips = ''
                             let oneDetail = result.data.lineDetail[params[0].dataIndex]
 
-                            strTips += '积分：' + result.data.lineTotal[params[0].dataIndex] + '</br>'
+                            strTips += '总分：' + result.data.lineTotal[params[0].dataIndex] + '</br>'
                             strTips += '点数：' + result.data.linePt[params[0].dataIndex] + '</br>'
                             strTips += '祝仪：' + result.data.lineZy[params[0].dataIndex] + '</br>'
                             strTips += '</br>'

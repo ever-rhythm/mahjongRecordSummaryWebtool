@@ -41,6 +41,7 @@ require (
 )
 
 require (
+	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/bitly/go-simplejson v0.5.0
 	github.com/gin-gonic/gin v1.9.0
 	github.com/jackc/pgx/v5 v5.5.0

@@ -1,9 +1,9 @@
 package api
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/avast/retry-go"
 	"github.com/mahjongRecordSummaryWebtool/client"
 	"github.com/mahjongRecordSummaryWebtool/message"
 	"github.com/mahjongRecordSummaryWebtool/utils"
@@ -497,8 +497,8 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 	}
 
 	// log
-	tmpLog, _ := json.Marshal(mapPlayerInfo)
-	log.Println("summary ok", uuids, ptRows, zhuyiRows, string(tmpLog))
+	//tmpLog, _ := json.Marshal(mapPlayerInfo)
+	//log.Println("summary ok", uuids, ptRows, zhuyiRows, string(tmpLog))
 
 	var pls []string
 	for _, v := range mapPlayerInfo {
@@ -512,12 +512,14 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 		groupId = 0
 	}
 
-	for i := 0; i < len(utils.ConfigMode.RecordContestIds); i++ {
-		if contestUid == utils.ConfigMode.RecordContestIds[i] {
-			groupId = utils.ConfigMode.RecordMode
-			rate = strconv.Itoa(groupId)
-			break
-		}
+	// change rate and groupId todo mod
+	//log.Println("matchId", contestUid)
+	if contestUid == "7241246" {
+		groupId = 503
+		rate = strconv.Itoa(groupId)
+	} else if contestUid == "41778585" {
+		groupId = 103
+		rate = strconv.Itoa(groupId)
 	}
 
 	// save db
@@ -588,19 +590,50 @@ func GetSummaryByUuids(uuids []string, ratePt int, rateZhuyi int) (map[string]*P
 			})
 		}
 
-		// save batch
-		log.Println("BatchInsert", batchPls, batchPaipus)
-		//go utils.BatchInsertPlayer(batchPls)
-		go utils.BatchInsertPaipu(batchPaipus)
+		// save batch + retry
+		//log.Println("BatchInsert", batchPls, batchPaipus)
+
+		go func() {
+			err := retry.Do(
+				func() error {
+					_, err := utils.BatchInsertPlayer(batchPls)
+					if err != nil {
+						return err
+					}
+					return nil
+				},
+				retry.Attempts(2),
+				retry.Delay(1*time.Second),
+			)
+
+			if err != nil {
+				log.Println("BatchInsertPlayer fail", err, batchPls)
+			}
+		}()
+
+		go func() {
+			err := retry.Do(
+				func() error {
+					_, err := utils.BatchInsertPaipu(batchPaipus)
+					if err != nil {
+						return err
+					}
+					return nil
+				},
+				retry.Attempts(2),
+				retry.Delay(1*time.Second),
+			)
+
+			if err != nil {
+				log.Println("BatchInsertPaipu fail", err, batchPaipus)
+			}
+		}()
 	}
 
 	return mapPlayerInfo, ptRows, zhuyiRows, nil
 }
 
 func CheckIfRecord(groupId int, pls []string, contestUid string) bool {
-
-	//log.Println("matchId", contestUid)
-
 	// #1 global switch
 	if utils.ConfigMode.RecordSwitch == 0 {
 		return false

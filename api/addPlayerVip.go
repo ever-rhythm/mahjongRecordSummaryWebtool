@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/mahjongRecordSummaryWebtool/utils"
 	"log"
+	"time"
 )
 
 func AddVip(pl string) (string, error) {
@@ -18,7 +19,11 @@ func AddVip(pl string) (string, error) {
 	}
 
 	code := utils.GenSaltHash(pl)
-	err = utils.InsertVipAndCareer(pl, code)
+	timeNow := time.Now()
+	timeIndex := time.Date(timeNow.Year(), timeNow.Month(), 1, 0, 0, 0, 0, time.Local)
+	timeEnd := timeIndex.AddDate(1, 0, 0)
+
+	err = utils.InsertVipAndCareer(pl, code, timeIndex, timeNow, timeEnd)
 	if err != nil {
 		log.Println(err)
 		return "", errors.New("创建失败")

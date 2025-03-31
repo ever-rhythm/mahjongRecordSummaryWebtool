@@ -1,6 +1,11 @@
 package api
 
-import "github.com/mahjongRecordSummaryWebtool/utils"
+import (
+	"errors"
+	"github.com/mahjongRecordSummaryWebtool/utils"
+	"log"
+	"time"
+)
 
 type StCareer struct {
 	Pl         string
@@ -19,31 +24,38 @@ type StCareer struct {
 	ZyAka      int
 }
 
-// todo test
-func GetCareer(code string, pl string) (*StCareer, error) {
+func GetCareer(code string, pl string, timeIndex time.Time, timeSpan string) (*StCareer, error) {
 
 	// query vip code
 	retVip, err := utils.QueryVipCode(code, pl)
-	if err != nil || len(retVip) == 0 {
-		return nil, err
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New("查询失败")
+	}
+	if len(retVip) == 0 {
+		return nil, errors.New("用户名和邀请码不匹配")
 	}
 
-	// get total
-	retSummary, err := utils.QueryTotalSummary(pl)
-	if err != nil || len(retSummary) == 0 {
-		return nil, err
+	// query plcr
+	retPlcr, err := utils.QueryPlayerCareer(pl, timeIndex, timeSpan)
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New("查询失败")
+	}
+	if len(retPlcr) == 0 {
+		return nil, errors.New("用户名战绩不存在")
 	}
 
 	retCareer := &StCareer{
 		Pl:         pl,
-		TotalDeal:  retSummary[0].Total_Deal,
-		TotalScore: retSummary[0].Total_Score,
-		TotalPt:    retSummary[0].Pt,
-		TotalZy:    retSummary[0].Zy,
-		Rank_1:     retSummary[0].Rank_1,
-		Rank_2:     retSummary[0].Rank_2,
-		Rank_3:     retSummary[0].Rank_3,
-		Rank_4:     retSummary[0].Rank_4,
+		TotalDeal:  retPlcr[0].Deal_Total,
+		TotalScore: retPlcr[0].Score_Total,
+		TotalPt:    retPlcr[0].Pt_Total,
+		TotalZy:    retPlcr[0].Zy_Total,
+		Rank_1:     retPlcr[0].Rank_1,
+		Rank_2:     retPlcr[0].Rank_2,
+		Rank_3:     retPlcr[0].Rank_3,
+		Rank_4:     retPlcr[0].Rank_4,
 	}
 
 	return retCareer, nil

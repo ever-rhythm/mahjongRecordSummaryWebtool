@@ -1,10 +1,158 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-    <meta charset="UTF-8">
-    <title>祝仪工具箱个人总览页</title>
+    <title>祝仪工具箱战绩统计</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+    <script src="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/echarts/5.3.0/echarts.min.js"></script>
+    <script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/jquery/3.6.0/jquery.min.js"></script>
+    <link rel="icon" href="https://static.mjget.fun/static/favicon.ico">
+
+    <style>
+        body {
+            background-color:#100C2A;
+        }
+
+        #main {
+            top:100px;
+            width: 960px;
+            height: 100px;
+            position: relative;
+            margin: auto;
+        }
+
+        #main1 {
+            height:100%;
+            margin: auto;
+            flex: 1;
+        }
+
+        #main2 {
+            top:100px;
+            width: 960px;
+            height:300px;
+            position: relative;
+            margin: auto;
+            display: flex
+        }
+
+        #grid-plcr {
+            top:0;
+            width: 800px;
+            height:800px;
+            position: relative;
+            margin: auto;
+            display: flex
+        }
+
+        #maininfo {
+            width: 400px;
+            height:100%;
+            position:relative;
+            margin: auto;
+        }
+
+        .spaninfo {
+            padding-left:100px;
+            font-weight:bold;
+            font-size:18px;
+            color: #EEF1FA
+        }
+
+        .onespan {
+            padding-left:100px;
+            font-weight:bold;
+            font-size:18px;
+            color: #4992ff
+        }
+
+    </style>
+
+    <script>
+        let loadingFontSize = 30
+        let loadingMaskColor = '#100C2A'
+        let loadingColor = '#4992ff'
+        let loadingTextColor = '#4992ff'
+        let intervalY = 1000
+
+        let titlePadding = [5, 100]
+        let radius = ['50%', '70%']
+        let tooltipsPosition = ['40%', '5%']
+        let sizeSp = 15
+
+        let colorPt = '#4992ff'
+        let colorZy = '#fddd60'
+        let colorTotal = '#7cffb2'
+        let colorTime = '#999'
+        let color1st = '#4992ff'
+        let color2nd = '#7cffb2'
+        let color3rd = '#fddd60'
+        let color4th = '#ff6e76'
+
+    </script>
 </head>
 <body>
+<div id="main2">
+    <div id="maininfo">
+        <span id='main-span' class="spaninfo">战绩统计</span><br/><br/><br/>
+        <span id='s6' class="onespan"></span><br/>
+        <span id='s0' class="onespan"></span><br/>
+        <span id='s1' class="onespan"></span><br/>
+        <span id='s2' class="onespan"></span><br/>
+        <span id='s3' class="onespan"></span><br/>
+        <span id='s4' class="onespan"></span><br/>
+        <span id='s5' class="onespan"></span>
+    </div>
+    <div id="main1"></div>
+</div>
+<div id="main"></div>
+<div id="grid-plcr"></div>
+<script type="text/javascript">
+    let params = new URLSearchParams(window.location.search)
+    let code = params.get('code')
+    let date = params.get('date')
+    let player = params.get('pl')
+    let urlApi = '/api/plcr'
 
+    let myChart = echarts.init(document.getElementById('main'), 'dark');
+
+    myChart.showLoading('default', {
+        fontSize: loadingFontSize,
+        maskColor: loadingMaskColor,
+        color: loadingColor,
+        textColor: loadingTextColor,
+    });
+
+    if (code == null || player == null) {
+        myChart.hideLoading();
+        alert('参数缺失')
+    } else {
+        $.ajax({
+            type:'POST',
+            url: urlApi,
+            contentType: "application/json",
+            data: JSON.stringify({
+                code:code,
+                player:player,
+            }),
+            success: function(result) {
+                myChart.hideLoading();
+
+                document.getElementById('s6').innerHTML = '日期：' + result.data.dateBegin + '至' + result.data.dateEnd
+                document.getElementById('s0').innerHTML = '昵称：' + player
+                document.getElementById('s1').innerHTML = '总数：' + result.data.totalDeal
+                document.getElementById('s2').innerHTML = '总分：' + result.data.totalScore
+                document.getElementById('s3').innerHTML = '点数：' + result.data.totalPt
+                document.getElementById('s4').innerHTML = '祝仪：' + result.data.totalZy
+
+            },
+            error: function(xhr, status, error) {
+                myChart.hideLoading();
+                alert(error)
+            }
+        })
+    }
+</script>
 </body>
 </html>

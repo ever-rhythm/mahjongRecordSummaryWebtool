@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-    <title>祝仪工具箱debug</title>
+    <title>祝仪工具箱adc</title>
     <meta charset="UTF-8" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
@@ -24,7 +24,7 @@
 
 </head>
 <body>
-<h1>Simple POST Form</h1>
+<h1>Form</h1>
 <form id="postForm" class="postForm">
     <label for="name">Name:</label>
     <input type="text" id="name" name="name" required><br><br>
@@ -40,16 +40,18 @@
         $("#postForm").on("submit", function(event) {
             event.preventDefault(); // 阻止表单默认提交行为
 
+            let urlApi = "http://127.0.0.1:8097/api/add_adc_vip"
+
             $.ajax({
                 type:'POST',
-                url: "http://127.0.0.1:8097/api/add_ads_vip",
+                url: urlApi,
                 contentType: "application/json",
                 dataType:"json",
                 data: JSON.stringify({
                     pl:$("#name").val(),
                 }),
                 success: function(result) {
-                    alert(result)
+                    alert(result.data.code)
                 },
                 error: function(xhr, status, error) {
                     alert(error)

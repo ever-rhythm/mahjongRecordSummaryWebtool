@@ -5,8 +5,22 @@ import (
 	"log"
 )
 
-// todo test
-func GetPlayerPtSummary(code string, pl string, dateStart string, dateEnd string) ([]utils.StPtSummary, error) {
+type StPtSummary struct {
+	Total_Deal  int
+	Total_Score int
+	Pt          int
+	Zy          int
+	Zy_Yifa     int
+	Zy_Li       int
+	Zy_Aka      int
+	Rank_1      int
+	Rank_2      int
+	Rank_3      int
+	Rank_4      int
+}
+
+// undo dev
+func GetPlayerPtSummary(code string, pl string, dateStart string, dateEnd string) ([]StPtSummary, error) {
 
 	retGroup, err := utils.QueryGroup(code)
 	if err != nil || len(retGroup) == 0 {
@@ -14,11 +28,5 @@ func GetPlayerPtSummary(code string, pl string, dateStart string, dateEnd string
 		return nil, err
 	}
 
-	rets, err := utils.QueryPtSummary(retGroup[0].Group_Id, pl, dateStart, dateEnd)
-	if err != nil {
-		log.Println(err)
-		return nil, err
-	}
-
-	return rets, nil
+	return nil, err
 }

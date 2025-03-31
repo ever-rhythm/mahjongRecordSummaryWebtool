@@ -6,8 +6,7 @@
   "MajsoulServerConfig": {
     "host": "https://game.maj-soul.com",
     "ws_server": "wss://gateway-hw.maj-soul.com:443/gateway",
-    "CodeUpdateInterval": 35,
-    "CodeUpdateTimestamp": 0,
+    "CodeUpdateInterval": 45,
     "interval": 4,
     "ws_servers": [
       "wss://common-v2.maj-soul.com:443/gateway",
@@ -15,8 +14,11 @@
     ]
   },
   "postgre": {
-    "dsn": "postgres://postgres:ygtianlou@localhost:5432/pgtest",
-    "timeout": 3
+    "dsn": "postgres://postgres:ygtianlou@localhost:5432/pgtest?options=-c%20TimeZone%3DAsia/Shanghai",
+    "timeout": 6
+  },
+  "cron": {
+    "IntervalCronUpdatePlayerCareer": 35
   },
   "RecordSwitch": 1,
   "recordContestUid": [
@@ -24,7 +26,8 @@
     "16147",
     "16657",
     "39018088",
-    "79037917"
+    "79037917",
+    "41778585"
   ],
   "recordMode": 503,
   "recordModeList": [
