@@ -1,2 +1,6 @@
 # mahjongRecordSummaryWebtool
- 根据牌谱链接生成统计表格
+
+根据牌谱链接，生成积分表格
+
+developed by Go & amis
+
